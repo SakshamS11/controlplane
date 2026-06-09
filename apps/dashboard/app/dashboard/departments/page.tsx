@@ -1,6 +1,6 @@
 "use client";
 
-import { ShieldCheck } from "lucide-react";
+import { LockKeyhole, ShieldCheck, Users } from "lucide-react";
 import { Card, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { departments, permissionModels } from "@/lib/mock-data";
 
@@ -10,6 +10,17 @@ export default function DepartmentsPage() {
     <>
       <PageHeader eyebrow="Governance" title="Departments and model access" description="Model permissions are enforced consistently across chat interfaces, APIs, workflows, and applications." />
       <Section>
+        <div className="mb-6 grid gap-4 md:grid-cols-3">
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><Users className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">6 departments</div><div className="text-xs text-slate-500">Mapped to model access</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">24 active policies</div><div className="text-xs text-slate-500">Updated instantly in demo state</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Safe defaults</div><div className="text-xs text-slate-500">Sensitive teams get private models first</div></div></div>
+          </Card>
+        </div>
         <Card className="overflow-hidden">
           <div className="flex items-center gap-3 border-b border-slate-200 bg-slate-50 px-5 py-4">
             <ShieldCheck size={18} className="text-cyan-700" />

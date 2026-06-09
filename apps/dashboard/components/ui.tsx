@@ -13,7 +13,6 @@ import {
   Cloud,
   Database,
   Gauge,
-  Home,
   KeyRound,
   Layers,
   LayoutDashboard,
@@ -125,16 +124,16 @@ const nav = [
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-white/10 bg-slate-950 text-white lg:flex lg:flex-col">
+    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
+      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-white/10 bg-[#080d18] text-white lg:flex lg:flex-col">
         <div className="border-b border-white/10 px-6 py-5">
           <Link href="/" className="flex items-center gap-3">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-400 text-slate-950">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30">
               <Cloud size={19} />
             </div>
             <div>
               <div className="font-semibold">AI Control Plane</div>
-              <div className="text-xs text-slate-400">Enterprise AI ops</div>
+              <div className="text-xs text-slate-400">Enterprise AI operations</div>
             </div>
           </Link>
         </div>
@@ -143,7 +142,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
-              <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}>
+              <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}>
                 <Icon size={17} />
                 {item.label}
               </Link>
@@ -151,9 +150,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           })}
         </nav>
         <div className="border-t border-white/10 p-4">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
             <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck size={16} /> Governance mode</div>
             <p className="mt-2 text-xs leading-5 text-slate-400">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
+            <div className="mt-4 flex items-center justify-between rounded-md bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+              <span>Policy engine</span>
+              <span>Active</span>
+            </div>
           </div>
         </div>
       </aside>
@@ -167,10 +170,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
 function TopBar() {
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-5 backdrop-blur">
-      <div>
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-6 backdrop-blur">
+      <div className="min-w-0">
         <div className="text-sm font-semibold">One operating layer for enterprise AI infrastructure.</div>
-        <div className="text-xs text-slate-500">Deploy AI anywhere. Govern it centrally. Operate it from one place.</div>
+        <div className="truncate text-xs text-slate-500">Deploy AI anywhere. Govern it centrally. Operate it from one place.</div>
       </div>
       <div className="hidden items-center gap-2 md:flex">
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
@@ -186,11 +189,11 @@ function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="border-b border-slate-200 bg-white px-6 py-6">
+    <div className="border-b border-slate-200 bg-white px-6 py-7">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <p className="text-xs font-semibold uppercase text-cyan-700">{eyebrow}</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-950">{title}</h1>
+          <h1 className="mt-2 text-3xl font-semibold text-slate-950">{title}</h1>
           {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
         </div>
         {action}
@@ -200,19 +203,20 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow: s
 }
 
 export function Section({ children }: { children: ReactNode }) {
-  return <section className="p-6">{children}</section>;
+  return <section className="p-6 xl:p-8">{children}</section>;
 }
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-lg border border-slate-200 bg-white shadow-sm ${className}`}>{children}</div>;
+  return <div className={`rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)] ${className}`}>{children}</div>;
 }
 
 export function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail?: string; icon: ReactNode }) {
   return (
-    <Card className="p-5">
+    <Card className="relative overflow-hidden p-5">
+      <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
       <div className="flex items-center justify-between">
-        <div className="text-sm text-slate-500">{label}</div>
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-slate-100 text-slate-700">{icon}</div>
+        <div className="text-sm font-medium text-slate-500">{label}</div>
+        <div className="grid h-9 w-9 place-items-center rounded-md bg-cyan-50 text-cyan-700">{icon}</div>
       </div>
       <div className="mt-4 text-2xl font-semibold">{value}</div>
       {detail ? <div className="mt-1 text-xs text-slate-500">{detail}</div> : null}
@@ -233,7 +237,7 @@ export function StatusBadge({ value }: { value: string }) {
 
 export function ActionButton({ children, onClick, variant = "primary" }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" }) {
   const cls = variant === "primary" ? "bg-slate-950 text-white hover:bg-slate-800" : variant === "danger" ? "bg-red-600 text-white hover:bg-red-700" : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50";
-  return <button onClick={onClick} className={`inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition ${cls}`}>{children}</button>;
+  return <button onClick={onClick} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${cls}`}>{children}</button>;
 }
 
 export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
@@ -244,7 +248,7 @@ export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNod
           <tr>{columns.map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {rows.map((row, index) => <tr key={index} className="hover:bg-slate-50">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-3 align-middle">{cell}</td>)}</tr>)}
+          {rows.map((row, index) => <tr key={index} className="hover:bg-slate-50">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-4 align-middle">{cell}</td>)}</tr>)}
         </tbody>
       </table>
     </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { Filter, Sparkles } from "lucide-react";
+import { Filter, Gauge, Server, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { models } from "@/lib/mock-data";
@@ -16,6 +16,17 @@ export default function ModelsPage() {
     <>
       <PageHeader eyebrow="Model catalog" title="Unified model catalog" description="A single inventory of local models, hosted provider models, access policies, latency, and request volume." />
       <Section>
+        <div className="mb-6 grid gap-4 md:grid-cols-3">
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><Server className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">3 local models</div><div className="text-xs text-slate-500">Private infrastructure</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><Sparkles className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">3 external providers</div><div className="text-xs text-slate-500">OpenAI, Anthropic, Google</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><Gauge className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">128k monthly requests</div><div className="text-xs text-slate-500">Governed by department policy</div></div></div>
+          </Card>
+        </div>
         <div className="mb-4 flex flex-wrap gap-2">
           {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
         </div>

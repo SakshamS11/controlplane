@@ -1,6 +1,6 @@
 "use client";
 
-import { Activity, Boxes, Cpu, HardDrive, RotateCcw, Server, UploadCloud, Zap } from "lucide-react";
+import { Activity, ArrowRight, Boxes, CheckCircle2, Cpu, FileText, HardDrive, RotateCcw, Server, UploadCloud, Zap } from "lucide-react";
 import { useState } from "react";
 import { AreaMetricChart, MultiLineChart } from "@/components/charts";
 import { ActionButton, Card, ChartCard, DataTable, MetricCard, MockAction, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
@@ -29,6 +29,54 @@ export default function AcmeTargetDetailPage() {
         action={<div className="flex flex-wrap gap-2"><ActionButton onClick={simulateDeploy}><UploadCloud size={16} /> Deploy Stack</ActionButton><MockAction label="View Logs" auditTarget={target.name} /></div>}
       />
       <Section>
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1.2fr_420px]">
+          <Card className="overflow-hidden">
+            <div className="grid gap-0 md:grid-cols-[260px_1fr]">
+              <div className="bg-slate-950 p-6 text-white">
+                <p className="text-xs font-semibold uppercase text-cyan-200">Target health</p>
+                <div className="mt-4 flex items-end gap-3">
+                  <div className="text-5xl font-semibold">96</div>
+                  <div className="pb-2 text-sm text-slate-300">/ 100</div>
+                </div>
+                <div className="mt-5 inline-flex items-center gap-2 rounded-md bg-emerald-400/10 px-3 py-2 text-sm text-emerald-200"><CheckCircle2 size={15} /> Healthy</div>
+              </div>
+              <div className="p-6">
+                <div className="flex flex-col justify-between gap-4 lg:flex-row">
+                  <div>
+                    <h2 className="text-lg font-semibold">Private AI Basic is serving traffic normally.</h2>
+                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">All six services are running. GPU utilization is elevated but stable, and the gateway latency remains inside the demo target range.</p>
+                  </div>
+                  <StatusBadge value="Online" />
+                </div>
+                <div className="mt-6 grid gap-3 md:grid-cols-3">
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <div className="text-xs text-slate-500">Recommended action</div>
+                    <div className="mt-1 text-sm font-semibold">Review logs after deployment</div>
+                  </div>
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <div className="text-xs text-slate-500">Access policy</div>
+                    <div className="mt-1 text-sm font-semibold">Claims, Legal enabled</div>
+                  </div>
+                  <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
+                    <div className="text-xs text-slate-500">Rollback point</div>
+                    <div className="mt-1 text-sm font-semibold">v0.1.0 stable</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </Card>
+          <Card className="p-5">
+            <p className="text-xs font-semibold uppercase text-cyan-700">Operator actions</p>
+            <h2 className="mt-2 text-lg font-semibold">Common tasks</h2>
+            <div className="mt-5 grid gap-2">
+              <ActionButton onClick={simulateDeploy}><UploadCloud size={15} /> Deploy Stack</ActionButton>
+              <MockAction label="Restart Service" auditTarget={target.name} />
+              <MockAction label="Upgrade Stack" auditTarget={target.name} />
+              <MockAction label="View Logs" auditTarget={target.name} />
+              <MockAction label="Rollback" auditTarget={target.name} variant="danger" />
+            </div>
+          </Card>
+        </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
           <MetricCard label="Agent status" value={target.agent} detail="Last heartbeat: 8 seconds ago" icon={<Activity size={18} />} />
           <MetricCard label="Region" value={target.region} detail={target.type} icon={<Server size={18} />} />
@@ -45,15 +93,19 @@ export default function AcmeTargetDetailPage() {
         <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_420px]">
           <Card>
             <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <h2 className="font-semibold">Running services</h2>
+              <div>
+                <h2 className="font-semibold">Running services</h2>
+                <p className="mt-1 text-xs text-slate-500">Restart actions are grouped at row level for fast service recovery.</p>
+              </div>
               <StatusBadge value="6/6 Running" />
             </div>
             <DataTable
-              columns={["Service", "Status", "Port", "Action"]}
+              columns={["Service", "Status", "Port", "Recommended action", "Action"]}
               rows={services.map((service) => [
                 <span key="name" className="font-medium">{service.name}</span>,
                 <StatusBadge key="status" value={service.status} />,
                 <span key="port" className="font-mono text-xs">{service.port}</span>,
+                <span key="recommended" className="inline-flex items-center gap-2 text-xs text-slate-600"><FileText size={13} /> Review logs before restart</span>,
                 <ActionButton key="action" variant="secondary" onClick={() => { showToast(`${service.name} restart queued`); addAudit(`${service.name} service restarted`, service.name); }}><RotateCcw size={14} /> Restart</ActionButton>
               ])}
             />
@@ -70,9 +122,7 @@ export default function AcmeTargetDetailPage() {
           </Card>
         </div>
         <div className="mt-6 flex flex-wrap gap-2">
-          <MockAction label="Restart Service" auditTarget={target.name} />
-          <MockAction label="Upgrade Stack" auditTarget={target.name} />
-          <MockAction label="Rollback" auditTarget={target.name} variant="danger" />
+          <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
         </div>
       </Section>
     </>
