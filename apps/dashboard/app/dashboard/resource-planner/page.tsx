@@ -9,6 +9,8 @@ const models = ["Qwen Local", "Llama Local", "DeepSeek Coder", "GPT-5", "Claude"
 const knowledgeBases = ["Claims SOPs", "Legal Contracts", "HR Policies", "Finance Policies", "Product FAQ", "Engineering Docs"];
 const agents = ["Claims Summary Agent", "Contract Review Agent", "Support Triage Agent", "Code Review Agent", "Finance Analysis Agent"];
 const fallbackPolicies = ["Local first", "Cheapest cloud", "Best quality", "Sensitive data local only"];
+const matrixTabs = ["Models", "Knowledge Bases", "Agents"] as const;
+type MatrixTab = (typeof matrixTabs)[number];
 
 const teamUsage = [
   { department: "Claims", users: 42, requests: "31,400", tokens: "8.7M", cost: "AED 3,900", peak: "10:00-13:00", gpu: "38%", cloud: "AED 880", latency: "940 ms", status: "Under-allocated" },
@@ -86,7 +88,7 @@ export default function ResourcePlannerPage() {
   const [allowedModels, setAllowedModels] = useState(["Qwen Local", "Claude"]);
   const [selectedKbs, setSelectedKbs] = useState(["Claims SOPs"]);
   const [assignedAgents, setAssignedAgents] = useState(["Claims Summary Agent"]);
-  const [activeMatrix, setActiveMatrix] = useState("Models");
+  const [activeMatrix, setActiveMatrix] = useState<MatrixTab>("Models");
   const [modelAccess, setModelAccess] = useState<Matrix>(initialModelAccess);
   const [kbAccess, setKbAccess] = useState<Matrix>(initialKbAccess);
   const [agentAccess, setAgentAccess] = useState<Matrix>(initialAgentAccess);
@@ -117,7 +119,18 @@ export default function ResourcePlannerPage() {
 
   const matrix = activeMatrix === "Models" ? modelAccess : activeMatrix === "Knowledge Bases" ? kbAccess : agentAccess;
   const matrixColumns = activeMatrix === "Models" ? models : activeMatrix === "Knowledge Bases" ? knowledgeBases : agents;
-  const setMatrix = activeMatrix === "Models" ? setModelAccess : activeMatrix === "Knowledge Bases" ? setKbAccess : setAgentAccess;
+
+  function toggleMatrixAccess(department: string, item: string) {
+    if (activeMatrix === "Models") {
+      setModelAccess((current) => toggleMatrix(current, department, item));
+      return;
+    }
+    if (activeMatrix === "Knowledge Bases") {
+      setKbAccess((current) => toggleMatrix(current, department, item));
+      return;
+    }
+    setAgentAccess((current) => toggleMatrix(current, department, item));
+  }
 
   return (
     <>
@@ -227,7 +240,7 @@ export default function ResourcePlannerPage() {
               <p className="mt-1 text-sm text-slate-500">Toggle mock access by department. Changes update local state only.</p>
             </div>
             <div role="tablist" aria-label="Resource planner access matrices" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
-              {["Models", "Knowledge Bases", "Agents"].map((tab) => (
+              {matrixTabs.map((tab) => (
                 <button key={tab} role="tab" aria-selected={activeMatrix === tab} onClick={() => setActiveMatrix(tab)} className={`min-h-9 rounded px-3 text-sm font-medium ${activeMatrix === tab ? "bg-slate-950 text-white" : "text-slate-600 hover:text-slate-950"}`}>{tab}</button>
               ))}
             </div>
@@ -246,7 +259,7 @@ export default function ResourcePlannerPage() {
                     <td className="px-4 py-4 font-semibold">{department}</td>
                     {matrixColumns.map((column) => (
                       <td key={column} className="px-4 py-4">
-                        <Toggle enabled={hasAccess(matrix, department, column)} label={`Toggle ${column} for ${department}`} onClick={() => setMatrix(toggleMatrix(matrix, department, column))} />
+                        <Toggle enabled={hasAccess(matrix, department, column)} label={`Toggle ${column} for ${department}`} onClick={() => toggleMatrixAccess(department, column)} />
                       </td>
                     ))}
                   </tr>
