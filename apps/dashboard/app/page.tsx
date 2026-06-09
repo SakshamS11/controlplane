@@ -48,8 +48,7 @@ export default function LoginPage() {
             Protected demo
           </div>
         </div>
-        <h1 className="mt-6 text-2xl font-semibold">Sign in to view the demo</h1>
-        <p className="mt-2 text-sm leading-6 text-slate-300">This Vercel preview is intentionally gated to reduce casual copying or browsing.</p>
+        <h1 className="mt-6 text-2xl font-semibold">Sign in to open the dashboard</h1>
 
         <form onSubmit={submit} className="mt-6 space-y-4">
           <div>

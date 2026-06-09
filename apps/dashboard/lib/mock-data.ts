@@ -60,6 +60,45 @@ export const models = [
   { name: "Gemini", hosting: "External", provider: "Google", status: "Connected", target: "External Provider", requests: "4,550", latency: "980 ms", access: "Marketing" }
 ];
 
+export const providerHealth = [
+  {
+    provider: "OpenAI",
+    status: "Degraded",
+    affectedModels: ["GPT-5"],
+    lastChecked: "48 seconds ago",
+    source: "Provider status feed",
+    impact: "Elevated latency on GPT-5 requests",
+    action: "Route critical work to Claude or Qwen 32B"
+  },
+  {
+    provider: "Anthropic",
+    status: "Operational",
+    affectedModels: ["Claude"],
+    lastChecked: "54 seconds ago",
+    source: "Provider status feed",
+    impact: "No active provider incident",
+    action: "Keep normal routing"
+  },
+  {
+    provider: "Google",
+    status: "Operational",
+    affectedModels: ["Gemini"],
+    lastChecked: "1 minute ago",
+    source: "Provider status feed",
+    impact: "No active provider incident",
+    action: "Keep normal routing"
+  },
+  {
+    provider: "Ollama/vLLM",
+    status: "Self-hosted",
+    affectedModels: ["Qwen 32B", "Llama 3.1 8B", "DeepSeek Coder"],
+    lastChecked: "Live agent telemetry",
+    source: "Server health",
+    impact: "Controlled by local targets",
+    action: "Use server details for runtime health"
+  }
+];
+
 export const departments = ["Engineering", "Legal", "Claims", "Finance", "Customer Support", "Marketing"];
 export const permissionModels = ["Qwen 32B", "Llama 3.1 8B", "GPT-5", "Claude"];
 
@@ -121,6 +160,7 @@ export const stacks = [
 ];
 
 export const alerts = [
+  { title: "OpenAI provider degradation affecting GPT-5", severity: "Warning", area: "Provider" },
   { title: "Claims On-Prem Node GPU memory above 90%", severity: "Warning", area: "Infrastructure" },
   { title: "Legal Sandbox agent offline", severity: "Critical", area: "Agent" },
   { title: "GPT-5 monthly cost above threshold", severity: "Warning", area: "Cost" },
@@ -176,6 +216,7 @@ export const cpuRamSeries = [
 
 export const deploymentEvents = [
   "Private AI Basic deployed to Acme Azure GPU Server",
+  "OpenAI provider status degraded for GPT-5 routing",
   "Claims AI Stack health degraded on Claims On-Prem Node",
   "Qwen 32B endpoint added to model catalog",
   "Legal Sandbox agent missed heartbeat",

@@ -180,7 +180,7 @@ export function AuthGate({ children }: { children: ReactNode }) {
             <Lock size={20} />
           </div>
           <h1 className="mt-5 text-2xl font-semibold">Secure demo access required</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300">This preview is gated so casual visitors cannot browse the product mockup.</p>
+          <p className="mt-3 text-sm leading-6 text-slate-300">Sign in to continue.</p>
           <Link href="/" className="mt-5 inline-flex min-h-10 items-center justify-center rounded-md bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950">
             Go to login
           </Link>
@@ -358,11 +358,11 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
 }
 
 export function StatusBadge({ value }: { value: string }) {
-  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success"
+  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational"
     ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-    : value === "Warning" || value === "Open" || value === "Medium"
+    : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit"
       ? "bg-amber-50 text-amber-700 ring-amber-200"
-      : value === "Offline" || value === "Critical" || value === "High"
+      : value === "Offline" || value === "Critical" || value === "High" || value === "Down"
         ? "bg-red-50 text-red-700 ring-red-200"
         : "bg-slate-100 text-slate-700 ring-slate-200";
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;
