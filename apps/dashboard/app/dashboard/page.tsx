@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Activity, AlertTriangle, ArrowRight, Boxes, Cpu, Gauge, PlayCircle, Server, ShieldCheck, Sparkles, WalletCards } from "lucide-react";
 import { AreaMetricChart, BarMetricChart, DonutChart } from "@/components/charts";
-import { ActionButton, Card, ChartCard, MetricCard, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { alerts, costByModel, deploymentEvents, requestsByDepartment, requestVolume, targets } from "@/lib/mock-data";
 
 const metrics = [
@@ -41,6 +42,43 @@ const actionQueue = [
   }
 ];
 
+const systemTiles = [
+  { label: "Primary server", value: "Acme Azure GPU Server", href: "/dashboard/targets/acme", cta: "View server" },
+  { label: "Governance posture", value: "24 policies enforced", href: "/dashboard/departments", cta: "Review access" },
+  { label: "Provider health", value: "OpenAI degraded", href: "/dashboard/models", cta: "Review models" },
+  { label: "Cost watch", value: "GPT-5 near threshold", href: "/dashboard/monitoring", cta: "Open monitoring" }
+];
+
+function CompactKpi({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: ReactNode }) {
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <div className="text-xs font-medium text-slate-500">{label}</div>
+          <div className="mt-2 text-xl font-semibold text-slate-950">{value}</div>
+          <div className="mt-1 truncate text-xs text-slate-500">{detail}</div>
+        </div>
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-cyan-50 text-cyan-700">{icon}</div>
+      </div>
+    </Card>
+  );
+}
+
+function CompactChart({ title, detail, children }: { title: string; detail: string; children: ReactNode }) {
+  return (
+    <Card className="p-4">
+      <div className="mb-3 flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold">{title}</h2>
+          <p className="mt-1 text-xs text-slate-500">{detail}</p>
+        </div>
+        <Gauge size={16} className="shrink-0 text-slate-400" />
+      </div>
+      <div className="h-44">{children}</div>
+    </Card>
+  );
+}
+
 export default function DashboardOverviewPage() {
   const { showToast, addAudit } = useAppState();
   function simulateAction(action: string, target: string) {
@@ -57,39 +95,38 @@ export default function DashboardOverviewPage() {
         action={<Link href="/dashboard/targets/acme" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"><PlayCircle size={16} /> View server details</Link>}
       />
       <Section>
-        <div className="mb-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
-          <Card className="overflow-hidden">
-            <div className="bg-slate-950 p-6 text-white">
-              <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
-                <div>
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          {metrics.slice(0, 4).map(([label, value, detail, icon]) => <CompactKpi key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
+        </div>
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
+          <div className="grid gap-6">
+            <Card className="overflow-hidden">
+              <div className="grid gap-0 lg:grid-cols-[260px_1fr]">
+                <div className="bg-slate-950 p-5 text-white">
                   <p className="text-xs font-semibold uppercase text-cyan-200">Priority status</p>
-                  <h2 className="mt-2 text-2xl font-semibold">Stable, but 3 items need operator review.</h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Acme Azure is healthy. Legal Sandbox is offline, Claims GPU memory is high, and OpenAI provider latency is degraded.</p>
+                  <div className="mt-4 flex items-end gap-3">
+                    <div className="text-4xl font-semibold">92</div>
+                    <div className="pb-1 text-xs text-slate-300">Ops score</div>
+                  </div>
+                  <p className="mt-4 text-sm leading-6 text-slate-300">Stable overall. Review 3 operator items before scaling traffic.</p>
                 </div>
-                <div className="rounded-lg border border-white/10 bg-white/10 p-4 text-center">
-                  <div className="text-4xl font-semibold">92</div>
-                  <div className="mt-1 text-xs text-slate-300">Ops score</div>
+                <div className="grid gap-0 divide-y divide-slate-200 md:grid-cols-2 md:divide-x md:divide-y-0 xl:grid-cols-4">
+                  {systemTiles.map((tile) => (
+                    <Link key={tile.label} href={tile.href} className="p-4 transition hover:bg-slate-50">
+                      <div className="text-xs font-medium uppercase text-slate-400">{tile.label}</div>
+                      <div className="mt-2 min-h-10 text-sm font-semibold text-slate-950">{tile.value}</div>
+                      <div className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-cyan-700">{tile.cta} <ArrowRight size={13} /></div>
+                    </Link>
+                  ))}
                 </div>
               </div>
+            </Card>
+            <div className="grid gap-4 lg:grid-cols-3">
+              <CompactChart title="Request volume" detail="7 day trend"><AreaMetricChart data={requestVolume} dataKey="requests" /></CompactChart>
+              <CompactChart title="Cost by model" detail="Estimated spend"><DonutChart data={costByModel} /></CompactChart>
+              <CompactChart title="Department usage" detail="Share of requests"><BarMetricChart data={requestsByDepartment} dataKey="value" /></CompactChart>
             </div>
-            <div className="grid gap-0 divide-y divide-slate-200 md:grid-cols-3 md:divide-x md:divide-y-0">
-              <div className="p-5">
-                <div className="text-sm font-semibold">Primary server</div>
-                <div className="mt-1 text-sm text-slate-600">Acme Azure GPU Server</div>
-                <Link href="/dashboard/targets/acme" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">View server details <ArrowRight size={14} /></Link>
-              </div>
-              <div className="p-5">
-                <div className="text-sm font-semibold">Governance posture</div>
-                <div className="mt-1 text-sm text-slate-600">24 model policies enforced</div>
-                <Link href="/dashboard/departments" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">Review access <ArrowRight size={14} /></Link>
-              </div>
-              <div className="p-5">
-                <div className="text-sm font-semibold">Cost watch</div>
-                <div className="mt-1 text-sm text-slate-600">GPT-5 nearing threshold</div>
-                <Link href="/dashboard/monitoring" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">Open monitoring <ArrowRight size={14} /></Link>
-              </div>
-            </div>
-          </Card>
+          </div>
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div>
@@ -122,13 +159,7 @@ export default function DashboardOverviewPage() {
           </Card>
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {metrics.map(([label, value, detail, icon]) => <MetricCard key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
-        </div>
-        <div className="mt-6 grid gap-6 xl:grid-cols-2">
-          <ChartCard title="Request volume over time" detail="Mock traffic across all models"><AreaMetricChart data={requestVolume} dataKey="requests" /></ChartCard>
-          <ChartCard title="Cost by model" detail="Estimated AED spend"><DonutChart data={costByModel} /></ChartCard>
-          <ChartCard title="GPU utilization over time" detail="Fleet average"><AreaMetricChart data={requestVolume} dataKey="gpu" stroke="#4f46e5" /></ChartCard>
-          <ChartCard title="Requests by department" detail="Share of usage"><BarMetricChart data={requestsByDepartment} dataKey="value" /></ChartCard>
+          {metrics.slice(4).map(([label, value, detail, icon]) => <CompactKpi key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
         </div>
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <Card className="p-5">
