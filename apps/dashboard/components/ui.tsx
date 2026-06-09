@@ -27,7 +27,7 @@ import {
   X
 } from "lucide-react";
 
-import { auditLogs, initialPermissions } from "@/lib/mock-data";
+import { auditLogs, initialDepartmentTokenBudgets, initialPermissions, initialUserTokenBudgets } from "@/lib/mock-data";
 
 type Toast = { id: number; message: string };
 type AppState = {
@@ -37,6 +37,11 @@ type AppState = {
   addAudit: (action: string, target: string, type?: string) => void;
   permissions: typeof initialPermissions;
   togglePermission: (department: string, model: string) => void;
+  departmentTokenBudgets: typeof initialDepartmentTokenBudgets;
+  updateDepartmentTokenBudget: (department: string, limit: number) => void;
+  toggleDepartmentHardLimit: (department: string) => void;
+  userTokenBudgets: typeof initialUserTokenBudgets;
+  updateUserTokenBudget: (id: string, limit: number) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -45,6 +50,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
   const [auditRows, setAuditRows] = useState(auditLogs);
   const [permissions, setPermissions] = useState(initialPermissions);
+  const [departmentTokenBudgets, setDepartmentTokenBudgets] = useState(initialDepartmentTokenBudgets);
+  const [userTokenBudgets, setUserTokenBudgets] = useState(initialUserTokenBudgets);
 
   function showToast(message: string) {
     const id = Date.now();
@@ -80,7 +87,53 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addAudit(`${model} access changed`, department, "Permission");
   }
 
-  const value = useMemo(() => ({ toasts, showToast, auditRows, addAudit, permissions, togglePermission }), [toasts, auditRows, permissions]);
+  function updateDepartmentTokenBudget(department: string, limit: number) {
+    setDepartmentTokenBudgets((current) => ({
+      ...current,
+      [department]: {
+        ...current[department],
+        monthlyLimit: limit
+      }
+    }));
+    showToast(`${department} token limit updated`);
+    addAudit("Department token limit updated", department, "Permission");
+  }
+
+  function toggleDepartmentHardLimit(department: string) {
+    setDepartmentTokenBudgets((current) => ({
+      ...current,
+      [department]: {
+        ...current[department],
+        hardLimit: !current[department].hardLimit
+      }
+    }));
+    showToast(`${department} hard limit updated`);
+    addAudit("Department hard limit updated", department, "Permission");
+  }
+
+  function updateUserTokenBudget(id: string, limit: number) {
+    const user = userTokenBudgets.find((item) => item.id === id);
+    setUserTokenBudgets((current) => current.map((item) => item.id === id ? { ...item, monthlyLimit: limit } : item));
+    showToast(`${user?.name || "User"} token limit updated`);
+    addAudit("Individual token limit updated", user?.name || id, "Permission");
+  }
+
+  const value = useMemo(
+    () => ({
+      toasts,
+      showToast,
+      auditRows,
+      addAudit,
+      permissions,
+      togglePermission,
+      departmentTokenBudgets,
+      updateDepartmentTokenBudget,
+      toggleDepartmentHardLimit,
+      userTokenBudgets,
+      updateUserTokenBudget
+    }),
+    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets]
+  );
 
   return (
     <AppStateContext.Provider value={value}>

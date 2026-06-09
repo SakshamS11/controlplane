@@ -72,6 +72,25 @@ export const initialPermissions: Record<string, Record<string, boolean>> = {
   Marketing: { "Qwen 32B": false, "Llama 3.1 8B": false, "GPT-5": true, Claude: false }
 };
 
+export const initialDepartmentTokenBudgets: Record<string, { monthlyLimit: number; used: number; hardLimit: boolean }> = {
+  Engineering: { monthlyLimit: 18000000, used: 11200000, hardLimit: true },
+  Legal: { monthlyLimit: 6000000, used: 3100000, hardLimit: true },
+  Claims: { monthlyLimit: 12000000, used: 8700000, hardLimit: true },
+  Finance: { monthlyLimit: 3500000, used: 1400000, hardLimit: true },
+  "Customer Support": { monthlyLimit: 9000000, used: 5200000, hardLimit: false },
+  Marketing: { monthlyLimit: 2500000, used: 980000, hardLimit: false }
+};
+
+export const initialUserTokenBudgets = [
+  { id: "u1", name: "Maya Rao", email: "maya@acme.ai", department: "Engineering", monthlyLimit: 2500000, used: 1620000, status: "Active" },
+  { id: "u2", name: "Omar Khan", email: "omar@acme.ai", department: "Engineering", monthlyLimit: 1800000, used: 790000, status: "Active" },
+  { id: "u3", name: "Leena Shah", email: "leena@acme.ai", department: "Legal", monthlyLimit: 900000, used: 640000, status: "Active" },
+  { id: "u4", name: "Farah Ali", email: "farah@acme.ai", department: "Claims", monthlyLimit: 1400000, used: 1180000, status: "Near limit" },
+  { id: "u5", name: "Daniel Cruz", email: "daniel@acme.ai", department: "Finance", monthlyLimit: 650000, used: 210000, status: "Active" },
+  { id: "u6", name: "Nadia Basu", email: "nadia@acme.ai", department: "Customer Support", monthlyLimit: 1200000, used: 880000, status: "Active" },
+  { id: "u7", name: "Yusuf Malik", email: "yusuf@acme.ai", department: "Marketing", monthlyLimit: 500000, used: 420000, status: "Near limit" }
+];
+
 export const services = [
   { name: "Ollama", status: "Running", port: "11434" },
   { name: "LiteLLM", status: "Running", port: "4000" },
