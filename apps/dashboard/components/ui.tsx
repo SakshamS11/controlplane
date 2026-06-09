@@ -17,6 +17,8 @@ import {
   Layers,
   LayoutDashboard,
   Lock,
+  PanelLeftClose,
+  PanelLeftOpen,
   MonitorDot,
   Play,
   ScrollText,
@@ -206,7 +208,7 @@ function ToastStack() {
 
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/targets", label: "Deployment Targets", icon: Server },
+  { href: "/dashboard/targets", label: "Servers", icon: Server },
   { href: "/dashboard/models", label: "Models", icon: Sparkles },
   { href: "/dashboard/stacks", label: "Stacks", icon: Layers },
   { href: "/dashboard/departments", label: "Departments", icon: Building2 },
@@ -217,33 +219,62 @@ const nav = [
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [collapsed, setCollapsed] = useState(false);
   return (
     <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
-      <aside className="fixed inset-y-0 left-0 z-30 hidden w-72 border-r border-white/10 bg-[#080d18] text-white lg:flex lg:flex-col">
-        <div className="border-b border-white/10 px-6 py-5">
-          <Link href="/" className="flex items-center gap-3">
+      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#080d18] text-white transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-72"}`}>
+        <div className={`border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
+          <div className="flex items-center justify-between gap-3">
+            <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
             <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30">
               <Cloud size={19} />
             </div>
-            <div>
+            {!collapsed ? <div className="min-w-0">
               <div className="font-semibold">AI Control Plane</div>
               <div className="text-xs text-slate-400">Enterprise AI operations</div>
-            </div>
+            </div> : null}
           </Link>
+            {!collapsed ? (
+              <button
+                type="button"
+                onClick={() => setCollapsed(true)}
+                className="rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                aria-label="Collapse sidebar"
+              >
+                <PanelLeftClose size={17} />
+              </button>
+            ) : null}
+          </div>
         </div>
-        <nav className="flex-1 space-y-1 px-3 py-4">
+        {collapsed ? (
+          <button
+            type="button"
+            onClick={() => setCollapsed(false)}
+            className="mx-auto mt-3 rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300"
+            aria-label="Expand sidebar"
+          >
+            <PanelLeftOpen size={18} />
+          </button>
+        ) : null}
+        <nav className={`flex-1 space-y-1 py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
           {nav.map((item) => {
             const Icon = item.icon;
             const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
-              <Link key={item.href} href={item.href} className={`flex items-center gap-3 rounded-md px-3 py-2.5 text-sm transition ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}>
+              <Link
+                key={item.href}
+                href={item.href}
+                title={collapsed ? item.label : undefined}
+                aria-label={collapsed ? item.label : undefined}
+                className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+              >
                 <Icon size={17} />
-                {item.label}
+                {!collapsed ? item.label : null}
               </Link>
             );
           })}
         </nav>
-        <div className="border-t border-white/10 p-4">
+        {!collapsed ? <div className="border-t border-white/10 p-4">
           <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
             <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck size={16} /> Governance mode</div>
             <p className="mt-2 text-xs leading-5 text-slate-400">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
@@ -252,9 +283,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <span>Active</span>
             </div>
           </div>
-        </div>
+        </div> : null}
       </aside>
-      <div className="lg:pl-72">
+      <div className={`transition-all duration-200 ${collapsed ? "lg:pl-20" : "lg:pl-72"}`}>
         <TopBar />
         {children}
       </div>

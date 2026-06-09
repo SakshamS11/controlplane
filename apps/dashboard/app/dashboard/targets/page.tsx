@@ -15,18 +15,18 @@ export default function DeploymentTargetsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Deployment targets"
+        eyebrow="Servers"
         title="Manage connected AI infrastructure"
-        description="Mock inventory for cloud VMs, on-prem GPU servers, local workstations, and provider endpoints."
-        action={<ActionButton onClick={() => setOpen(true)}><Plus size={16} /> Add Deployment Target</ActionButton>}
+        description="Servers are the places where AI infrastructure runs: cloud VMs, on-prem GPU machines, local workstations, and provider environments."
+        action={<ActionButton onClick={() => setOpen(true)}><Plus size={16} /> Add server</ActionButton>}
       />
       <Section>
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           <Card className="p-5">
-            <div className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">3 targets online</div><div className="text-xs text-slate-500">Ready for stack operations</div></div></div>
+            <div className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">3 servers online</div><div className="text-xs text-slate-500">Ready for stack operations</div></div></div>
           </Card>
           <Card className="p-5">
-            <div className="flex items-center gap-3"><AlertTriangle className="text-amber-600" size={20} /><div><div className="text-sm font-semibold">1 target warning</div><div className="text-xs text-slate-500">Claims GPU memory review</div></div></div>
+            <div className="flex items-center gap-3"><AlertTriangle className="text-amber-600" size={20} /><div><div className="text-sm font-semibold">1 server warning</div><div className="text-xs text-slate-500">Claims GPU memory review</div></div></div>
           </Card>
           <Card className="p-5">
             <div className="flex items-center gap-3"><Activity className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">Fast path</div><div className="text-xs text-slate-500">Click Acme to run the demo</div></div></div>
@@ -34,7 +34,7 @@ export default function DeploymentTargetsPage() {
         </div>
         <Card>
           <DataTable
-            columns={["Target", "Type", "Region", "Agent", "Stack", "GPU", "Health", "Next step"]}
+            columns={["Server", "Type", "Region", "Agent", "Stack", "GPU", "Health", "Next step"]}
             rows={targets.map((target) => [
               <Link key="target" href={target.id === "acme" ? "/dashboard/targets/acme" : "#"} className="font-semibold text-cyan-700">{target.name}</Link>,
               target.type,
@@ -43,7 +43,7 @@ export default function DeploymentTargetsPage() {
               target.stack,
               target.gpu,
               <StatusBadge key="health" value={target.health} />,
-              target.id === "acme" ? <Link key="next" href="/dashboard/targets/acme" className="font-semibold text-cyan-700">Open target</Link> : <span key="next" className="text-slate-500">Review status</span>
+              target.id === "acme" ? <Link key="next" href="/dashboard/targets/acme" className="font-semibold text-cyan-700">View server details</Link> : <span key="next" className="text-slate-500">Review status</span>
             ])}
           />
         </Card>

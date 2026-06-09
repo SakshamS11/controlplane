@@ -30,7 +30,7 @@ export default function DashboardOverviewPage() {
         eyebrow="Command center"
         title="Dashboard overview"
         description="A unified operating view across deployment targets, AI stacks, model providers, governance events, and infrastructure health."
-        action={<Link href="/dashboard/targets/acme" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"><PlayCircle size={16} /> Open live target</Link>}
+        action={<Link href="/dashboard/targets/acme" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-slate-800"><PlayCircle size={16} /> View server details</Link>}
       />
       <Section>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1.4fr_1fr]">
@@ -50,9 +50,9 @@ export default function DashboardOverviewPage() {
             </div>
             <div className="grid gap-0 divide-y divide-slate-200 md:grid-cols-3 md:divide-x md:divide-y-0">
               <div className="p-5">
-                <div className="text-sm font-semibold">Primary target</div>
+                <div className="text-sm font-semibold">Primary server</div>
                 <div className="mt-1 text-sm text-slate-600">Acme Azure GPU Server</div>
-                <Link href="/dashboard/targets/acme" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">Inspect target <ArrowRight size={14} /></Link>
+                <Link href="/dashboard/targets/acme" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-cyan-700">View server details <ArrowRight size={14} /></Link>
               </div>
               <div className="p-5">
                 <div className="text-sm font-semibold">Governance posture</div>

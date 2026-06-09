@@ -24,9 +24,9 @@ export default function AcmeTargetDetailPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Target detail"
+        eyebrow="Server detail"
         title="Acme Azure GPU Server"
-        description="The primary demo page: remote target status, GPU telemetry, service controls, stack actions, and deployment timeline in one operational view."
+        description="A focused control-room view for server health, GPU telemetry, service actions, and stack deployment history."
         action={<div className="flex flex-wrap gap-2"><ActionButton onClick={simulateDeploy}><UploadCloud size={16} /> Deploy Stack</ActionButton><MockAction label="View Logs" auditTarget={target.name} /></div>}
       />
       <Section>
@@ -89,10 +89,10 @@ export default function AcmeTargetDetailPage() {
         <div className="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)]">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 xl:flex-row xl:items-center">
             <div>
-              <h2 className="font-semibold">Target workspace</h2>
+              <h2 className="font-semibold">Server workspace</h2>
               <p className="mt-1 text-sm text-slate-600">Use tabs to focus on one operating task at a time.</p>
             </div>
-            <div role="tablist" aria-label="Target workspace sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
+            <div role="tablist" aria-label="Server workspace sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
               {[
                 ["metrics", "Metrics"],
                 ["services", "Services"],
