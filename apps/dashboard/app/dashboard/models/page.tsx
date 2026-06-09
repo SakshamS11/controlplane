@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Filter, Gauge, RefreshCw, Server, Sparkles } from "lucide-react";
+import { AlertTriangle, Filter, Gauge, Plus, RefreshCw, Route, Server, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { models, providerHealth } from "@/lib/mock-data";
@@ -14,6 +14,9 @@ function getProviderHealth(model: (typeof models)[number]) {
 
 export default function ModelsPage() {
   const [filter, setFilter] = useState("All");
+  const [providerName, setProviderName] = useState("OpenAI");
+  const [modelName, setModelName] = useState("GPT-5 mini");
+  const [modelType, setModelType] = useState("Cloud");
   const { showToast, addAudit } = useAppState();
   const providerIssues = providerHealth.filter((provider) => provider.status === "Degraded" || provider.status === "Down");
   const visible = useMemo(() => models.filter((model) => {
@@ -64,10 +67,72 @@ export default function ModelsPage() {
                 <div className="mt-3 text-sm text-slate-600">{provider.impact}</div>
                 <div className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">Action</div>
                 <div className="mt-1 text-sm font-medium text-slate-800">{provider.action}</div>
+                {provider.provider === "OpenAI" ? (
+                  <div className="mt-4 space-y-2">
+                    <button
+                      onClick={() => { showToast("Critical GPT-5 traffic routed to Claude"); addAudit("Routing policy applied", "GPT-5 to Claude", "Model"); }}
+                      className="w-full rounded-md bg-slate-950 px-3 py-2 text-left text-xs font-semibold text-white hover:bg-slate-800"
+                    >
+                      Apply routing policy
+                    </button>
+                    <button
+                      onClick={() => { showToast("Sensitive GPT-5 traffic routed to Qwen 32B"); addAudit("Routing policy applied", "GPT-5 to Qwen 32B", "Model"); }}
+                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-800 hover:bg-slate-50"
+                    >
+                      Route sensitive work to Qwen 32B
+                    </button>
+                    <ol className="list-decimal space-y-1 pl-4 text-xs leading-5 text-slate-500">
+                      <li>Confirm Claude or Qwen 32B is enabled.</li>
+                      <li>Select affected departments or workspaces.</li>
+                      <li>Apply fallback from GPT-5 to the approved model.</li>
+                    </ol>
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
         </Card>
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
+          <Card className="p-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Models and providers</div>
+            <h2 className="mt-2 text-lg font-semibold">Add or integrate a model</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Admins add cloud or local models here, test connectivity, and then assign them to departments, workspaces, agents, and routing policies.</p>
+            <div className="mt-5 grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-medium text-slate-600">Provider
+                <input value={providerName} onChange={(event) => setProviderName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Model name
+                <input value={modelName} onChange={(event) => setModelName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Model type
+                <select value={modelType} onChange={(event) => setModelType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  <option>Cloud</option>
+                  <option>Local</option>
+                </select>
+              </label>
+            </div>
+            <div className="mt-4 grid gap-3 md:grid-cols-4">
+              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Endpoint:</span> API or local serving URL</div>
+              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Secrets:</span> Stored server-side only</div>
+              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Limits:</span> Context, cost, concurrency</div>
+              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Access:</span> Departments and workspaces</div>
+            </div>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <ActionButton onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
+              <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} added as ${modelType} model`); addAudit("Model/provider added", `${providerName} ${modelName}`, "Model"); }}><Plus size={14} /> Add model</ActionButton>
+            </div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Route size={15} /> Routing recommendations</div>
+            <h2 className="mt-2 text-lg font-semibold">Suggest the best allowed model</h2>
+            <div className="mt-4 space-y-3 text-sm">
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Legal confidential:</span> Qwen Local first; Claude only for non-sensitive drafting.</div>
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Claims sensitive:</span> Qwen Local only; external models blocked.</div>
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Engineering code:</span> DeepSeek Coder, then Claude or GPT-5 if available.</div>
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Marketing drafting:</span> Gemini first; GPT-5 only for executive content.</div>
+            </div>
+          </Card>
+        </div>
         <div className="mb-4 flex flex-wrap gap-2">
           {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
         </div>

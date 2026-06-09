@@ -1,7 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Bot, BrainCircuit, Database, Gauge, Info, Lightbulb, SlidersHorizontal } from "lucide-react";
+import type { ReactNode } from "react";
+import { Bot, BrainCircuit, Database, Gauge, Info, Lightbulb, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const departments = ["Claims", "Legal", "Engineering", "Finance", "Customer Support", "Marketing"];
@@ -11,6 +12,44 @@ const agents = ["Claims Summary Agent", "Contract Review Agent", "Support Triage
 const fallbackPolicies = ["Local first", "Cheapest cloud", "Best quality", "Sensitive data local only"];
 const matrixTabs = ["Models", "Knowledge Bases", "Agents"] as const;
 type MatrixTab = (typeof matrixTabs)[number];
+
+const initialTeamMembers = {
+  Claims: ["claims.lead@acme.ai", "adjuster.ops@acme.ai"],
+  Legal: ["legal.counsel@acme.ai", "contracts@acme.ai"],
+  Engineering: ["platform@acme.ai", "devlead@acme.ai"],
+  Finance: ["finance.ops@acme.ai"],
+  "Customer Support": ["support.lead@acme.ai", "triage@acme.ai"],
+  Marketing: ["marketing.lead@acme.ai"]
+};
+
+const workspaces = [
+  { name: "Legal AI Assistant", interface: "Open WebUI", models: "Claude, Qwen Local", knowledge: "Legal Contracts", users: "Legal team", external: "Restricted for confidential matters", audit: "Enabled" },
+  { name: "Claims AI Assistant", interface: "Open WebUI", models: "Qwen Local, Llama Local", knowledge: "Claims SOPs, Policy Documents", users: "Claims department", external: "Blocked", audit: "Enabled" },
+  { name: "Engineering Copilot", interface: "Open WebUI / custom chat", models: "GPT-5, Claude, DeepSeek Coder", knowledge: "Engineering Docs, Codebase Docs", users: "Engineering team", external: "Allowed by policy", audit: "Enabled" },
+  { name: "Finance AI Desk", interface: "Custom chat", models: "Qwen Local", knowledge: "Finance Policies", users: "Finance team", external: "Restricted", audit: "Enabled" }
+];
+
+const knowledgeBaseDetails = [
+  { name: "Legal Contracts", documents: "1,240", source: "SharePoint", sync: "Synced", index: "Ready", workspace: "Legal AI Assistant", departments: "Legal", access: "Legal only", lastSync: "12 minutes ago" },
+  { name: "Claims SOPs", documents: "850", source: "S3 bucket", sync: "Synced", index: "Ready", workspace: "Claims AI Assistant", departments: "Claims", access: "Claims only", lastSync: "18 minutes ago" },
+  { name: "Engineering Docs", documents: "2,100", source: "Google Drive", sync: "Syncing", index: "Rebuilding", workspace: "Engineering Copilot", departments: "Engineering", access: "Engineering only", lastSync: "4 minutes ago" },
+  { name: "Finance Policies", documents: "410", source: "Uploaded documents", sync: "Synced", index: "Ready", workspace: "Finance AI Desk", departments: "Finance", access: "Finance only", lastSync: "1 hour ago" }
+];
+
+const customAgents = [
+  { name: "Claims Summary Agent", departments: "Claims", models: "Qwen Local", knowledge: "Claims SOPs, Policy Documents", tools: "Claim summary generator", approval: "Required before final decision", external: "Blocked", audit: "Enabled", limit: "12k tokens/request" },
+  { name: "Contract Review Agent", departments: "Legal", models: "Qwen Local, Claude", knowledge: "Legal Contracts", tools: "Clause extraction, risk flags", approval: "Required for confidential matters", external: "Restricted", audit: "Enabled", limit: "16k tokens/request" },
+  { name: "Support Triage Agent", departments: "Customer Support", models: "Llama Local, Gemini", knowledge: "Product FAQ", tools: "Ticket classification", approval: "Not required", external: "Allowed for non-sensitive", audit: "Enabled", limit: "8k tokens/request" },
+  { name: "Code Review Agent", departments: "Engineering", models: "DeepSeek Coder, Claude", knowledge: "Engineering Docs", tools: "Code review checklist", approval: "Required before merge", external: "Allowed", audit: "Enabled", limit: "24k tokens/request" },
+  { name: "Finance Analysis Agent", departments: "Finance", models: "Qwen Local", knowledge: "Finance Policies", tools: "Variance analysis", approval: "Required", external: "Blocked", audit: "Enabled", limit: "8k tokens/request" }
+];
+
+const routingSuggestions = [
+  { scenario: "Confidential legal task", route: "Qwen Local first; Claude only for non-sensitive drafting", reason: "Prevents confidential contract retrieval from leaving approved boundaries." },
+  { scenario: "Claims sensitive workflow", route: "Qwen Local only", reason: "External models are blocked for Claims policy and claims documents." },
+  { scenario: "Engineering code task", route: "DeepSeek Coder, then Claude or GPT-5", reason: "Balances coding quality, latency, and approved department access." },
+  { scenario: "Marketing drafting", route: "Gemini first; GPT-5 only for executive content", reason: "Simple drafting can use a cheaper model while preserving high-quality fallback." }
+];
 
 const teamUsage = [
   { department: "Claims", users: 42, requests: "31,400", tokens: "8.7M", cost: "AED 3,900", peak: "10:00-13:00", gpu: "38%", cloud: "AED 880", latency: "940 ms", status: "Under-allocated" },
@@ -80,6 +119,9 @@ function Toggle({ enabled, label, onClick }: { enabled: boolean; label: string; 
 
 export default function ResourcePlannerPage() {
   const { showToast, addAudit } = useAppState();
+  const [teamMembers, setTeamMembers] = useState<Record<string, string[]>>(initialTeamMembers);
+  const [memberDepartment, setMemberDepartment] = useState("Claims");
+  const [memberEmail, setMemberEmail] = useState("");
   const [selectedDepartment, setSelectedDepartment] = useState("Claims");
   const [monthlyBudget, setMonthlyBudget] = useState(12000);
   const [localGpu, setLocalGpu] = useState(35);
@@ -115,6 +157,30 @@ export default function ResourcePlannerPage() {
   function saveSimulation() {
     showToast(`${selectedDepartment} planner policy simulated`);
     addAudit("Resource planner simulation updated", selectedDepartment, "Permission");
+  }
+
+  function addTeamMember() {
+    const email = memberEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      showToast("Enter a valid team member email");
+      return;
+    }
+    setTeamMembers((current) => ({
+      ...current,
+      [memberDepartment]: Array.from(new Set([...(current[memberDepartment] ?? []), email]))
+    }));
+    setMemberEmail("");
+    showToast(`${email} added to ${memberDepartment}`);
+    addAudit("Department member added", memberDepartment, "Permission");
+  }
+
+  function removeTeamMember(department: string, email: string) {
+    setTeamMembers((current) => ({
+      ...current,
+      [department]: (current[department] ?? []).filter((member) => member !== email)
+    }));
+    showToast(`${email} removed from ${department}`);
+    addAudit("Department member removed", department, "Permission");
   }
 
   const matrix = activeMatrix === "Models" ? modelAccess : activeMatrix === "Knowledge Bases" ? kbAccess : agentAccess;
@@ -181,6 +247,75 @@ export default function ResourcePlannerPage() {
               <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
             </Card>
           ))}
+        </div>
+
+        <div className="mb-6 grid gap-6 xl:grid-cols-[420px_1fr]">
+          <Card className="p-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><ShieldCheck size={15} /> Teams and departments</div>
+            <h2 className="mt-2 text-lg font-semibold">Add members by email</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">Department membership drives workspace access, knowledge access, agent assignment, and capacity planning.</p>
+            <label className="mt-5 block text-sm font-medium text-slate-600">Department
+              <select value={memberDepartment} onChange={(event) => setMemberDepartment(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
+                {departments.map((department) => <option key={department}>{department}</option>)}
+              </select>
+            </label>
+            <label className="mt-4 block text-sm font-medium text-slate-600">Member email
+              <input value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="name@company.com" className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+            </label>
+            <ActionButton onClick={addTeamMember}>Add member</ActionButton>
+          </Card>
+          <Card className="overflow-hidden">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h2 className="font-semibold">Users by department</h2>
+              <p className="mt-1 text-sm text-slate-500">Local mock membership state. In production, this connects to organization identity and invites.</p>
+            </div>
+            <div className="grid gap-0 divide-y divide-slate-100 md:grid-cols-2 md:divide-x xl:grid-cols-3">
+              {departments.map((department) => (
+                <div key={department} className="p-4">
+                  <div className="font-semibold">{department}</div>
+                  <div className="mt-3 space-y-2">
+                    {(teamMembers[department] ?? []).map((email) => (
+                      <div key={email} className="flex items-center justify-between gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
+                        <span className="truncate">{email}</span>
+                        <button onClick={() => removeTeamMember(department, email)} className="font-semibold text-red-700">Remove</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
+          <Card className="p-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><BrainCircuit size={15} /> Model recommendation engine</div>
+            <h2 className="mt-2 text-lg font-semibold">Suggested routes by task and sensitivity</h2>
+            <div className="mt-5 grid gap-3 md:grid-cols-2">
+              {routingSuggestions.map((item) => (
+                <div key={item.scenario} className="rounded-md border border-slate-200 p-4">
+                  <div className="text-sm font-semibold">{item.scenario}</div>
+                  <div className="mt-2 rounded-md bg-cyan-50 px-3 py-2 text-sm font-medium text-cyan-900">{item.route}</div>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">{item.reason}</p>
+                </div>
+              ))}
+            </div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><SlidersHorizontal size={15} /> Routing controls</div>
+            <h2 className="mt-2 text-lg font-semibold">Admin action model</h2>
+            <p className="mt-2 text-sm leading-6 text-slate-600">When a provider is degraded, the product should let admins apply a routing policy, not just read a suggestion.</p>
+            <div className="mt-4 space-y-3">
+              <ActionButton onClick={() => { showToast("GPT-5 critical traffic routed to Claude"); addAudit("Routing policy changed", "GPT-5 fallback to Claude", "Model"); }}>Route GPT-5 critical traffic to Claude</ActionButton>
+              <ActionButton variant="secondary" onClick={() => { showToast("GPT-5 sensitive traffic routed to Qwen Local"); addAudit("Routing policy changed", "GPT-5 fallback to Qwen Local", "Model"); }}>Route sensitive work to Qwen Local</ActionButton>
+            </div>
+            <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-600">
+              <li>Confirm fallback model is enabled.</li>
+              <li>Select affected departments or workspaces.</li>
+              <li>Apply fallback rule from GPT-5 to Claude/Qwen.</li>
+              <li>Audit the policy change.</li>
+            </ol>
+          </Card>
         </div>
 
         <div className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -268,6 +403,73 @@ export default function ResourcePlannerPage() {
             </table>
           </div>
         </Card>
+
+        <div className="mb-6 grid gap-6 xl:grid-cols-3">
+          <Card className="p-5 xl:col-span-3">
+            <h2 className="font-semibold">AI workspaces</h2>
+            <p className="mt-1 text-sm text-slate-500">Workspaces bind interface, models, users, departments, knowledge bases, agents, fallback policy, and audit settings.</p>
+            <div className="mt-4 grid gap-4 xl:grid-cols-4">
+              {workspaces.map((workspace) => (
+                <div key={workspace.name} className="rounded-md border border-slate-200 p-4">
+                  <div className="font-semibold">{workspace.name}</div>
+                  <div className="mt-3 space-y-2 text-xs text-slate-600">
+                    <div><span className="font-semibold text-slate-800">Interface:</span> {workspace.interface}</div>
+                    <div><span className="font-semibold text-slate-800">Models:</span> {workspace.models}</div>
+                    <div><span className="font-semibold text-slate-800">Knowledge:</span> {workspace.knowledge}</div>
+                    <div><span className="font-semibold text-slate-800">Users:</span> {workspace.users}</div>
+                    <div><span className="font-semibold text-slate-800">External:</span> {workspace.external}</div>
+                    <div><span className="font-semibold text-slate-800">Audit:</span> {workspace.audit}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_1fr]">
+          <Card className="overflow-hidden">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h2 className="font-semibold">Knowledge base governance</h2>
+              <p className="mt-1 text-sm text-slate-500">Retrieval should be filtered by department, workspace, and user permissions.</p>
+            </div>
+            <DataTable
+              columns={["Knowledge base", "Docs", "Source", "Sync", "Index", "Workspace", "Access", "Last sync"]}
+              rows={knowledgeBaseDetails.map((kb) => [
+                <span key="name" className="font-semibold">{kb.name}</span>,
+                kb.documents,
+                kb.source,
+                kb.sync,
+                kb.index,
+                kb.workspace,
+                kb.access,
+                kb.lastSync
+              ])}
+            />
+          </Card>
+          <Card className="overflow-hidden">
+            <div className="border-b border-slate-200 px-5 py-4">
+              <h2 className="font-semibold">Custom agents</h2>
+              <p className="mt-1 text-sm text-slate-500">Agents inherit department, model, knowledge, tool, approval, external model, and usage policies.</p>
+            </div>
+            <div className="divide-y divide-slate-100">
+              {customAgents.map((agent) => (
+                <div key={agent.name} className="p-4">
+                  <div className="font-semibold">{agent.name}</div>
+                  <div className="mt-2 grid gap-2 text-xs text-slate-600 md:grid-cols-2">
+                    <div><span className="font-semibold text-slate-800">Department:</span> {agent.departments}</div>
+                    <div><span className="font-semibold text-slate-800">Models:</span> {agent.models}</div>
+                    <div><span className="font-semibold text-slate-800">Knowledge:</span> {agent.knowledge}</div>
+                    <div><span className="font-semibold text-slate-800">Tools:</span> {agent.tools}</div>
+                    <div><span className="font-semibold text-slate-800">Approval:</span> {agent.approval}</div>
+                    <div><span className="font-semibold text-slate-800">External:</span> {agent.external}</div>
+                    <div><span className="font-semibold text-slate-800">Audit:</span> {agent.audit}</div>
+                    <div><span className="font-semibold text-slate-800">Limit:</span> {agent.limit}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
 
         <Card className="p-5">
           <div className="flex items-start gap-3">
