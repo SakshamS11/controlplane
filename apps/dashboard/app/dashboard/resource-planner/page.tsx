@@ -52,16 +52,34 @@ const routingSuggestions = [
 ];
 
 const teamUsage = [
-  { department: "Claims", users: 42, requests: "31,400", tokens: "8.7M", cost: "AED 3,900", peak: "10:00-13:00", gpu: "38%", cloud: "AED 880", latency: "940 ms", status: "Under-allocated" },
-  { department: "Legal", users: 18, requests: "12,700", tokens: "3.1M", cost: "AED 3,100", peak: "14:00-17:00", gpu: "12%", cloud: "AED 2,420", latency: "1,040 ms", status: "Governance risk" },
-  { department: "Engineering", users: 55, requests: "38,900", tokens: "11.2M", cost: "AED 4,600", peak: "15:00-20:00", gpu: "34%", cloud: "AED 1,700", latency: "780 ms", status: "Healthy" },
+  { department: "Claims", users: 42, requests: "31,400", tokens: "8.7M", cost: "AED 3,900", peak: "10:00-13:00", gpu: "28%", cloud: "AED 880", latency: "940 ms", status: "Under-allocated" },
+  { department: "Legal", users: 18, requests: "12,700", tokens: "3.1M", cost: "AED 3,100", peak: "14:00-17:00", gpu: "10%", cloud: "AED 2,420", latency: "1,040 ms", status: "Governance risk" },
+  { department: "Engineering", users: 55, requests: "38,900", tokens: "11.2M", cost: "AED 4,600", peak: "15:00-20:00", gpu: "26%", cloud: "AED 1,700", latency: "780 ms", status: "Healthy" },
   { department: "Finance", users: 11, requests: "4,200", tokens: "1.4M", cost: "AED 690", peak: "09:00-11:00", gpu: "30%", cloud: "AED 210", latency: "720 ms", status: "Over-allocated" },
-  { department: "Customer Support", users: 63, requests: "24,100", tokens: "5.2M", cost: "AED 1,850", peak: "11:00-18:00", gpu: "18%", cloud: "AED 430", latency: "620 ms", status: "Healthy" },
-  { department: "Marketing", users: 14, requests: "8,900", tokens: "980K", cost: "AED 4,260", peak: "13:00-16:00", gpu: "4%", cloud: "AED 3,920", latency: "1,120 ms", status: "Cost risk" }
+  { department: "Customer Support", users: 63, requests: "24,100", tokens: "5.2M", cost: "AED 1,850", peak: "11:00-18:00", gpu: "6%", cloud: "AED 430", latency: "620 ms", status: "Healthy" },
+  { department: "Marketing", users: 14, requests: "8,900", tokens: "980K", cost: "AED 4,260", peak: "13:00-16:00", gpu: "0%", cloud: "AED 3,920", latency: "1,120 ms", status: "Cost risk" }
 ];
 
+const currentReservedCapacity: Record<string, number> = {
+  Claims: 28,
+  Legal: 10,
+  Engineering: 26,
+  Finance: 30,
+  "Customer Support": 6,
+  Marketing: 0
+};
+
+const actualLocalUtilization: Record<string, number> = {
+  Claims: 31,
+  Legal: 8,
+  Engineering: 24,
+  Finance: 8,
+  "Customer Support": 5,
+  Marketing: 0
+};
+
 const recommendations = [
-  { title: "Claims under-allocated", status: "Under-allocated", text: "Peak GPU utilization is 92% and queue wait time is rising. Recommend increasing local Qwen capacity by 25% or adding one additional replica." },
+  { title: "Claims under-allocated", status: "Under-allocated", text: "Peak GPU utilization is 92% and queue wait time is rising. Recommend increasing local Qwen capacity, but only by reclaiming unused Finance capacity or adding one GPU replica." },
   { title: "Marketing over-spending", status: "Cost risk", text: "72% of Marketing requests are drafting/summarization. Recommend routing most traffic to a cheaper cloud model and reducing GPT-5 budget by AED 2,000/month." },
   { title: "Finance over-allocated", status: "Over-allocated", text: "Finance has 30% reserved local capacity but only 8% utilization. Recommend reducing reserved capacity to 10%." },
   { title: "Legal governance risk", status: "Governance risk", text: "Legal is using external Claude for confidential contract review. Recommend switching confidential workflows to Qwen Local and keeping Claude only for non-sensitive drafting." },
@@ -134,6 +152,27 @@ export default function ResourcePlannerPage() {
   const [modelAccess, setModelAccess] = useState<Matrix>(initialModelAccess);
   const [kbAccess, setKbAccess] = useState<Matrix>(initialKbAccess);
   const [agentAccess, setAgentAccess] = useState<Matrix>(initialAgentAccess);
+  const totalReserved = Object.values(currentReservedCapacity).reduce((sum, value) => sum + value, 0);
+  const currentDepartmentCapacity = currentReservedCapacity[selectedDepartment] ?? 0;
+  const proposedTotalReserved = totalReserved - currentDepartmentCapacity + localGpu;
+  const unassignedCapacity = Math.max(0, 100 - proposedTotalReserved);
+  const overbookedCapacity = Math.max(0, proposedTotalReserved - 100);
+  const donorDepartments = departments
+    .filter((department) => department !== selectedDepartment)
+    .map((department) => ({
+      department,
+      reserved: currentReservedCapacity[department] ?? 0,
+      utilized: actualLocalUtilization[department] ?? 0,
+      reclaimable: Math.max(0, (currentReservedCapacity[department] ?? 0) - Math.max(10, actualLocalUtilization[department] ?? 0))
+    }))
+    .filter((department) => department.reclaimable > 0)
+    .sort((a, b) => b.reclaimable - a.reclaimable);
+  const totalReclaimable = donorDepartments.reduce((sum, department) => sum + department.reclaimable, 0);
+  const capacityDecision = overbookedCapacity === 0
+    ? `${unassignedCapacity}% capacity remains unassigned after this change. No department needs to be reduced.`
+    : totalReclaimable >= overbookedCapacity
+      ? `This change overbooks local capacity by ${overbookedCapacity}%. Reclaim ${overbookedCapacity}% from over-allocated teams before applying.`
+      : `This change overbooks local capacity by ${overbookedCapacity}%, but only ${totalReclaimable}% looks safely reclaimable. Add GPU capacity or move demand to cloud credits.`;
 
   const projected = useMemo(() => {
     const cloudHeavy = allowedModels.includes("GPT-5") || allowedModels.includes("Claude");
@@ -214,7 +253,7 @@ export default function ResourcePlannerPage() {
           <Card className="p-4"><div className="text-xs text-slate-500">Governance risks</div><div className="mt-2 text-2xl font-semibold">1</div><div className="mt-1 text-xs text-slate-500">Legal confidential workflow</div></Card>
         </div>
 
-        <Card className="mb-6 overflow-hidden">
+        <Card id="usage" className="mb-6 overflow-hidden">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="font-semibold">Team usage overview</h2>
             <p className="mt-1 text-sm text-slate-500">Department-level demand, spend, latency, and allocation posture.</p>
@@ -236,7 +275,7 @@ export default function ResourcePlannerPage() {
           />
         </Card>
 
-        <div className="mb-6 grid gap-4 xl:grid-cols-5">
+        <div id="recommendations" className="mb-6 grid gap-4 xl:grid-cols-5">
           {recommendations.map((item) => (
             <Card key={item.title} className="p-4">
               <div className="flex items-start justify-between gap-3">
@@ -248,6 +287,34 @@ export default function ResourcePlannerPage() {
             </Card>
           ))}
         </div>
+
+        <Card className="mb-6 p-5">
+          <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-start">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Gauge size={15} /> Capacity balancing</div>
+              <h2 className="mt-2 text-lg font-semibold">Local capacity is already 100% assigned</h2>
+              <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">If one department gets more reserved GPU capacity, the product should either reduce another department's allocation or recommend adding capacity. This prevents the planner from making impossible recommendations.</p>
+            </div>
+            <StatusBadge value={overbookedCapacity > 0 ? "Warning" : "Healthy"} />
+          </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-4">
+            <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Current assigned</div><div className="mt-1 text-2xl font-semibold">{totalReserved}%</div></div>
+            <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Proposed assigned</div><div className="mt-1 text-2xl font-semibold">{proposedTotalReserved}%</div></div>
+            <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Overbooked</div><div className="mt-1 text-2xl font-semibold">{overbookedCapacity}%</div></div>
+            <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Safely reclaimable</div><div className="mt-1 text-2xl font-semibold">{totalReclaimable}%</div></div>
+          </div>
+          <div className={`mt-4 rounded-md border p-4 text-sm leading-6 ${overbookedCapacity > 0 ? "border-amber-200 bg-amber-50 text-amber-950" : "border-emerald-200 bg-emerald-50 text-emerald-950"}`}>
+            {capacityDecision}
+          </div>
+          <div className="mt-4 grid gap-3 xl:grid-cols-3">
+            {donorDepartments.slice(0, 3).map((department) => (
+              <div key={department.department} className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                <div className="font-semibold">{department.department}</div>
+                <div className="mt-1 text-xs text-slate-500">Reserved {department.reserved}% / actual {department.utilized}% / reclaimable {department.reclaimable}%</div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         <div className="mb-6 grid gap-6 xl:grid-cols-[420px_1fr]">
           <Card className="p-5">
@@ -318,7 +385,7 @@ export default function ResourcePlannerPage() {
           </Card>
         </div>
 
-        <div className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+        <div id="simulator" className="mb-6 grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
           <Card className="p-5">
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
@@ -364,11 +431,18 @@ export default function ResourcePlannerPage() {
               <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Expected latency</div><div className="mt-1 text-2xl font-semibold">{projected.expectedLatency} ms</div></div>
               <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Risk level</div><div className="mt-2"><StatusBadge value={projected.risk} /></div></div>
               <div className="rounded-md border border-cyan-100 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">{projected.recommendation}</div>
+              <div className={`rounded-md border p-4 text-sm leading-6 ${overbookedCapacity > 0 ? "border-amber-200 bg-amber-50 text-amber-950" : "border-emerald-200 bg-emerald-50 text-emerald-950"}`}>
+                <div className="font-semibold">Capacity action</div>
+                <div className="mt-1">{capacityDecision}</div>
+                {overbookedCapacity > 0 && totalReclaimable < overbookedCapacity ? (
+                  <div className="mt-2">Recommended next step: add an on-prem GPU replica or increase cloud model credits for Claude/GPT fallback.</div>
+                ) : null}
+              </div>
             </div>
           </Card>
         </div>
 
-        <Card className="mb-6 overflow-hidden">
+        <Card id="access" className="mb-6 overflow-hidden">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200 px-5 py-4 xl:flex-row xl:items-center">
             <div>
               <h2 className="font-semibold">Access control matrix</h2>

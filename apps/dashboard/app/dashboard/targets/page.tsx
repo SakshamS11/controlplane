@@ -21,7 +21,7 @@ export default function DeploymentTargetsPage() {
         action={<ActionButton onClick={() => setOpen(true)}><Plus size={16} /> Add server</ActionButton>}
       />
       <Section>
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
+        <div id="server-summary" className="mb-6 grid scroll-mt-24 gap-4 md:grid-cols-3">
           <Card className="p-5">
             <div className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">3 servers online</div><div className="text-xs text-slate-500">Ready for stack operations</div></div></div>
           </Card>
@@ -32,7 +32,7 @@ export default function DeploymentTargetsPage() {
             <div className="flex items-center gap-3"><Activity className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">Fast path</div><div className="text-xs text-slate-500">Click Acme to run the demo</div></div></div>
           </Card>
         </div>
-        <Card>
+        <Card id="server-list">
           <DataTable
             columns={["Server", "Type", "Region", "Agent", "Stack", "GPU", "Health", "Next step"]}
             rows={targets.map((target) => [

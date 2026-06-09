@@ -13,8 +13,8 @@ export default function AuditLogsPage() {
     <>
       <PageHeader eyebrow="Audit trail" title="Enterprise audit logs" description="Mock audit trail for infrastructure actions, model changes, permission updates, alerts, and agent events." />
       <Section>
-        <div className="mb-4 flex flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}>{item}</button>)}</div>
-        <Card>
+        <div id="audit-filters" className="mb-4 flex scroll-mt-24 flex-wrap gap-2">{filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}>{item}</button>)}</div>
+        <Card id="audit-table">
           <DataTable
             columns={["Timestamp", "Actor", "Action", "Target", "Severity", "Status"]}
             rows={rows.map((log) => [log.timestamp, log.actor, log.action, log.target, <StatusBadge key="sev" value={log.severity} />, <StatusBadge key="status" value={log.status} />])}

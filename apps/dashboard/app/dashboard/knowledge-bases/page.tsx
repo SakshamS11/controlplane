@@ -53,7 +53,7 @@ export default function KnowledgeBasesPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-          <Card className="p-5">
+          <Card id="kb-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
             <h2 className="mt-2 text-lg font-semibold">Knowledge source setup</h2>
             <div className="mt-5 space-y-4">
@@ -87,7 +87,7 @@ export default function KnowledgeBasesPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card id="kb-list" className="overflow-hidden">
               <DataTable
                 columns={["Knowledge base", "Docs", "Source", "Sync", "Vector index", "Workspace", "Departments", "Access", "Last sync", "Action"]}
                 rows={rows.map((item) => [
@@ -104,7 +104,7 @@ export default function KnowledgeBasesPage() {
                 ])}
               />
             </Card>
-            <Card className="p-5">
+            <Card id="kb-auth" className="p-5">
               <div className="flex items-start gap-3">
                 <LockKeyhole className="mt-1 text-cyan-700" size={20} />
                 <div>

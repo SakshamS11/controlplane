@@ -38,7 +38,7 @@ export default function RoutingPoliciesPage() {
     <>
       <PageHeader eyebrow="Routing" title="Routing policies" description="Define how work moves between local and cloud models based on department, workspace, sensitivity, provider health, cost, latency, and fallback eligibility." />
       <Section>
-        <Card className="mb-6 overflow-hidden border-amber-200">
+        <Card id="incident-action" className="mb-6 overflow-hidden border-amber-200">
           <div className="grid gap-4 bg-amber-50 px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
             <div className="flex items-start gap-3">
               <AlertTriangle className="mt-1 text-amber-700" size={20} />
@@ -62,7 +62,7 @@ export default function RoutingPoliciesPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-          <Card className="p-5">
+          <Card id="routing-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
             <h2 className="mt-2 text-lg font-semibold">Routing rule</h2>
             <div className="mt-5 space-y-4">
@@ -101,7 +101,7 @@ export default function RoutingPoliciesPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card id="routing-list" className="overflow-hidden">
               <DataTable
                 columns={["Policy", "Scope", "Task", "Sensitivity", "Primary", "Fallback", "Blocked", "Status", "Action"]}
                 rows={policies.map((policy) => [
@@ -127,7 +127,7 @@ export default function RoutingPoliciesPage() {
                 ])}
               />
             </Card>
-            <Card className="p-5">
+            <Card id="model-suggestions" className="p-5">
               <div className="flex items-start gap-3">
                 <Sparkles className="mt-1 text-cyan-700" size={20} />
                 <div>

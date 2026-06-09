@@ -10,7 +10,7 @@ export default function StacksPage() {
     <>
       <PageHeader eyebrow="Stack templates" title="Deployable AI stack templates" description="Mock templates show how the platform packages model serving, gateways, UIs, vector databases, monitoring, and audit controls." />
       <Section>
-        <div className="grid gap-5 xl:grid-cols-2">
+        <div id="stack-templates" className="grid scroll-mt-24 gap-5 xl:grid-cols-2">
           {stacks.map((stack) => (
             <Card key={stack.name} className="p-5">
               <div className="flex items-start justify-between gap-4">

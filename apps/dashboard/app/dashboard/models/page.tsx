@@ -50,7 +50,7 @@ export default function ModelsPage() {
             <div className="flex items-center gap-3"><Gauge className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">128k monthly requests</div><div className="text-xs text-slate-500">Governed by department policy</div></div></div>
           </Card>
         </div>
-        <Card className="mb-6 p-5">
+        <Card id="provider-health" className="mb-6 p-5">
           <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <h2 className="text-base font-semibold">External provider health</h2>
@@ -103,7 +103,7 @@ export default function ModelsPage() {
           </div>
         </Card>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
-          <Card className="p-5">
+          <Card id="integrate-model" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Models and providers</div>
             <h2 className="mt-2 text-lg font-semibold">Add or integrate a model</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Admins add cloud or local models here, test connectivity, and then assign them to departments, workspaces, agents, and routing policies.</p>
@@ -176,7 +176,7 @@ export default function ModelsPage() {
               <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} added as ${modelType} model`); addAudit("Model/provider added", `${providerName} ${modelName} via ${endpoint}`, "Model"); }}><Plus size={14} /> Add model</ActionButton>
             </div>
           </Card>
-          <Card className="p-5">
+          <Card id="routing-suggestions" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Route size={15} /> Routing recommendations</div>
             <h2 className="mt-2 text-lg font-semibold">Suggest the best allowed model</h2>
             <div className="mt-4 space-y-3 text-sm">
@@ -190,7 +190,7 @@ export default function ModelsPage() {
         <div className="mb-4 flex flex-wrap gap-2">
           {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
         </div>
-        <Card>
+        <Card id="model-catalog">
           <DataTable
             columns={["Model", "Hosting", "Runtime", "Provider health", "Target", "Monthly requests", "Avg latency", "Access", "Action"]}
             rows={visible.map((model) => {

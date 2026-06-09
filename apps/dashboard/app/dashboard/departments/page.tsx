@@ -105,7 +105,7 @@ export default function DepartmentsPage() {
           </Card>
         </div>
 
-        <Card className="overflow-hidden">
+        <Card id="team-control" className="overflow-hidden">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 xl:flex-row xl:items-center">
             <div>
               <h2 className="font-semibold">Team control center</h2>

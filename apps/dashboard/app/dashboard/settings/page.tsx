@@ -36,7 +36,7 @@ export default function SettingsPage() {
       <PageHeader eyebrow="Settings" title="Workspace settings" description="Configure organization defaults, providers, agents, notifications, and the operational thresholds that drive alerts." />
       <Section>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
-          <Card className="p-5">
+          <Card id="thresholds" className="p-5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><SlidersHorizontal size={15} /> Alert thresholds</div>
@@ -76,7 +76,7 @@ export default function SettingsPage() {
               ))}
             </div>
           </Card>
-          <div className="grid gap-4 md:grid-cols-2">
+          <div id="settings-tiles" className="grid scroll-mt-24 gap-4 md:grid-cols-2">
             {settings.map((item) => {
               const Icon = item.icon;
               return <Card key={item.title} className="p-5"><Icon className="text-cyan-700" size={20} /><h2 className="mt-4 font-semibold">{item.title}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p><button onClick={() => showToast(`${item.title} opened`)} className="mt-4 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium">Configure</button></Card>;
@@ -84,7 +84,7 @@ export default function SettingsPage() {
           </div>
         </div>
         <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
-          <Card className="p-5">
+          <Card id="policy-impact" className="p-5">
             <h2 className="font-semibold">Policy impact preview</h2>
             <div className="mt-4 grid gap-3 md:grid-cols-3">
               <div className="rounded-md border border-amber-100 bg-amber-50 p-4 text-sm">
@@ -101,7 +101,7 @@ export default function SettingsPage() {
               </div>
             </div>
           </Card>
-          <Card className="p-5">
+          <Card id="providers" className="p-5">
             <div className="flex items-center gap-3"><Cloud className="text-cyan-700" size={20} /><h2 className="font-semibold">Connected providers</h2></div>
             <div className="mt-5 space-y-3">{providers.map(([name, status]) => <div key={name} className="flex items-center justify-between rounded-md border border-slate-200 p-3 text-sm"><span>{name}</span><StatusBadge value={status} /></div>)}</div>
           </Card>

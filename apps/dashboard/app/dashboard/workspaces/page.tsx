@@ -95,7 +95,7 @@ export default function WorkspacesPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[430px_1fr]">
-          <Card className="p-5">
+          <Card id="workspace-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
             <h2 className="mt-2 text-lg font-semibold">Workspace configuration</h2>
             <div className="mt-5 space-y-4">
@@ -134,7 +134,7 @@ export default function WorkspacesPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card id="workspace-list" className="overflow-hidden">
               <DataTable
                 columns={["Workspace", "Interface", "Allowed models", "Knowledge", "Users", "External rules", "Status", "Action"]}
                 rows={workspaces.map((workspace) => [
@@ -155,7 +155,7 @@ export default function WorkspacesPage() {
                 ])}
               />
             </Card>
-            <Card className="p-5">
+            <Card id="workspace-auth" className="p-5">
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-1 text-cyan-700" size={20} />
                 <div>

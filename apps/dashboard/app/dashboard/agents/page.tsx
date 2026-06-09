@@ -93,7 +93,7 @@ export default function AgentsPage() {
         </div>
 
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-          <Card className="p-5">
+          <Card id="agent-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or assign</div>
             <h2 className="mt-2 text-lg font-semibold">Agent configuration</h2>
             <div className="mt-5 space-y-4">
@@ -135,7 +135,7 @@ export default function AgentsPage() {
           </Card>
 
           <div className="space-y-6">
-            <Card className="overflow-hidden">
+            <Card id="agent-list" className="overflow-hidden">
               <DataTable
                 columns={["Agent", "Department", "Models", "Knowledge bases", "Tools", "Human approval", "External models", "Usage", "Status", "Action"]}
                 rows={agents.map((agent) => [
@@ -163,7 +163,7 @@ export default function AgentsPage() {
                 ])}
               />
             </Card>
-            <Card className="p-5">
+            <Card id="agent-safety" className="p-5">
               <div className="flex items-start gap-3">
                 <LockKeyhole className="mt-1 text-cyan-700" size={20} />
                 <div>

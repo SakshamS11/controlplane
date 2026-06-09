@@ -341,11 +341,11 @@ function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="border-b border-slate-200 bg-white px-6 py-7">
+    <div className="border-b border-slate-200 bg-white px-6 py-5">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <p className="text-xs font-semibold uppercase text-cyan-700">{eyebrow}</p>
-          <h1 className="mt-2 text-3xl font-semibold text-slate-950">{title}</h1>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-950">{title}</h1>
           {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
         </div>
         {action}
@@ -358,8 +358,8 @@ export function Section({ children }: { children: ReactNode }) {
   return <section className="p-6 xl:p-8">{children}</section>;
 }
 
-export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)] ${className}`}>{children}</div>;
+export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
+  return <div id={id} className={`scroll-mt-24 rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)] ${className}`}>{children}</div>;
 }
 
 export function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail?: string; icon: ReactNode }) {

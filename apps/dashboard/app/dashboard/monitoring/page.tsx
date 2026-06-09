@@ -78,7 +78,7 @@ export default function MonitoringPage() {
     <>
       <PageHeader eyebrow="Observability" title="Monitoring dashboard" description="Infrastructure health, request volume, latency, cost, errors, department usage, and target service health in one place." />
       <Section>
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+        <div id="monitoring-kpis" className="mb-6 grid scroll-mt-24 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <MonitoringKpi label="Fleet GPU" value="71%" detail={`Warns at ${operationalThresholds.gpuMemoryWarning}%`} icon={<Gauge size={18} />} tone="emerald" />
           <MonitoringKpi label="Requests" value="128k" detail={`${timeRange} selected`} icon={<Activity size={18} />} />
           <MonitoringKpi label="Avg latency" value="812 ms" detail={`Limit ${operationalThresholds.latencyWarning} ms`} icon={<Cpu size={18} />} tone="amber" />
@@ -87,7 +87,7 @@ export default function MonitoringPage() {
           <MonitoringKpi label="Open issues" value={String(activeIssues)} detail={`${visibleAlerts.length} alerts visible`} icon={<Server size={18} />} tone={activeIssues ? "amber" : "emerald"} />
         </div>
 
-        <Card className="mb-6 p-5">
+        <Card id="monitoring-filters" className="mb-6 p-5">
           <div className="flex flex-col gap-5">
             <div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Filter size={14} /> Monitoring filters</div>
@@ -134,7 +134,7 @@ export default function MonitoringPage() {
           </div>
         </Card>
 
-        <div className="mb-6 grid gap-3 md:grid-cols-3">
+        <div id="monitoring-actions" className="mb-6 grid scroll-mt-24 gap-3 md:grid-cols-3">
           <Link href="/dashboard/targets" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Open affected servers <ArrowRight size={15} /></Link>
           <Link href="/dashboard/models" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Review model routing <ArrowRight size={15} /></Link>
           <Link href="/dashboard/settings" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Tune alert thresholds <ArrowRight size={15} /></Link>
@@ -144,7 +144,7 @@ export default function MonitoringPage() {
           <button onClick={() => simulateAction("Refresh monitoring data", "Monitoring")} className="ml-3 inline-flex items-center gap-1 font-semibold text-amber-900">Refresh <RefreshCw size={13} /></button>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-2">
+        <div id="monitoring-charts" className="grid scroll-mt-24 gap-6 xl:grid-cols-2">
           {(metricView === "Overview" || metricView === "Infrastructure") ? <ChartCard title="Fleet GPU utilization" detail={`${targetFilter}, ${timeRange}`}><AreaMetricChart data={requestVolume} dataKey="gpu" stroke="#059669" /></ChartCard> : null}
           {(metricView === "Overview" || metricView === "Usage") ? <ChartCard title="Request volume" detail={`${providerFilter}, ${timeRange}`}><AreaMetricChart data={requestVolume} dataKey="requests" /></ChartCard> : null}
           {(metricView === "Overview" || metricView === "Infrastructure") ? <ChartCard title="Average latency" detail={`${targetFilter}, ${timeRange}`}><AreaMetricChart data={requestVolume} dataKey="latency" stroke="#d97706" /></ChartCard> : null}
