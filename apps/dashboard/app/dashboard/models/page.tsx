@@ -3,11 +3,22 @@
 import { AlertTriangle, Filter, Gauge, Plus, RefreshCw, Route, Server, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
-import { models, providerHealth } from "@/lib/mock-data";
+import { providerHealth } from "@/lib/mock-data";
 
 const filters = ["All", "Local", "External", "Provider issue", "Running", "Department"];
 
-function getProviderHealth(model: (typeof models)[number]) {
+type ModelRow = {
+  name: string;
+  hosting: string;
+  provider: string;
+  status: string;
+  target: string;
+  requests: string;
+  latency: string;
+  access: string;
+};
+
+function getProviderHealth(model: ModelRow) {
   if (model.hosting === "Local") return providerHealth.find((provider) => provider.provider === "Ollama/vLLM");
   return providerHealth.find((provider) => provider.provider === model.provider);
 }
@@ -27,13 +38,27 @@ export default function ModelsPage() {
   const [vramRequirement, setVramRequirement] = useState("0 GB");
   const [fallbackEligible, setFallbackEligible] = useState("Yes");
   const [maxConcurrency, setMaxConcurrency] = useState("100");
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, modelCatalog, addModelToCatalog } = useAppState();
   const providerIssues = providerHealth.filter((provider) => provider.status === "Degraded" || provider.status === "Down");
-  const visible = useMemo(() => models.filter((model) => {
+  const visible = useMemo(() => modelCatalog.filter((model) => {
     const health = getProviderHealth(model);
     if (filter === "Provider issue") return health?.status === "Degraded" || health?.status === "Down";
     return filter === "All" || filter === "Department" || model.hosting === filter || model.status === filter;
-  }), [filter]);
+  }), [filter, modelCatalog]);
+
+  function addModel() {
+    addModelToCatalog({
+      name: modelName,
+      hosting: modelType === "Local" ? "Local" : "External",
+      provider: providerName,
+      status: modelType === "Local" ? "Running" : "Connected",
+      target: modelType === "Local" ? "Acme Azure GPU Server" : "External Provider",
+      requests: "0",
+      latency: "Not measured",
+      access: "Unassigned"
+    });
+    addAudit("Model/provider configured", `${providerName} ${modelName} via ${endpoint}`, "Model");
+  }
 
   return (
     <>
@@ -173,15 +198,15 @@ export default function ModelsPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <ActionButton onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
-              <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} added as ${modelType} model`); addAudit("Model/provider added", `${providerName} ${modelName} via ${endpoint}`, "Model"); }}><Plus size={14} /> Add model</ActionButton>
+              <ActionButton variant="secondary" onClick={addModel}><Plus size={14} /> Add model</ActionButton>
             </div>
           </Card>
           <Card id="routing-suggestions" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Route size={15} /> Routing recommendations</div>
             <h2 className="mt-2 text-lg font-semibold">Suggest the best allowed model</h2>
             <div className="mt-4 space-y-3 text-sm">
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Legal confidential:</span> Qwen Local first; Claude only for non-sensitive drafting.</div>
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Claims sensitive:</span> Qwen Local only; external models blocked.</div>
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Legal confidential:</span> Qwen 32B first; Claude only for non-sensitive drafting.</div>
+              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Claims sensitive:</span> Qwen 32B only; external models blocked.</div>
               <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Engineering code:</span> DeepSeek Coder, then Claude or GPT-5 if available.</div>
               <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Marketing drafting:</span> Gemini first; GPT-5 only for executive content.</div>
             </div>

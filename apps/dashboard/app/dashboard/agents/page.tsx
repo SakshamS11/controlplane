@@ -8,7 +8,7 @@ const agentSeed = [
   {
     name: "Claims Summary Agent",
     department: "Claims",
-    models: "Qwen Local",
+    models: "Qwen 32B",
     knowledge: "Claims SOPs, Policy Documents",
     tools: "Claim summary generator",
     approval: "Required before final decision",
@@ -19,7 +19,7 @@ const agentSeed = [
   {
     name: "Contract Review Agent",
     department: "Legal",
-    models: "Claude, Qwen Local",
+    models: "Claude, Qwen 32B",
     knowledge: "Legal Contracts",
     tools: "Clause risk extractor, redline assistant",
     approval: "Required for confidential matters",
@@ -30,7 +30,7 @@ const agentSeed = [
   {
     name: "Support Triage Agent",
     department: "Customer Support",
-    models: "Llama Local, Gemini",
+    models: "Llama 3.1 8B, Gemini",
     knowledge: "Product FAQ",
     tools: "Ticket classifier, response draft",
     approval: "Optional",
@@ -52,7 +52,7 @@ const agentSeed = [
   {
     name: "Finance Analysis Agent",
     department: "Finance",
-    models: "Qwen Local",
+    models: "Qwen 32B",
     knowledge: "Finance Policies",
     tools: "Variance analysis",
     approval: "Required",
@@ -66,16 +66,17 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState(agentSeed);
   const [name, setName] = useState("Claims Summary Agent");
   const [department, setDepartment] = useState("Claims");
-  const [models, setModels] = useState("Qwen Local");
+  const [selectedModels, setSelectedModels] = useState(["Qwen 32B"]);
   const [knowledge, setKnowledge] = useState("Claims SOPs, Policy Documents");
   const [tools, setTools] = useState("Claim summary generator");
   const [approval, setApproval] = useState("Required before final decision");
   const [external, setExternal] = useState("Blocked");
   const [usage, setUsage] = useState("25 concurrent requests");
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, modelCatalog } = useAppState();
+  const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
 
   function saveAgent() {
-    const row = { name, department, models, knowledge, tools, approval, external, usage, status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
+    const row = { name, department, models: selectedModels.join(", "), knowledge, tools, approval, external, usage, status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
     setAgents((current) => [row, ...current.filter((item) => item.name !== name)]);
     showToast(`${name} agent saved`);
     addAudit("Custom agent saved", name, "Permission");
@@ -110,9 +111,7 @@ export default function AgentsPage() {
                   <input value={usage} onChange={(event) => setUsage(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
                 </label>
               </div>
-              <label className="text-sm font-medium text-slate-600">Allowed models
-                <input value={models} onChange={(event) => setModels(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
+              <ModelChecklist options={activeModelOptions} values={selectedModels} onToggle={(item) => setSelectedModels((current) => current.includes(item) ? current.filter((model) => model !== item) : [...current, item])} />
               <label className="text-sm font-medium text-slate-600">Allowed knowledge bases
                 <input value={knowledge} onChange={(event) => setKnowledge(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
               </label>
@@ -151,7 +150,7 @@ export default function AgentsPage() {
                   <ActionButton key="action" variant="secondary" onClick={() => {
                     setName(agent.name);
                     setDepartment(agent.department);
-                    setModels(agent.models);
+                    setSelectedModels(agent.models.split(",").map((item) => item.trim()).filter(Boolean));
                     setKnowledge(agent.knowledge);
                     setTools(agent.tools);
                     setApproval(agent.approval);
@@ -182,5 +181,20 @@ export default function AgentsPage() {
         </div>
       </Section>
     </>
+  );
+}
+
+function ModelChecklist({ options, values, onToggle }: { options: string[]; values: string[]; onToggle: (item: string) => void }) {
+  return (
+    <div>
+      <div className="mb-2 text-sm font-medium text-slate-600">Allowed models</div>
+      <div className="grid gap-2 sm:grid-cols-2">
+        {options.map((option) => (
+          <button key={option} type="button" onClick={() => onToggle(option)} className={`rounded-md border px-3 py-2 text-left text-sm ${values.includes(option) ? "border-cyan-200 bg-cyan-50 text-cyan-900" : "border-slate-200 bg-white text-slate-700"}`}>
+            {option}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 }

@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import type { ReactNode } from "react";
-import { Activity, AlertTriangle, ArrowRight, Bot, Boxes, Building2, Cpu, Database, Gauge, Layers, MonitorDot, PlayCircle, Route, Server, ShieldCheck, SlidersHorizontal, Sparkles, WalletCards } from "lucide-react";
+import { Activity, AlertTriangle, ArrowRight, Bot, Boxes, Building2, Copy, Cpu, Database, ExternalLink, Gauge, Layers, MailPlus, MonitorDot, PlayCircle, Plus, Route, Server, ShieldCheck, SlidersHorizontal, Sparkles, TerminalSquare, WalletCards } from "lucide-react";
 import { AreaMetricChart, BarMetricChart, DonutChart } from "@/components/charts";
-import { ActionButton, Card, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
-import { alerts, costByModel, deploymentEvents, requestsByDepartment, requestVolume, targets } from "@/lib/mock-data";
+import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { alerts, costByModel, deploymentEvents, requestsByDepartment, requestVolume, targets, workspaces } from "@/lib/mock-data";
 
 const metrics = [
   ["Online agents", "3", "1 offline sandbox", <Activity key="i" size={18} />],
@@ -69,6 +70,8 @@ const plannerMetrics = [
   ["Governance risks", "1", "Legal confidential workflow", <ShieldCheck key="i" size={18} />]
 ];
 
+const installCommand = "curl -fsSL https://controlplane.example.com/install-agent.sh | sudo bash -s -- --token TARGET_TOKEN --url https://api.controlplane.example.com";
+
 function CompactKpi({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: ReactNode }) {
   return (
     <Card className="p-4">
@@ -114,10 +117,35 @@ function ModuleTile({ item }: { item: (typeof commandModules)[number] }) {
 }
 
 export default function DashboardOverviewPage() {
-  const { showToast, addAudit, operationalThresholds } = useAppState();
+  const { showToast, addAudit, operationalThresholds, addModelToCatalog } = useAppState();
+  const [serverModalOpen, setServerModalOpen] = useState(false);
+  const [modelModalOpen, setModelModalOpen] = useState(false);
+  const [workspaceModal, setWorkspaceModal] = useState<(typeof workspaces)[number] | null>(null);
+  const [modelName, setModelName] = useState("GPT-5 mini");
+  const [providerName, setProviderName] = useState("OpenAI");
+  const [modelType, setModelType] = useState("External");
   function simulateAction(action: string, target: string) {
     showToast(`${action} opened`);
     addAudit(action, target);
+  }
+
+  function addQuickModel() {
+    addModelToCatalog({
+      name: modelName,
+      hosting: modelType,
+      provider: providerName,
+      status: modelType === "Local" ? "Running" : "Connected",
+      target: modelType === "Local" ? "Unassigned local server" : "External Provider",
+      requests: "0",
+      latency: "Not measured",
+      access: "Unassigned"
+    });
+    setModelModalOpen(false);
+  }
+
+  function copyText(value: string, message: string) {
+    navigator.clipboard?.writeText(value);
+    showToast(message);
   }
 
   return (
@@ -131,6 +159,20 @@ export default function DashboardOverviewPage() {
       <Section>
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {metrics.slice(0, 4).map(([label, value, detail, icon]) => <CompactKpi key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
+        </div>
+        <div className="mb-6 grid gap-3 md:grid-cols-4">
+          <button onClick={() => setServerModalOpen(true)} className="flex min-h-16 items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50">
+            <span className="inline-flex items-center gap-2"><Server size={16} /> Add Server</span><ArrowRight size={14} />
+          </button>
+          <button onClick={() => setModelModalOpen(true)} className="flex min-h-16 items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50">
+            <span className="inline-flex items-center gap-2"><Sparkles size={16} /> Add Model</span><ArrowRight size={14} />
+          </button>
+          <Link href="/dashboard/workspaces#workspace-form" className="flex min-h-16 items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50">
+            <span className="inline-flex items-center gap-2"><Layers size={16} /> Create Workspace</span><ArrowRight size={14} />
+          </Link>
+          <Link href="/dashboard/departments" className="flex min-h-16 items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-left text-sm font-semibold text-slate-900 shadow-sm transition hover:border-cyan-200 hover:bg-cyan-50">
+            <span className="inline-flex items-center gap-2"><MailPlus size={16} /> Invite Users</span><ArrowRight size={14} />
+          </Link>
         </div>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_360px]">
           <Card className="p-5">
@@ -167,6 +209,31 @@ export default function DashboardOverviewPage() {
             </div>
           </Card>
         </div>
+        <Card className="mb-6 overflow-hidden">
+          <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+            <div>
+              <h2 className="font-semibold">Published AI workspaces</h2>
+              <p className="mt-1 text-sm text-slate-500">Launch Open WebUI or send the approved workspace link to a team.</p>
+            </div>
+            <Link href="/dashboard/workspaces" className="inline-flex min-h-9 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Manage <ArrowRight size={14} /></Link>
+          </div>
+          <DataTable
+            columns={["Workspace", "Department", "Interface", "Status", "Allowed models", "Launch", "Invite", "Manage"]}
+            rows={workspaces.map((workspace) => [
+              <span key="name" className="font-semibold">{workspace.name}</span>,
+              workspace.department,
+              workspace.interface,
+              <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
+              workspace.allowedModels.join(", "),
+              <div key="launch" className="flex flex-wrap gap-2">
+                <ActionButton variant="secondary" onClick={() => setWorkspaceModal(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
+                <button onClick={() => copyText(workspace.launchUrl, `${workspace.name} URL copied`)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
+              </div>,
+              <ActionButton key="invite" variant="secondary" onClick={() => { showToast(`Invite flow opened for ${workspace.name}`); addAudit("Workspace invite opened", workspace.name, "Permission"); }}><MailPlus size={14} /> Invite</ActionButton>,
+              <Link key="manage" href="/dashboard/workspaces" className="font-semibold text-cyan-700">Manage</Link>
+            ])}
+          />
+        </Card>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
           <div className="grid gap-6">
             <div className="grid gap-4 lg:grid-cols-3">
@@ -236,6 +303,79 @@ export default function DashboardOverviewPage() {
           </Card>
         </div>
       </Section>
+      {serverModalOpen ? (
+        <Modal title="Add server" onClose={() => setServerModalOpen(false)}>
+          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div>
+              <div className="text-sm font-semibold">Install the lightweight agent</div>
+              <p className="mt-2 text-sm leading-6 text-slate-600">This creates a deployment target and gives the server a registration command. The token is a mock placeholder in this demo.</p>
+            </div>
+            <div className="rounded-md border border-slate-200 p-3 text-sm">
+              <div className="text-xs text-slate-500">Target type</div>
+              <div className="mt-1 font-semibold">Ubuntu GPU server</div>
+            </div>
+          </div>
+          <pre className="mt-4 overflow-auto rounded-lg bg-slate-950 p-4 text-xs text-cyan-100">{installCommand}</pre>
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <ActionButton variant="secondary" onClick={() => copyText(installCommand, "Install command copied")}><TerminalSquare size={14} /> Copy command</ActionButton>
+            <Link href="/dashboard/targets" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800">Open Servers <ArrowRight size={14} /></Link>
+          </div>
+        </Modal>
+      ) : null}
+      {modelModalOpen ? (
+        <Modal title="Add model" onClose={() => setModelModalOpen(false)}>
+          <div className="grid gap-4 md:grid-cols-3">
+            <label className="text-sm font-medium text-slate-600">Provider
+              <input value={providerName} onChange={(event) => setProviderName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+            </label>
+            <label className="text-sm font-medium text-slate-600">Model
+              <input value={modelName} onChange={(event) => setModelName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+            </label>
+            <label className="text-sm font-medium text-slate-600">Type
+              <select value={modelType} onChange={(event) => setModelType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                <option>External</option>
+                <option>Local</option>
+              </select>
+            </label>
+          </div>
+          <div className="mt-4 rounded-md border border-cyan-100 bg-cyan-50 p-3 text-sm leading-6 text-cyan-950">After adding, this model becomes available anywhere the product asks for allowed models.</div>
+          <div className="mt-4 flex justify-end">
+            <ActionButton onClick={addQuickModel}><Plus size={14} /> Add model</ActionButton>
+          </div>
+        </Modal>
+      ) : null}
+      {workspaceModal ? (
+        <Modal title={`Launch ${workspaceModal.name}`} onClose={() => setWorkspaceModal(null)}>
+          <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <div>
+              <div className="text-xs font-semibold uppercase text-cyan-700">{workspaceModal.interface}</div>
+              <div className="mt-2 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">{workspaceModal.launchUrl}</div>
+            </div>
+            <div className="rounded-md border border-slate-200 p-3">
+              <div className="text-xs text-slate-500">Status</div>
+              <div className="mt-2 flex flex-wrap gap-2"><StatusBadge value={workspaceModal.publishStatus} /><StatusBadge value={workspaceModal.status} /></div>
+            </div>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-2">
+            <LaunchInfo label="Users" value={workspaceModal.assignedUsers} />
+            <LaunchInfo label="Department" value={workspaceModal.department} />
+            <LaunchInfo label="Allowed models" value={workspaceModal.allowedModels.join(", ")} />
+            <LaunchInfo label="Knowledge" value={workspaceModal.knowledgeBases.join(", ")} />
+            <LaunchInfo label="Agents" value={workspaceModal.agents.join(", ")} />
+            <LaunchInfo label="External rule" value={workspaceModal.externalRule} />
+          </div>
+          <div className="mt-5 flex flex-wrap gap-2">
+            <a href={workspaceModal.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"><ExternalLink size={14} /> Open</a>
+            <ActionButton variant="secondary" onClick={() => copyText(workspaceModal.launchUrl, `${workspaceModal.name} URL copied`)}><Copy size={14} /> Copy URL</ActionButton>
+            <ActionButton variant="secondary" onClick={() => { showToast(`Invite flow opened for ${workspaceModal.name}`); addAudit("Workspace invite opened", workspaceModal.name, "Permission"); }}><MailPlus size={14} /> Invite users</ActionButton>
+            <Link href="/dashboard/workspaces" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50"><ShieldCheck size={14} /> Manage policy</Link>
+          </div>
+        </Modal>
+      ) : null}
     </>
   );
+}
+
+function LaunchInfo({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-md border border-slate-200 p-3 text-sm"><div className="text-xs font-semibold uppercase text-slate-400">{label}</div><div className="mt-1 font-medium text-slate-900">{value}</div></div>;
 }

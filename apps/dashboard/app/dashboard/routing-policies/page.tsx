@@ -5,8 +5,8 @@ import { AlertTriangle, ArrowRightLeft, CheckCircle2, Plus, Route, ShieldCheck, 
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const policySeed = [
-  { name: "Legal confidential review", scope: "Legal AI Assistant", task: "Contract review", sensitivity: "Confidential", primary: "Qwen Local", fallback: "Claude for non-sensitive drafting", blocked: "GPT-5, Gemini", status: "Governance risk" },
-  { name: "Claims sensitive workflow", scope: "Claims AI Assistant", task: "Claim summarization", sensitivity: "Restricted", primary: "Qwen Local", fallback: "No external fallback", blocked: "GPT-5, Claude, Gemini", status: "Healthy" },
+  { name: "Legal confidential review", scope: "Legal AI Assistant", task: "Contract review", sensitivity: "Confidential", primary: "Qwen 32B", fallback: "Claude for non-sensitive drafting", blocked: "GPT-5, Gemini", status: "Governance risk" },
+  { name: "Claims sensitive workflow", scope: "Claims AI Assistant", task: "Claim summarization", sensitivity: "Restricted", primary: "Qwen 32B", fallback: "No external fallback", blocked: "GPT-5, Claude, Gemini", status: "Healthy" },
   { name: "Engineering code assist", scope: "Engineering Copilot", task: "Code review", sensitivity: "Internal", primary: "DeepSeek Coder", fallback: "Claude, then GPT-5", blocked: "None", status: "Healthy" },
   { name: "Marketing drafting economy", scope: "Marketing Studio", task: "Drafting and summarization", sensitivity: "Public", primary: "Gemini", fallback: "GPT-5 mini for executive content", blocked: "GPT-5 full by default", status: "Cost risk" }
 ];
@@ -18,9 +18,10 @@ export default function RoutingPoliciesPage() {
   const [task, setTask] = useState("Critical GPT-5 work");
   const [sensitivity, setSensitivity] = useState("Internal");
   const [primary, setPrimary] = useState("Claude");
-  const [fallback, setFallback] = useState("Qwen Local for sensitive prompts");
+  const [fallback, setFallback] = useState("Qwen 32B for sensitive prompts");
   const [blocked, setBlocked] = useState("None");
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, modelCatalog } = useAppState();
+  const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
 
   function savePolicy() {
     const row = { name, scope, task, sensitivity, primary, fallback, blocked, status: sensitivity === "Confidential" ? "Governance risk" : "Healthy" };
@@ -49,7 +50,7 @@ export default function RoutingPoliciesPage() {
             </div>
             <div className="flex flex-wrap gap-2">
               <ActionButton onClick={() => applyIncidentRoute("Critical GPT-5 traffic routed to Claude")}><ArrowRightLeft size={14} /> Route to Claude</ActionButton>
-              <ActionButton variant="secondary" onClick={() => applyIncidentRoute("Sensitive GPT-5 traffic routed to Qwen Local")}><ShieldCheck size={14} /> Route to Qwen</ActionButton>
+              <ActionButton variant="secondary" onClick={() => applyIncidentRoute("Sensitive GPT-5 traffic routed to Qwen 32B")}><ShieldCheck size={14} /> Route to Qwen</ActionButton>
             </div>
           </div>
         </Card>
@@ -87,7 +88,9 @@ export default function RoutingPoliciesPage() {
               </label>
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-600">Primary model
-                  <input value={primary} onChange={(event) => setPrimary(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                  <select value={primary} onChange={(event) => setPrimary(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                    {activeModelOptions.map((model) => <option key={model}>{model}</option>)}
+                  </select>
                 </label>
                 <label className="text-sm font-medium text-slate-600">Fallback policy
                   <input value={fallback} onChange={(event) => setFallback(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
@@ -133,8 +136,8 @@ export default function RoutingPoliciesPage() {
                 <div>
                   <h2 className="font-semibold">Model suggestions</h2>
                   <div className="mt-4 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Legal confidential:</span> Qwen Local first, Claude only for non-sensitive drafting.</div>
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Claims sensitive:</span> Qwen Local only, no external fallback.</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Legal confidential:</span> Qwen 32B first, Claude only for non-sensitive drafting.</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Claims sensitive:</span> Qwen 32B only, no external fallback.</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Engineering code:</span> DeepSeek Coder, then Claude or GPT-5.</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Marketing drafting:</span> Gemini first, GPT-5 for executive content only.</div>
                   </div>

@@ -60,6 +60,73 @@ export const models = [
   { name: "Gemini", hosting: "External", provider: "Google", status: "Connected", target: "External Provider", requests: "4,550", latency: "980 ms", access: "Marketing" }
 ];
 
+export const workspaces = [
+  {
+    name: "Legal AI Assistant",
+    department: "Legal",
+    interface: "Open WebUI",
+    launchUrl: "https://legal-ai.controlplane.example.com",
+    publishStatus: "Published",
+    assignedUsers: "Legal team",
+    allowedModels: ["Claude", "Qwen 32B"],
+    knowledgeBases: ["Legal Contracts"],
+    agents: ["Contract Review Agent"],
+    routingPolicy: "Legal confidential review",
+    tokenBudget: "2M tokens / month",
+    externalRule: "Restricted for confidential matters",
+    audit: "Enabled",
+    status: "Governance risk"
+  },
+  {
+    name: "Claims AI Assistant",
+    department: "Claims",
+    interface: "Open WebUI",
+    launchUrl: "https://claims-ai.controlplane.example.com",
+    publishStatus: "Published",
+    assignedUsers: "Claims department",
+    allowedModels: ["Qwen 32B", "Llama 3.1 8B"],
+    knowledgeBases: ["Claims SOPs", "Policy Documents"],
+    agents: ["Claims Summary Agent"],
+    routingPolicy: "Claims sensitive workflow",
+    tokenBudget: "4M tokens / month",
+    externalRule: "Blocked",
+    audit: "Enabled",
+    status: "Healthy"
+  },
+  {
+    name: "Engineering Copilot",
+    department: "Engineering",
+    interface: "Open WebUI / custom chat",
+    launchUrl: "https://engineering-ai.controlplane.example.com",
+    publishStatus: "Published",
+    assignedUsers: "Engineering team",
+    allowedModels: ["GPT-5", "Claude", "DeepSeek Coder"],
+    knowledgeBases: ["Engineering Docs", "Codebase Docs"],
+    agents: ["Code Review Agent"],
+    routingPolicy: "Engineering code assist",
+    tokenBudget: "6M tokens / month",
+    externalRule: "Allowed",
+    audit: "Enabled",
+    status: "Healthy"
+  },
+  {
+    name: "Finance AI Desk",
+    department: "Finance",
+    interface: "Custom chat",
+    launchUrl: "https://finance-ai.controlplane.example.com",
+    publishStatus: "Draft",
+    assignedUsers: "Finance team",
+    allowedModels: ["Qwen 32B", "Claude"],
+    knowledgeBases: ["Finance Policies"],
+    agents: ["Finance Analysis Agent"],
+    routingPolicy: "Finance local-first",
+    tokenBudget: "900K tokens / month",
+    externalRule: "Approval required",
+    audit: "Enabled",
+    status: "Healthy"
+  }
+];
+
 export const providerHealth = [
   {
     provider: "OpenAI",

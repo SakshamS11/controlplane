@@ -32,13 +32,14 @@ import {
   X
 } from "lucide-react";
 
-import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds, initialPermissions, initialUserTokenBudgets } from "@/lib/mock-data";
+import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds, initialPermissions, initialUserTokenBudgets, models as initialModels } from "@/lib/mock-data";
 
 export const DEMO_AUTH_KEY = "ai-control-plane-demo-authenticated";
 export const DEMO_EMAIL_HASH = "d66bee74";
 export const DEMO_PASSWORD_HASH = "c1aef9c0";
 
 type Toast = { id: number; message: string };
+type ModelRecord = (typeof initialModels)[number];
 type AppState = {
   toasts: Toast[];
   showToast: (message: string) => void;
@@ -53,6 +54,8 @@ type AppState = {
   updateUserTokenBudget: (id: string, limit: number) => void;
   operationalThresholds: typeof initialOperationalThresholds;
   updateOperationalThreshold: (key: keyof typeof initialOperationalThresholds, value: number) => void;
+  modelCatalog: ModelRecord[];
+  addModelToCatalog: (model: ModelRecord) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -64,6 +67,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [departmentTokenBudgets, setDepartmentTokenBudgets] = useState(initialDepartmentTokenBudgets);
   const [userTokenBudgets, setUserTokenBudgets] = useState(initialUserTokenBudgets);
   const [operationalThresholds, setOperationalThresholds] = useState(initialOperationalThresholds);
+  const [modelCatalog, setModelCatalog] = useState<ModelRecord[]>(initialModels);
 
   function showToast(message: string) {
     const id = Date.now();
@@ -136,6 +140,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addAudit("Operational threshold updated", key, "Alert");
   }
 
+  function addModelToCatalog(model: ModelRecord) {
+    setModelCatalog((current) => [model, ...current.filter((item) => item.name !== model.name)]);
+    showToast(`${model.name} added to model catalog`);
+    addAudit("Model/provider added", model.name, "Model");
+  }
+
   const value = useMemo(
     () => ({
       toasts,
@@ -150,9 +160,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       userTokenBudgets,
       updateUserTokenBudget,
       operationalThresholds,
-      updateOperationalThreshold
+      updateOperationalThreshold,
+      modelCatalog,
+      addModelToCatalog
     }),
-    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets, operationalThresholds]
+    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets, operationalThresholds, modelCatalog]
   );
 
   return (
@@ -220,20 +232,28 @@ function ToastStack() {
   );
 }
 
-const nav = [
-  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-  { href: "/dashboard/targets", label: "Servers", icon: Server },
-  { href: "/dashboard/models", label: "Models & Providers", icon: Sparkles },
-  { href: "/dashboard/stacks", label: "Stacks", icon: Layers },
-  { href: "/dashboard/departments", label: "Teams", icon: Building2 },
-  { href: "/dashboard/workspaces", label: "AI Workspaces", icon: Layers },
-  { href: "/dashboard/knowledge-bases", label: "Knowledge Bases", icon: Database },
-  { href: "/dashboard/agents", label: "Agents", icon: Bot },
-  { href: "/dashboard/routing-policies", label: "Routing Policies", icon: Route },
-  { href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal },
-  { href: "/dashboard/monitoring", label: "Monitoring", icon: MonitorDot },
-  { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText },
-  { href: "/dashboard/settings", label: "Settings", icon: Settings }
+const navSections = [
+  { label: "Command Center", items: [{ href: "/dashboard", label: "Overview", icon: LayoutDashboard }] },
+  { label: "Operate", items: [
+    { href: "/dashboard/targets", label: "Servers", icon: Server },
+    { href: "/dashboard/monitoring", label: "Monitoring", icon: MonitorDot },
+    { href: "/dashboard/stacks", label: "Stacks", icon: Layers }
+  ] },
+  { label: "AI Platform", items: [
+    { href: "/dashboard/models", label: "Models & Providers", icon: Sparkles },
+    { href: "/dashboard/routing-policies", label: "Routing Policies", icon: Route }
+  ] },
+  { label: "Workspaces", items: [
+    { href: "/dashboard/workspaces", label: "AI Workspaces", icon: Layers },
+    { href: "/dashboard/knowledge-bases", label: "Knowledge Bases", icon: Database },
+    { href: "/dashboard/agents", label: "Agents", icon: Bot }
+  ] },
+  { label: "Govern", items: [
+    { href: "/dashboard/departments", label: "Teams", icon: Building2 },
+    { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText }
+  ] },
+  { label: "Optimize", items: [{ href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal }] },
+  { label: "Settings", items: [{ href: "/dashboard/settings", label: "Settings", icon: Settings }] }
 ];
 
 export function DashboardShell({ children }: { children: ReactNode }) {
@@ -275,23 +295,30 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <PanelLeftOpen size={18} />
           </button>
         ) : null}
-        <nav className={`flex-1 space-y-1 py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
-          {nav.map((item) => {
-            const Icon = item.icon;
-            const active = item.href === "/dashboard" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                aria-label={collapsed ? item.label : undefined}
-                className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
-              >
-                <Icon size={17} />
-                {!collapsed ? item.label : null}
-              </Link>
-            );
-          })}
+        <nav className={`flex-1 space-y-4 overflow-y-auto py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
+          {navSections.map((section) => (
+            <div key={section.label}>
+              {!collapsed ? <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{section.label}</div> : null}
+              <div className="space-y-1">
+                {section.items.map((item) => {
+                  const Icon = item.icon;
+                  const active = item.href === "/dashboard" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
+                  return (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      title={collapsed ? item.label : undefined}
+                      aria-label={collapsed ? item.label : undefined}
+                      className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+                    >
+                      <Icon size={17} />
+                      {!collapsed ? item.label : null}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
         {!collapsed ? <div className="border-t border-white/10 p-4">
           <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
@@ -377,11 +404,11 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
 }
 
 export function StatusBadge({ value }: { value: string }) {
-  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational" || value === "Active" || value === "Enforced" || value === "Synced" || value === "Indexed"
+  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational" || value === "Active" || value === "Enforced" || value === "Synced" || value === "Indexed" || value === "Published"
     ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
     : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit" || value === "Under-allocated" || value === "Over-allocated" || value === "Cost risk"
       ? "bg-amber-50 text-amber-700 ring-amber-200"
-      : value === "Offline" || value === "Critical" || value === "High" || value === "Down" || value === "Governance risk"
+      : value === "Offline" || value === "Critical" || value === "High" || value === "Down" || value === "Governance risk" || value === "Disabled"
         ? "bg-red-50 text-red-700 ring-red-200"
         : "bg-slate-100 text-slate-700 ring-slate-200";
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;

@@ -1,80 +1,77 @@
 "use client";
 
 import { useState } from "react";
-import { Layers, LockKeyhole, Plus, Save, ShieldCheck, Users } from "lucide-react";
-import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { Copy, ExternalLink, Layers, LockKeyhole, MailPlus, Plus, Power, Save, ShieldCheck, Users } from "lucide-react";
+import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { departments as departmentOptions, workspaces as initialWorkspaces } from "@/lib/mock-data";
 
-const workspaceSeed = [
-  {
-    name: "Legal AI Assistant",
-    interface: "Open WebUI",
-    models: "Claude, Qwen Local",
-    knowledge: "Legal Contracts",
-    users: "Legal team",
-    external: "Restricted for confidential matters",
-    audit: "Enabled",
-    status: "Governance risk"
-  },
-  {
-    name: "Claims AI Assistant",
-    interface: "Open WebUI",
-    models: "Qwen Local, Llama Local",
-    knowledge: "Claims SOPs, Policy Documents",
-    users: "Claims department",
-    external: "Blocked",
-    audit: "Enabled",
-    status: "Healthy"
-  },
-  {
-    name: "Engineering Copilot",
-    interface: "Open WebUI / custom chat",
-    models: "GPT-5, Claude, DeepSeek Coder",
-    knowledge: "Engineering Docs, Codebase Docs",
-    users: "Engineering team",
-    external: "Allowed",
-    audit: "Enabled",
-    status: "Healthy"
-  },
-  {
-    name: "Finance AI Desk",
-    interface: "Custom chat",
-    models: "Qwen Local, Claude",
-    knowledge: "Finance Policies",
-    users: "Finance team",
-    external: "Approval required",
-    audit: "Enabled",
-    status: "Healthy"
-  }
-];
+type Workspace = (typeof initialWorkspaces)[number];
 
-const modelOptions = ["Qwen Local", "Llama Local", "DeepSeek Coder", "GPT-5", "Claude", "Gemini"];
-const knowledgeOptions = ["Legal Contracts", "Claims SOPs", "Finance Policies", "Product FAQ", "Engineering Docs", "HR Policies"];
-const departmentOptions = ["Legal", "Claims", "Engineering", "Finance", "Customer Support", "Marketing"];
+const knowledgeOptions = ["Legal Contracts", "Claims SOPs", "Finance Policies", "Product FAQ", "Engineering Docs", "HR Policies", "Policy Documents", "Codebase Docs"];
+const agentOptions = ["Claims Summary Agent", "Contract Review Agent", "Support Triage Agent", "Code Review Agent", "Finance Analysis Agent"];
 
 export default function WorkspacesPage() {
-  const [workspaces, setWorkspaces] = useState(workspaceSeed);
+  const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
+  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
   const [name, setName] = useState("Legal AI Assistant");
   const [interfaceType, setInterfaceType] = useState("Open WebUI");
-  const [models, setModels] = useState(["Claude", "Qwen Local"]);
+  const [launchUrl, setLaunchUrl] = useState("https://legal-ai.controlplane.example.com");
+  const [publishStatus, setPublishStatus] = useState("Published");
+  const [selectedModels, setSelectedModels] = useState(["Claude", "Qwen 32B"]);
   const [knowledge, setKnowledge] = useState(["Legal Contracts"]);
   const [departments, setDepartments] = useState(["Legal"]);
+  const [agents, setAgents] = useState(["Contract Review Agent"]);
+  const [routingPolicy, setRoutingPolicy] = useState("Legal confidential review");
+  const [tokenBudget, setTokenBudget] = useState("2M tokens / month");
   const [externalRule, setExternalRule] = useState("Restricted for confidential matters");
-  const [usageLimit, setUsageLimit] = useState("2M tokens / month");
-  const [fallbackPolicy, setFallbackPolicy] = useState("Qwen Local for confidential prompts");
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, modelCatalog } = useAppState();
+  const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
 
   function toggleValue(value: string, list: string[], setter: (items: string[]) => void) {
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
   }
 
+  function copyWorkspaceUrl(workspace: Workspace) {
+    navigator.clipboard?.writeText(workspace.launchUrl);
+    showToast(`${workspace.name} URL copied`);
+    addAudit("Workspace URL copied", workspace.name, "Permission");
+  }
+
+  function inviteWorkspace(workspace: Workspace) {
+    showToast(`Invite flow opened for ${workspace.name}`);
+    addAudit("Workspace invite opened", workspace.name, "Permission");
+  }
+
+  function loadWorkspace(workspace: Workspace) {
+    setName(workspace.name);
+    setInterfaceType(workspace.interface);
+    setLaunchUrl(workspace.launchUrl);
+    setPublishStatus(workspace.publishStatus);
+    setSelectedModels(workspace.allowedModels);
+    setKnowledge(workspace.knowledgeBases);
+    setDepartments([workspace.department]);
+    setAgents(workspace.agents);
+    setRoutingPolicy(workspace.routingPolicy);
+    setTokenBudget(workspace.tokenBudget);
+    setExternalRule(workspace.externalRule);
+    showToast(`${workspace.name} loaded for editing`);
+    addAudit("AI workspace opened", workspace.name, "Permission");
+  }
+
   function saveWorkspace() {
-    const row = {
+    const row: Workspace = {
       name,
+      department: departments[0] ?? "Unassigned",
       interface: interfaceType,
-      models: models.join(", "),
-      knowledge: knowledge.join(", "),
-      users: departments.join(", "),
-      external: externalRule,
+      launchUrl,
+      publishStatus,
+      assignedUsers: departments.join(", "),
+      allowedModels: selectedModels.filter((model) => activeModelOptions.includes(model)),
+      knowledgeBases: knowledge,
+      agents,
+      routingPolicy,
+      tokenBudget,
+      externalRule,
       audit: "Enabled",
       status: externalRule.includes("Restricted") ? "Governance risk" : "Healthy"
     };
@@ -83,18 +80,25 @@ export default function WorkspacesPage() {
     addAudit("AI workspace saved", name, "Permission");
   }
 
+  function togglePublish(workspace: Workspace) {
+    const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
+    setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: next, status: next === "Disabled" ? "Offline" : item.status } : item));
+    showToast(`${workspace.name} ${next.toLowerCase()}`);
+    addAudit("Workspace publish state changed", workspace.name, "Permission");
+  }
+
   return (
     <>
-      <PageHeader eyebrow="Workspaces" title="AI workspaces" description="Create team-specific AI experiences with approved interfaces, models, knowledge bases, users, external model rules, and audit logging." />
+      <PageHeader eyebrow="Workspaces" title="AI workspaces" description="Create and publish governed team AI experiences, then send users into Open WebUI or a custom chat with the right models, knowledge, agents, and policies." />
       <Section>
         <div className="mb-5 grid gap-4 md:grid-cols-4">
           <Card className="p-5"><div className="flex items-center gap-3"><Layers className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{workspaces.length} workspaces</div><div className="text-xs text-slate-500">Team AI surfaces</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><Users className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">6 departments</div><div className="text-xs text-slate-500">Mapped to access</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><ExternalLink className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">3 published</div><div className="text-xs text-slate-500">Launchable links</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Knowledge scoped</div><div className="text-xs text-slate-500">Workspace and department</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Audit enabled</div><div className="text-xs text-slate-500">For every workspace change</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Audit enabled</div><div className="text-xs text-slate-500">For launch and admin changes</div></div></div></Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[430px_1fr]">
+        <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <Card id="workspace-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
             <h2 className="mt-2 text-lg font-semibold">Workspace configuration</h2>
@@ -102,17 +106,38 @@ export default function WorkspacesPage() {
               <label className="text-sm font-medium text-slate-600">Workspace name
                 <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
               </label>
-              <label className="text-sm font-medium text-slate-600">Interface
-                <select value={interfaceType} onChange={(event) => setInterfaceType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Open WebUI</option>
-                  <option>Open WebUI / custom chat</option>
-                  <option>Custom chat</option>
-                  <option>API only</option>
-                </select>
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-sm font-medium text-slate-600">Interface
+                  <select value={interfaceType} onChange={(event) => setInterfaceType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                    <option>Open WebUI</option>
+                    <option>Open WebUI / custom chat</option>
+                    <option>Custom chat</option>
+                    <option>API only</option>
+                  </select>
+                </label>
+                <label className="text-sm font-medium text-slate-600">Publish status
+                  <select value={publishStatus} onChange={(event) => setPublishStatus(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                    <option>Published</option>
+                    <option>Draft</option>
+                    <option>Disabled</option>
+                  </select>
+                </label>
+              </div>
+              <label className="text-sm font-medium text-slate-600">Launch URL
+                <input value={launchUrl} onChange={(event) => setLaunchUrl(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
               </label>
-              <Checklist title="Allowed models" options={modelOptions} values={models} onToggle={(item) => toggleValue(item, models, setModels)} />
+              <Checklist title="Allowed models" options={activeModelOptions} values={selectedModels} onToggle={(item) => toggleValue(item, selectedModels, setSelectedModels)} />
               <Checklist title="Knowledge bases" options={knowledgeOptions} values={knowledge} onToggle={(item) => toggleValue(item, knowledge, setKnowledge)} />
               <Checklist title="Departments" options={departmentOptions} values={departments} onToggle={(item) => toggleValue(item, departments, setDepartments)} />
+              <Checklist title="Assigned agents" options={agentOptions} values={agents} onToggle={(item) => toggleValue(item, agents, setAgents)} />
+              <div className="grid gap-3 md:grid-cols-2">
+                <label className="text-sm font-medium text-slate-600">Routing policy
+                  <input value={routingPolicy} onChange={(event) => setRoutingPolicy(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                </label>
+                <label className="text-sm font-medium text-slate-600">Token budget
+                  <input value={tokenBudget} onChange={(event) => setTokenBudget(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                </label>
+              </div>
               <label className="text-sm font-medium text-slate-600">External model rule
                 <select value={externalRule} onChange={(event) => setExternalRule(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
                   <option>Restricted for confidential matters</option>
@@ -121,14 +146,6 @@ export default function WorkspacesPage() {
                   <option>Approval required</option>
                 </select>
               </label>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-600">Usage limit
-                  <input value={usageLimit} onChange={(event) => setUsageLimit(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-                </label>
-                <label className="text-sm font-medium text-slate-600">Fallback policy
-                  <input value={fallbackPolicy} onChange={(event) => setFallbackPolicy(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-                </label>
-              </div>
               <ActionButton onClick={saveWorkspace}><Save size={14} /> Save workspace</ActionButton>
             </div>
           </Card>
@@ -136,22 +153,22 @@ export default function WorkspacesPage() {
           <div className="space-y-6">
             <Card id="workspace-list" className="overflow-hidden">
               <DataTable
-                columns={["Workspace", "Interface", "Allowed models", "Knowledge", "Users", "External rules", "Status", "Action"]}
+                columns={["Workspace", "Department", "Interface", "Status", "Allowed models", "Launch", "Invite", "Manage"]}
                 rows={workspaces.map((workspace) => [
                   <span key="name" className="font-semibold">{workspace.name}</span>,
+                  workspace.department,
                   workspace.interface,
-                  workspace.models,
-                  workspace.knowledge,
-                  workspace.users,
-                  workspace.external,
-                  <StatusBadge key="status" value={workspace.status} />,
-                  <ActionButton key="edit" variant="secondary" onClick={() => {
-                    setName(workspace.name);
-                    setInterfaceType(workspace.interface);
-                    setExternalRule(workspace.external);
-                    showToast(`${workspace.name} loaded for editing`);
-                    addAudit("AI workspace opened", workspace.name, "Permission");
-                  }}>Edit</ActionButton>
+                  <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
+                  workspace.allowedModels.join(", "),
+                  <div key="launch" className="flex flex-wrap gap-2">
+                    <ActionButton variant="secondary" onClick={() => setSelectedWorkspace(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
+                    <button onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
+                  </div>,
+                  <ActionButton key="invite" variant="secondary" onClick={() => inviteWorkspace(workspace)}><MailPlus size={14} /> Invite</ActionButton>,
+                  <div key="manage" className="flex flex-wrap gap-2">
+                    <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Edit</ActionButton>
+                    <button onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
+                  </div>
                 ])}
               />
             </Card>
@@ -159,12 +176,11 @@ export default function WorkspacesPage() {
               <div className="flex items-start gap-3">
                 <ShieldCheck className="mt-1 text-cyan-700" size={20} />
                 <div>
-                  <h2 className="font-semibold">Authorized knowledge retrieval</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Each workspace resolves the user, department, allowed models, assigned knowledge bases, assigned agents, external model restrictions, and audit setting before any AI response is generated.</p>
+                  <h2 className="font-semibold">Workspace access boundary</h2>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">User check:</span> member of assigned department</div>
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Knowledge check:</span> workspace-approved KB only</div>
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Audit:</span> every prompt, route, and admin change</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Users:</span> department and invite list</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Models:</span> active catalog models only</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Knowledge:</span> workspace-approved KBs only</div>
                   </div>
                 </div>
               </div>
@@ -172,8 +188,55 @@ export default function WorkspacesPage() {
           </div>
         </div>
       </Section>
+      {selectedWorkspace ? (
+        <WorkspaceLaunchModal
+          workspace={selectedWorkspace}
+          onClose={() => setSelectedWorkspace(null)}
+          onCopy={() => copyWorkspaceUrl(selectedWorkspace)}
+          onInvite={() => inviteWorkspace(selectedWorkspace)}
+          onPolicy={() => {
+            showToast(`${selectedWorkspace.name} policy opened`);
+            addAudit("Workspace policy opened", selectedWorkspace.name, "Permission");
+          }}
+        />
+      ) : null}
     </>
   );
+}
+
+function WorkspaceLaunchModal({ workspace, onClose, onCopy, onInvite, onPolicy }: { workspace: Workspace; onClose: () => void; onCopy: () => void; onInvite: () => void; onPolicy: () => void }) {
+  return (
+    <Modal title={`Launch ${workspace.name}`} onClose={onClose}>
+      <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+        <div>
+          <div className="text-xs font-semibold uppercase text-cyan-700">{workspace.interface}</div>
+          <div className="mt-2 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">{workspace.launchUrl}</div>
+        </div>
+        <div className="rounded-md border border-slate-200 p-3">
+          <div className="text-xs text-slate-500">Status</div>
+          <div className="mt-2 flex flex-wrap gap-2"><StatusBadge value={workspace.publishStatus} /><StatusBadge value={workspace.status} /></div>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3 md:grid-cols-2">
+        <InfoRow label="Users" value={workspace.assignedUsers} />
+        <InfoRow label="Departments" value={workspace.department} />
+        <InfoRow label="Allowed models" value={workspace.allowedModels.join(", ")} />
+        <InfoRow label="Knowledge bases" value={workspace.knowledgeBases.join(", ")} />
+        <InfoRow label="Agents" value={workspace.agents.join(", ")} />
+        <InfoRow label="External rule" value={workspace.externalRule} />
+      </div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <a href={workspace.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"><ExternalLink size={14} /> Open</a>
+        <ActionButton variant="secondary" onClick={onCopy}><Copy size={14} /> Copy URL</ActionButton>
+        <ActionButton variant="secondary" onClick={onInvite}><MailPlus size={14} /> Invite users</ActionButton>
+        <ActionButton variant="secondary" onClick={onPolicy}><ShieldCheck size={14} /> Manage policy</ActionButton>
+      </div>
+    </Modal>
+  );
+}
+
+function InfoRow({ label, value }: { label: string; value: string }) {
+  return <div className="rounded-md border border-slate-200 p-3 text-sm"><div className="text-xs font-semibold uppercase text-slate-400">{label}</div><div className="mt-1 font-medium text-slate-900">{value}</div></div>;
 }
 
 function Checklist({ title, options, values, onToggle }: { title: string; options: string[]; values: string[]; onToggle: (item: string) => void }) {

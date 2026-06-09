@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { LockKeyhole, MailPlus, ShieldCheck, SlidersHorizontal, UserRoundCog, Users } from "lucide-react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
-import { departments, permissionModels } from "@/lib/mock-data";
+import { departments } from "@/lib/mock-data";
 
 function formatTokens(value: number) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(value % 1000000 === 0 ? 0 : 1)}M`;
@@ -33,10 +33,10 @@ const initialTeamMembers: Record<string, string[]> = {
 
 const teamPolicySummary: Record<string, { workspace: string; knowledge: string; agents: string; rule: string }> = {
   Engineering: { workspace: "Engineering Copilot", knowledge: "Engineering Docs", agents: "Code Review Agent", rule: "GPT-5, Claude, DeepSeek Coder" },
-  Legal: { workspace: "Legal AI Assistant", knowledge: "Legal Contracts", agents: "Contract Review Agent", rule: "Claude and Qwen Local, restricted external use" },
+  Legal: { workspace: "Legal AI Assistant", knowledge: "Legal Contracts", agents: "Contract Review Agent", rule: "Claude and Qwen 32B, restricted external use" },
   Claims: { workspace: "Claims AI Assistant", knowledge: "Claims SOPs", agents: "Claims Summary Agent", rule: "External models blocked" },
   Finance: { workspace: "Finance AI Desk", knowledge: "Finance Policies", agents: "Finance Analysis Agent", rule: "Local-first, Claude approval required" },
-  "Customer Support": { workspace: "Support Desk", knowledge: "Product FAQ", agents: "Support Triage Agent", rule: "Gemini and Llama Local" },
+  "Customer Support": { workspace: "Support Desk", knowledge: "Product FAQ", agents: "Support Triage Agent", rule: "Gemini and Llama 3.1 8B" },
   Marketing: { workspace: "Marketing Studio", knowledge: "Brand and Product FAQ", agents: "Drafting Assistant", rule: "Gemini first, GPT-5 capped" }
 };
 
@@ -54,8 +54,10 @@ export default function DepartmentsPage() {
     userTokenBudgets,
     updateUserTokenBudget,
     showToast,
-    addAudit
+    addAudit,
+    modelCatalog
   } = useAppState();
+  const permissionModels = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
 
   const totalLimit = Object.values(departmentTokenBudgets).reduce((sum, item) => sum + item.monthlyLimit, 0);
   const totalUsed = Object.values(departmentTokenBudgets).reduce((sum, item) => sum + item.used, 0);

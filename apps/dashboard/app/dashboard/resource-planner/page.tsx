@@ -6,7 +6,6 @@ import { Bot, BrainCircuit, Database, Gauge, Info, Lightbulb, ShieldCheck, Slide
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const departments = ["Claims", "Legal", "Engineering", "Finance", "Customer Support", "Marketing"];
-const models = ["Qwen Local", "Llama Local", "DeepSeek Coder", "GPT-5", "Claude", "Gemini"];
 const knowledgeBases = ["Claims SOPs", "Legal Contracts", "HR Policies", "Finance Policies", "Product FAQ", "Engineering Docs"];
 const agents = ["Claims Summary Agent", "Contract Review Agent", "Support Triage Agent", "Code Review Agent", "Finance Analysis Agent"];
 const fallbackPolicies = ["Local first", "Cheapest cloud", "Best quality", "Sensitive data local only"];
@@ -23,10 +22,10 @@ const initialTeamMembers = {
 };
 
 const workspaces = [
-  { name: "Legal AI Assistant", interface: "Open WebUI", models: "Claude, Qwen Local", knowledge: "Legal Contracts", users: "Legal team", external: "Restricted for confidential matters", audit: "Enabled" },
-  { name: "Claims AI Assistant", interface: "Open WebUI", models: "Qwen Local, Llama Local", knowledge: "Claims SOPs, Policy Documents", users: "Claims department", external: "Blocked", audit: "Enabled" },
+  { name: "Legal AI Assistant", interface: "Open WebUI", models: "Claude, Qwen 32B", knowledge: "Legal Contracts", users: "Legal team", external: "Restricted for confidential matters", audit: "Enabled" },
+  { name: "Claims AI Assistant", interface: "Open WebUI", models: "Qwen 32B, Llama 3.1 8B", knowledge: "Claims SOPs, Policy Documents", users: "Claims department", external: "Blocked", audit: "Enabled" },
   { name: "Engineering Copilot", interface: "Open WebUI / custom chat", models: "GPT-5, Claude, DeepSeek Coder", knowledge: "Engineering Docs, Codebase Docs", users: "Engineering team", external: "Allowed by policy", audit: "Enabled" },
-  { name: "Finance AI Desk", interface: "Custom chat", models: "Qwen Local", knowledge: "Finance Policies", users: "Finance team", external: "Restricted", audit: "Enabled" }
+  { name: "Finance AI Desk", interface: "Custom chat", models: "Qwen 32B", knowledge: "Finance Policies", users: "Finance team", external: "Restricted", audit: "Enabled" }
 ];
 
 const knowledgeBaseDetails = [
@@ -37,16 +36,16 @@ const knowledgeBaseDetails = [
 ];
 
 const customAgents = [
-  { name: "Claims Summary Agent", departments: "Claims", models: "Qwen Local", knowledge: "Claims SOPs, Policy Documents", tools: "Claim summary generator", approval: "Required before final decision", external: "Blocked", audit: "Enabled", limit: "12k tokens/request" },
-  { name: "Contract Review Agent", departments: "Legal", models: "Qwen Local, Claude", knowledge: "Legal Contracts", tools: "Clause extraction, risk flags", approval: "Required for confidential matters", external: "Restricted", audit: "Enabled", limit: "16k tokens/request" },
-  { name: "Support Triage Agent", departments: "Customer Support", models: "Llama Local, Gemini", knowledge: "Product FAQ", tools: "Ticket classification", approval: "Not required", external: "Allowed for non-sensitive", audit: "Enabled", limit: "8k tokens/request" },
+  { name: "Claims Summary Agent", departments: "Claims", models: "Qwen 32B", knowledge: "Claims SOPs, Policy Documents", tools: "Claim summary generator", approval: "Required before final decision", external: "Blocked", audit: "Enabled", limit: "12k tokens/request" },
+  { name: "Contract Review Agent", departments: "Legal", models: "Qwen 32B, Claude", knowledge: "Legal Contracts", tools: "Clause extraction, risk flags", approval: "Required for confidential matters", external: "Restricted", audit: "Enabled", limit: "16k tokens/request" },
+  { name: "Support Triage Agent", departments: "Customer Support", models: "Llama 3.1 8B, Gemini", knowledge: "Product FAQ", tools: "Ticket classification", approval: "Not required", external: "Allowed for non-sensitive", audit: "Enabled", limit: "8k tokens/request" },
   { name: "Code Review Agent", departments: "Engineering", models: "DeepSeek Coder, Claude", knowledge: "Engineering Docs", tools: "Code review checklist", approval: "Required before merge", external: "Allowed", audit: "Enabled", limit: "24k tokens/request" },
-  { name: "Finance Analysis Agent", departments: "Finance", models: "Qwen Local", knowledge: "Finance Policies", tools: "Variance analysis", approval: "Required", external: "Blocked", audit: "Enabled", limit: "8k tokens/request" }
+  { name: "Finance Analysis Agent", departments: "Finance", models: "Qwen 32B", knowledge: "Finance Policies", tools: "Variance analysis", approval: "Required", external: "Blocked", audit: "Enabled", limit: "8k tokens/request" }
 ];
 
 const routingSuggestions = [
-  { scenario: "Confidential legal task", route: "Qwen Local first; Claude only for non-sensitive drafting", reason: "Prevents confidential contract retrieval from leaving approved boundaries." },
-  { scenario: "Claims sensitive workflow", route: "Qwen Local only", reason: "External models are blocked for Claims policy and claims documents." },
+  { scenario: "Confidential legal task", route: "Qwen 32B first; Claude only for non-sensitive drafting", reason: "Prevents confidential contract retrieval from leaving approved boundaries." },
+  { scenario: "Claims sensitive workflow", route: "Qwen 32B only", reason: "External models are blocked for Claims policy and claims documents." },
   { scenario: "Engineering code task", route: "DeepSeek Coder, then Claude or GPT-5", reason: "Balances coding quality, latency, and approved department access." },
   { scenario: "Marketing drafting", route: "Gemini first; GPT-5 only for executive content", reason: "Simple drafting can use a cheaper model while preserving high-quality fallback." }
 ];
@@ -82,16 +81,16 @@ const recommendations = [
   { title: "Claims under-allocated", status: "Under-allocated", text: "Peak GPU utilization is 92% and queue wait time is rising. Recommend increasing local Qwen capacity, but only by reclaiming unused Finance capacity or adding one GPU replica." },
   { title: "Marketing over-spending", status: "Cost risk", text: "72% of Marketing requests are drafting/summarization. Recommend routing most traffic to a cheaper cloud model and reducing GPT-5 budget by AED 2,000/month." },
   { title: "Finance over-allocated", status: "Over-allocated", text: "Finance has 30% reserved local capacity but only 8% utilization. Recommend reducing reserved capacity to 10%." },
-  { title: "Legal governance risk", status: "Governance risk", text: "Legal is using external Claude for confidential contract review. Recommend switching confidential workflows to Qwen Local and keeping Claude only for non-sensitive drafting." },
+  { title: "Legal governance risk", status: "Governance risk", text: "Legal is using external Claude for confidential contract review. Recommend switching confidential workflows to Qwen 32B and keeping Claude only for non-sensitive drafting." },
   { title: "Customer Support cache opportunity", status: "Healthy", text: "Repeated queries represent 35% of support traffic. Recommend enabling response caching and attaching Product FAQ knowledge base." }
 ];
 
 const initialModelAccess = {
-  Claims: ["Qwen Local", "Llama Local"],
-  Legal: ["Qwen Local", "Claude"],
-  Engineering: ["Qwen Local", "Llama Local", "DeepSeek Coder", "GPT-5", "Claude"],
-  Finance: ["Qwen Local"],
-  "Customer Support": ["Llama Local", "Gemini"],
+  Claims: ["Qwen 32B", "Llama 3.1 8B"],
+  Legal: ["Qwen 32B", "Claude"],
+  Engineering: ["Qwen 32B", "Llama 3.1 8B", "DeepSeek Coder", "GPT-5", "Claude"],
+  Finance: ["Qwen 32B"],
+  "Customer Support": ["Llama 3.1 8B", "Gemini"],
   Marketing: ["GPT-5", "Claude", "Gemini"]
 };
 
@@ -136,7 +135,7 @@ function Toggle({ enabled, label, onClick }: { enabled: boolean; label: string; 
 }
 
 export default function ResourcePlannerPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, modelCatalog } = useAppState();
   const [teamMembers, setTeamMembers] = useState<Record<string, string[]>>(initialTeamMembers);
   const [memberDepartment, setMemberDepartment] = useState("Claims");
   const [memberEmail, setMemberEmail] = useState("");
@@ -145,13 +144,14 @@ export default function ResourcePlannerPage() {
   const [localGpu, setLocalGpu] = useState(35);
   const [maxConcurrent, setMaxConcurrent] = useState(24);
   const [fallbackPolicy, setFallbackPolicy] = useState("Local first");
-  const [allowedModels, setAllowedModels] = useState(["Qwen Local", "Claude"]);
+  const [allowedModels, setAllowedModels] = useState(["Qwen 32B", "Claude"]);
   const [selectedKbs, setSelectedKbs] = useState(["Claims SOPs"]);
   const [assignedAgents, setAssignedAgents] = useState(["Claims Summary Agent"]);
   const [activeMatrix, setActiveMatrix] = useState<MatrixTab>("Models");
   const [modelAccess, setModelAccess] = useState<Matrix>(initialModelAccess);
   const [kbAccess, setKbAccess] = useState<Matrix>(initialKbAccess);
   const [agentAccess, setAgentAccess] = useState<Matrix>(initialAgentAccess);
+  const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
   const totalReserved = Object.values(currentReservedCapacity).reduce((sum, value) => sum + value, 0);
   const currentDepartmentCapacity = currentReservedCapacity[selectedDepartment] ?? 0;
   const proposedTotalReserved = totalReserved - currentDepartmentCapacity + localGpu;
@@ -223,7 +223,7 @@ export default function ResourcePlannerPage() {
   }
 
   const matrix = activeMatrix === "Models" ? modelAccess : activeMatrix === "Knowledge Bases" ? kbAccess : agentAccess;
-  const matrixColumns = activeMatrix === "Models" ? models : activeMatrix === "Knowledge Bases" ? knowledgeBases : agents;
+  const matrixColumns = activeMatrix === "Models" ? activeModelOptions : activeMatrix === "Knowledge Bases" ? knowledgeBases : agents;
 
   function toggleMatrixAccess(department: string, item: string) {
     if (activeMatrix === "Models") {
@@ -374,7 +374,7 @@ export default function ResourcePlannerPage() {
             <p className="mt-2 text-sm leading-6 text-slate-600">When a provider is degraded, the product should let admins apply a routing policy, not just read a suggestion.</p>
             <div className="mt-4 space-y-3">
               <ActionButton onClick={() => { showToast("GPT-5 critical traffic routed to Claude"); addAudit("Routing policy changed", "GPT-5 fallback to Claude", "Model"); }}>Route GPT-5 critical traffic to Claude</ActionButton>
-              <ActionButton variant="secondary" onClick={() => { showToast("GPT-5 sensitive traffic routed to Qwen Local"); addAudit("Routing policy changed", "GPT-5 fallback to Qwen Local", "Model"); }}>Route sensitive work to Qwen Local</ActionButton>
+              <ActionButton variant="secondary" onClick={() => { showToast("GPT-5 sensitive traffic routed to Qwen 32B"); addAudit("Routing policy changed", "GPT-5 fallback to Qwen 32B", "Model"); }}>Route sensitive work to Qwen 32B</ActionButton>
             </div>
             <ol className="mt-4 list-decimal space-y-1 pl-5 text-sm leading-6 text-slate-600">
               <li>Confirm fallback model is enabled.</li>
@@ -418,7 +418,7 @@ export default function ResourcePlannerPage() {
             </div>
 
             <div className="mt-5 grid gap-4 xl:grid-cols-3">
-              <Selector title="Allowed models" icon={<BrainCircuit size={16} />} options={models} values={allowedModels} onToggle={(item) => toggleSelected(allowedModels, item, setAllowedModels)} />
+              <Selector title="Allowed models" icon={<BrainCircuit size={16} />} options={activeModelOptions} values={allowedModels} onToggle={(item) => toggleSelected(allowedModels, item, setAllowedModels)} />
               <Selector title="Knowledge bases" icon={<Database size={16} />} options={knowledgeBases} values={selectedKbs} onToggle={(item) => toggleSelected(selectedKbs, item, setSelectedKbs)} />
               <Selector title="Assigned agents" icon={<Bot size={16} />} options={agents} values={assignedAgents} onToggle={(item) => toggleSelected(assignedAgents, item, setAssignedAgents)} />
             </div>
