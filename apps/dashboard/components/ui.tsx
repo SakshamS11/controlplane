@@ -25,6 +25,7 @@ import {
   Settings,
   ShieldCheck,
   Server,
+  SlidersHorizontal,
   Sparkles,
   X
 } from "lucide-react";
@@ -223,6 +224,7 @@ const nav = [
   { href: "/dashboard/models", label: "Models", icon: Sparkles },
   { href: "/dashboard/stacks", label: "Stacks", icon: Layers },
   { href: "/dashboard/departments", label: "Departments", icon: Building2 },
+  { href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal },
   { href: "/dashboard/monitoring", label: "Monitoring", icon: MonitorDot },
   { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText },
   { href: "/dashboard/settings", label: "Settings", icon: Settings }
@@ -270,7 +272,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <nav className={`flex-1 space-y-1 py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
           {nav.map((item) => {
             const Icon = item.icon;
-            const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
+            const active = item.href === "/dashboard" ? pathname === item.href : pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.href}
@@ -371,9 +373,9 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
 export function StatusBadge({ value }: { value: string }) {
   const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational"
     ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
-    : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit"
+    : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit" || value === "Under-allocated" || value === "Over-allocated" || value === "Cost risk"
       ? "bg-amber-50 text-amber-700 ring-amber-200"
-      : value === "Offline" || value === "Critical" || value === "High" || value === "Down"
+      : value === "Offline" || value === "Critical" || value === "High" || value === "Down" || value === "Governance risk"
         ? "bg-red-50 text-red-700 ring-red-200"
         : "bg-slate-100 text-slate-700 ring-slate-200";
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;

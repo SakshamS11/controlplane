@@ -49,6 +49,14 @@ const systemTiles = [
   { label: "Cost watch", value: "GPT-5 near threshold", href: "/dashboard/monitoring", cta: "Open monitoring" }
 ];
 
+const plannerMetrics = [
+  ["Departments optimized", "6", "All active teams analyzed", <ShieldCheck key="i" size={18} />],
+  ["Potential monthly savings", "AED 9,400", "Routing and capacity changes", <WalletCards key="i" size={18} />],
+  ["Under-allocated teams", "1", "Claims needs more local capacity", <AlertTriangle key="i" size={18} />],
+  ["Over-allocated teams", "2", "Finance and Marketing", <Gauge key="i" size={18} />],
+  ["Governance risks", "1", "Legal confidential workflow", <ShieldCheck key="i" size={18} />]
+];
+
 function CompactKpi({ label, value, detail, icon }: { label: string; value: string; detail: string; icon: ReactNode }) {
   return (
     <Card className="p-4">
@@ -160,6 +168,18 @@ export default function DashboardOverviewPage() {
         </div>
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {metrics.slice(4).map(([label, value, detail, icon]) => <CompactKpi key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
+        </div>
+        <div className="mt-6">
+          <div className="mb-3 flex items-center justify-between gap-4">
+            <div>
+              <h2 className="font-semibold">Resource planner impact</h2>
+              <p className="mt-1 text-sm text-slate-500">Capacity and governance optimization opportunities across departments.</p>
+            </div>
+            <Link href="/dashboard/resource-planner" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50">Open planner <ArrowRight size={14} /></Link>
+          </div>
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+            {plannerMetrics.map(([label, value, detail, icon]) => <CompactKpi key={label as string} label={label as string} value={value as string} detail={detail as string} icon={icon} />)}
+          </div>
         </div>
         <div className="mt-6 grid gap-6 xl:grid-cols-3">
           <Card className="p-5">
