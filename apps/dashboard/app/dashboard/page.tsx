@@ -17,6 +17,30 @@ const metrics = [
   ["Open alerts", "2", "1 critical, 1 warning", <AlertTriangle key="i" size={18} />]
 ];
 
+const actionQueue = [
+  {
+    title: "Reconnect Legal Sandbox",
+    severity: "Critical",
+    detail: "Agent has missed heartbeats for 42 minutes. Reconnect the agent before deploying or collecting logs.",
+    href: "/dashboard/targets",
+    cta: "Open servers"
+  },
+  {
+    title: "Review Claims GPU memory",
+    severity: "Warning",
+    detail: "GPU memory is above the safe operating range. Check services and logs before routing more local traffic.",
+    href: "/dashboard/targets",
+    cta: "View target"
+  },
+  {
+    title: "Route around OpenAI degradation",
+    severity: "Warning",
+    detail: "GPT-5 provider latency is elevated. Review provider health and fallback model access.",
+    href: "/dashboard/models",
+    cta: "Review models"
+  }
+];
+
 export default function DashboardOverviewPage() {
   const { showToast, addAudit } = useAppState();
   function simulateAction(action: string, target: string) {
@@ -38,9 +62,9 @@ export default function DashboardOverviewPage() {
             <div className="bg-slate-950 p-6 text-white">
               <div className="flex flex-col justify-between gap-6 md:flex-row md:items-start">
                 <div>
-                  <p className="text-xs font-semibold uppercase text-cyan-200">Executive focus</p>
-                  <h2 className="mt-2 text-2xl font-semibold">Fleet is operational, with one target needing attention.</h2>
-                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">The core AI stack is healthy on Acme Azure GPU Server. Claims On-Prem needs GPU memory review and Legal Sandbox should be reconnected.</p>
+                  <p className="text-xs font-semibold uppercase text-cyan-200">Priority status</p>
+                  <h2 className="mt-2 text-2xl font-semibold">Stable, but 3 items need operator review.</h2>
+                  <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">Acme Azure is healthy. Legal Sandbox is offline, Claims GPU memory is high, and OpenAI provider latency is degraded.</p>
                 </div>
                 <div className="rounded-lg border border-white/10 bg-white/10 p-4 text-center">
                   <div className="text-4xl font-semibold">92</div>
@@ -69,21 +93,31 @@ export default function DashboardOverviewPage() {
           <Card className="p-5">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase text-cyan-700">Recommended actions</p>
-                <h2 className="mt-2 text-lg font-semibold">Next best moves</h2>
+                <p className="text-xs font-semibold uppercase text-cyan-700">Action queue</p>
+                <h2 className="mt-2 text-lg font-semibold">Do these first</h2>
               </div>
               <ShieldCheck className="text-cyan-700" size={22} />
             </div>
             <div className="mt-5 space-y-3">
-              <button onClick={() => simulateAction("Review critical alert", "Legal Sandbox")} className="flex w-full items-center justify-between rounded-md border border-red-100 bg-red-50 px-4 py-3 text-left text-sm hover:bg-red-100">
-                <span><span className="font-semibold text-red-800">Reconnect Legal Sandbox</span><span className="block text-red-700/70">Agent offline for 42 minutes</span></span>
-                <ArrowRight size={16} className="text-red-700" />
-              </button>
-              <button onClick={() => simulateAction("Open GPU memory review", "Claims On-Prem Node")} className="flex w-full items-center justify-between rounded-md border border-amber-100 bg-amber-50 px-4 py-3 text-left text-sm hover:bg-amber-100">
-                <span><span className="font-semibold text-amber-800">Check Claims GPU memory</span><span className="block text-amber-700/70">Above recommended threshold</span></span>
-                <ArrowRight size={16} className="text-amber-700" />
-              </button>
-              <ActionButton variant="secondary" onClick={() => simulateAction("Generate executive report", "Dashboard")}>Generate report</ActionButton>
+              {actionQueue.map((item) => (
+                <Link
+                  key={item.title}
+                  href={item.href}
+                  className={`block rounded-md border px-4 py-3 text-sm transition ${item.severity === "Critical" ? "border-red-100 bg-red-50 hover:bg-red-100" : "border-amber-100 bg-amber-50 hover:bg-amber-100"}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <div className={item.severity === "Critical" ? "font-semibold text-red-800" : "font-semibold text-amber-800"}>{item.title}</div>
+                      <div className={item.severity === "Critical" ? "mt-1 text-red-700/75" : "mt-1 text-amber-700/75"}>{item.detail}</div>
+                    </div>
+                    <StatusBadge value={item.severity} />
+                  </div>
+                  <div className={item.severity === "Critical" ? "mt-3 inline-flex items-center gap-2 font-semibold text-red-800" : "mt-3 inline-flex items-center gap-2 font-semibold text-amber-800"}>
+                    {item.cta} <ArrowRight size={14} />
+                  </div>
+                </Link>
+              ))}
+              <ActionButton variant="secondary" onClick={() => simulateAction("Generate operations report", "Dashboard")}>Generate ops report</ActionButton>
             </div>
           </Card>
         </div>
