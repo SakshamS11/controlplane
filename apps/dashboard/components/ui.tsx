@@ -29,7 +29,7 @@ import {
   X
 } from "lucide-react";
 
-import { auditLogs, initialDepartmentTokenBudgets, initialPermissions, initialUserTokenBudgets } from "@/lib/mock-data";
+import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds, initialPermissions, initialUserTokenBudgets } from "@/lib/mock-data";
 
 export const DEMO_AUTH_KEY = "ai-control-plane-demo-authenticated";
 export const DEMO_EMAIL_HASH = "d66bee74";
@@ -48,6 +48,8 @@ type AppState = {
   toggleDepartmentHardLimit: (department: string) => void;
   userTokenBudgets: typeof initialUserTokenBudgets;
   updateUserTokenBudget: (id: string, limit: number) => void;
+  operationalThresholds: typeof initialOperationalThresholds;
+  updateOperationalThreshold: (key: keyof typeof initialOperationalThresholds, value: number) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -58,6 +60,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState(initialPermissions);
   const [departmentTokenBudgets, setDepartmentTokenBudgets] = useState(initialDepartmentTokenBudgets);
   const [userTokenBudgets, setUserTokenBudgets] = useState(initialUserTokenBudgets);
+  const [operationalThresholds, setOperationalThresholds] = useState(initialOperationalThresholds);
 
   function showToast(message: string) {
     const id = Date.now();
@@ -124,6 +127,12 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
     addAudit("Individual token limit updated", user?.name || id, "Permission");
   }
 
+  function updateOperationalThreshold(key: keyof typeof initialOperationalThresholds, value: number) {
+    setOperationalThresholds((current) => ({ ...current, [key]: value }));
+    showToast("Operational threshold updated");
+    addAudit("Operational threshold updated", key, "Alert");
+  }
+
   const value = useMemo(
     () => ({
       toasts,
@@ -136,9 +145,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       updateDepartmentTokenBudget,
       toggleDepartmentHardLimit,
       userTokenBudgets,
-      updateUserTokenBudget
+      updateUserTokenBudget,
+      operationalThresholds,
+      updateOperationalThreshold
     }),
-    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets]
+    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets, operationalThresholds]
   );
 
   return (

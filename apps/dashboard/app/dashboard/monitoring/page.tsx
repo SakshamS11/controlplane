@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { AlertTriangle, ArrowRight, Clock, Filter, RefreshCw, Server, Sparkles } from "lucide-react";
+import type { ReactNode } from "react";
+import { Activity, AlertTriangle, ArrowRight, Cpu, Filter, Gauge, RefreshCw, Server, WalletCards, X } from "lucide-react";
 import { AreaMetricChart, BarMetricChart, DonutChart, MultiLineChart } from "@/components/charts";
 import { ActionButton, Card, ChartCard, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { alerts, costByModel, providerHealth, requestsByDepartment, requestVolume, targets } from "@/lib/mock-data";
@@ -11,8 +12,43 @@ const timeRanges = ["24h", "7d", "30d"];
 const metricViews = ["Overview", "Infrastructure", "Usage", "Cost"];
 const severities = ["All", "Critical", "Warning", "Info"];
 
+function MonitoringKpi({ label, value, detail, icon, tone = "cyan" }: { label: string; value: string; detail: string; icon: ReactNode; tone?: "cyan" | "emerald" | "amber" | "red" | "indigo" }) {
+  const toneClass = {
+    cyan: "bg-cyan-50 text-cyan-700",
+    emerald: "bg-emerald-50 text-emerald-700",
+    amber: "bg-amber-50 text-amber-700",
+    red: "bg-red-50 text-red-700",
+    indigo: "bg-indigo-50 text-indigo-700"
+  }[tone];
+
+  return (
+    <Card className="p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <div className="text-xs font-medium text-slate-500">{label}</div>
+          <div className="mt-2 text-2xl font-semibold text-slate-950">{value}</div>
+          <div className="mt-1 text-xs text-slate-500">{detail}</div>
+        </div>
+        <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-md ${toneClass}`}>{icon}</div>
+      </div>
+    </Card>
+  );
+}
+
+function FilterButton({ active, children, onClick }: { active: boolean; children: ReactNode; onClick: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-9 rounded-md px-3 text-sm font-medium transition focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${active ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700 hover:bg-slate-50"}`}
+    >
+      {children}
+    </button>
+  );
+}
+
 export default function MonitoringPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, operationalThresholds } = useAppState();
   const [timeRange, setTimeRange] = useState("7d");
   const [targetFilter, setTargetFilter] = useState("All servers");
   const [providerFilter, setProviderFilter] = useState("All providers");
@@ -29,59 +65,83 @@ export default function MonitoringPage() {
     addAudit(action, target, "Alert");
   }
 
+  function resetFilters() {
+    setTimeRange("7d");
+    setTargetFilter("All servers");
+    setProviderFilter("All providers");
+    setSeverityFilter("All");
+    setMetricView("Overview");
+    showToast("Monitoring filters reset");
+  }
+
   return (
     <>
       <PageHeader eyebrow="Observability" title="Monitoring dashboard" description="Infrastructure health, request volume, latency, cost, errors, department usage, and target service health in one place." />
       <Section>
-        <Card className="mb-6 p-4">
-          <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-6">
+          <MonitoringKpi label="Fleet GPU" value="71%" detail={`Warns at ${operationalThresholds.gpuMemoryWarning}%`} icon={<Gauge size={18} />} tone="emerald" />
+          <MonitoringKpi label="Requests" value="128k" detail={`${timeRange} selected`} icon={<Activity size={18} />} />
+          <MonitoringKpi label="Avg latency" value="812 ms" detail={`Limit ${operationalThresholds.latencyWarning} ms`} icon={<Cpu size={18} />} tone="amber" />
+          <MonitoringKpi label="Error rate" value="0.9%" detail="Across selected scope" icon={<AlertTriangle size={18} />} tone="red" />
+          <MonitoringKpi label="Est. cost" value="AED 18.4k" detail={`Watch ${operationalThresholds.monthlyCostWarning.toLocaleString()} AED`} icon={<WalletCards size={18} />} tone="indigo" />
+          <MonitoringKpi label="Open issues" value={String(activeIssues)} detail={`${visibleAlerts.length} alerts visible`} icon={<Server size={18} />} tone={activeIssues ? "amber" : "emerald"} />
+        </div>
+
+        <Card className="mb-6 p-5">
+          <div className="flex flex-col gap-5">
             <div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Filter size={14} /> Filters</div>
-              <p className="mt-2 text-sm text-slate-500">Narrow monitoring by time, server, provider, severity, and metric focus.</p>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Filter size={14} /> Monitoring filters</div>
+              <h2 className="mt-2 text-lg font-semibold">Filter all KPIs, charts, alerts, and health panels</h2>
+              <p className="mt-1 text-sm text-slate-500">Use these controls to move from fleet-wide health to a specific server, provider, severity, or metric view.</p>
             </div>
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-              <label className="text-xs font-medium text-slate-500">Time range
-                <select value={timeRange} onChange={(event) => setTimeRange(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
-                  {timeRanges.map((range) => <option key={range}>{range}</option>)}
-                </select>
-              </label>
-              <label className="text-xs font-medium text-slate-500">Server
-                <select value={targetFilter} onChange={(event) => setTargetFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
-                  <option>All servers</option>
-                  {targets.map((target) => <option key={target.id}>{target.name}</option>)}
-                </select>
-              </label>
-              <label className="text-xs font-medium text-slate-500">Provider
-                <select value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
-                  <option>All providers</option>
-                  {providerHealth.filter((provider) => provider.status !== "Self-hosted").map((provider) => <option key={provider.provider}>{provider.provider}</option>)}
-                </select>
-              </label>
-              <label className="text-xs font-medium text-slate-500">Severity
-                <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
-                  {severities.map((severity) => <option key={severity}>{severity}</option>)}
-                </select>
-              </label>
-              <label className="text-xs font-medium text-slate-500">View
-                <select value={metricView} onChange={(event) => setMetricView(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
-                  {metricViews.map((view) => <option key={view}>{view}</option>)}
-                </select>
-              </label>
+            <div className="grid gap-5 xl:grid-cols-[1fr_1fr_1.25fr]">
+              <div>
+                <div className="text-xs font-semibold uppercase text-slate-500">Time range</div>
+                <div className="mt-2 flex flex-wrap gap-2">{timeRanges.map((range) => <FilterButton key={range} active={timeRange === range} onClick={() => setTimeRange(range)}>{range}</FilterButton>)}</div>
+              </div>
+              <div>
+                <div className="text-xs font-semibold uppercase text-slate-500">Metric view</div>
+                <div className="mt-2 flex flex-wrap gap-2">{metricViews.map((view) => <FilterButton key={view} active={metricView === view} onClick={() => setMetricView(view)}>{view}</FilterButton>)}</div>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <label className="text-xs font-medium text-slate-500">Server
+                  <select value={targetFilter} onChange={(event) => setTargetFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
+                    <option>All servers</option>
+                    {targets.map((target) => <option key={target.id}>{target.name}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-slate-500">Provider
+                  <select value={providerFilter} onChange={(event) => setProviderFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
+                    <option>All providers</option>
+                    {providerHealth.filter((provider) => provider.status !== "Self-hosted").map((provider) => <option key={provider.provider}>{provider.provider}</option>)}
+                  </select>
+                </label>
+                <label className="text-xs font-medium text-slate-500">Severity
+                  <select value={severityFilter} onChange={(event) => setSeverityFilter(event.target.value)} className="mt-1 block min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-900">
+                    {severities.map((severity) => <option key={severity}>{severity}</option>)}
+                  </select>
+                </label>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-3 rounded-md bg-slate-50 px-4 py-3">
+              <div className="text-sm text-slate-600">
+                Showing <span className="font-semibold text-slate-900">{targetFilter}</span>, <span className="font-semibold text-slate-900">{providerFilter}</span>, <span className="font-semibold text-slate-900">{severityFilter}</span> alerts, <span className="font-semibold text-slate-900">{metricView}</span> charts.
+              </div>
+              <button onClick={resetFilters} className="inline-flex min-h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 hover:bg-slate-50">
+                <X size={14} /> Reset filters
+              </button>
             </div>
           </div>
         </Card>
 
-        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <Card className="p-4"><div className="flex items-center gap-3"><Clock className="text-cyan-700" size={18} /><div><div className="text-xs text-slate-500">Window</div><div className="mt-1 font-semibold">{timeRange}</div></div></div></Card>
-          <Card className="p-4"><div className="flex items-center gap-3"><Server className="text-emerald-700" size={18} /><div><div className="text-xs text-slate-500">Servers shown</div><div className="mt-1 font-semibold">{visibleTargets.length}</div></div></div></Card>
-          <Card className="p-4"><div className="flex items-center gap-3"><Sparkles className="text-indigo-700" size={18} /><div><div className="text-xs text-slate-500">Providers shown</div><div className="mt-1 font-semibold">{visibleProviders.length}</div></div></div></Card>
-          <Card className="p-4"><div className="flex items-center gap-3"><AlertTriangle className="text-amber-700" size={18} /><div><div className="text-xs text-slate-500">Issues in scope</div><div className="mt-1 font-semibold">{activeIssues}</div></div></div></Card>
-        </div>
-
         <div className="mb-6 grid gap-3 md:grid-cols-3">
           <Link href="/dashboard/targets" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Open affected servers <ArrowRight size={15} /></Link>
           <Link href="/dashboard/models" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Review model routing <ArrowRight size={15} /></Link>
-          <button onClick={() => simulateAction("Refresh monitoring data", "Monitoring")} className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Refresh data <RefreshCw size={15} /></button>
+          <Link href="/dashboard/settings" className="flex items-center justify-between rounded-md border border-slate-200 bg-white px-4 py-3 text-sm font-semibold text-slate-800 hover:bg-slate-50">Tune alert thresholds <ArrowRight size={15} /></Link>
+        </div>
+        <div className="mb-6 rounded-md border border-amber-100 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+          GPU memory warnings use your configured threshold of {operationalThresholds.gpuMemoryWarning}%; critical alerts start at {operationalThresholds.gpuMemoryCritical}%.
+          <button onClick={() => simulateAction("Refresh monitoring data", "Monitoring")} className="ml-3 inline-flex items-center gap-1 font-semibold text-amber-900">Refresh <RefreshCw size={13} /></button>
         </div>
 
         <div className="grid gap-6 xl:grid-cols-2">

@@ -130,6 +130,16 @@ export const initialUserTokenBudgets = [
   { id: "u7", name: "Yusuf Malik", email: "yusuf@acme.ai", department: "Marketing", monthlyLimit: 500000, used: 420000, status: "Near limit" }
 ];
 
+export const initialOperationalThresholds = {
+  gpuMemoryWarning: 90,
+  gpuMemoryCritical: 96,
+  cpuWarning: 85,
+  ramWarning: 88,
+  diskWarning: 82,
+  latencyWarning: 1200,
+  monthlyCostWarning: 20000
+};
+
 export const services = [
   { name: "Ollama", status: "Running", port: "11434" },
   { name: "LiteLLM", status: "Running", port: "4000" },
@@ -161,7 +171,7 @@ export const stacks = [
 
 export const alerts = [
   { title: "OpenAI provider degradation affecting GPT-5", severity: "Warning", area: "Provider" },
-  { title: "Claims On-Prem Node GPU memory above 90%", severity: "Warning", area: "Infrastructure" },
+  { title: "Claims On-Prem Node GPU memory above configured threshold", severity: "Warning", area: "Infrastructure" },
   { title: "Legal Sandbox agent offline", severity: "Critical", area: "Agent" },
   { title: "GPT-5 monthly cost above threshold", severity: "Warning", area: "Cost" },
   { title: "LiteLLM restart event detected", severity: "Info", area: "Service" }

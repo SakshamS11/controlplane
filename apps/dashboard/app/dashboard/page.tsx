@@ -29,9 +29,9 @@ const actionQueue = [
   {
     title: "Review Claims GPU memory",
     severity: "Warning",
-    detail: "GPU memory is above the safe operating range. Check services and logs before routing more local traffic.",
-    href: "/dashboard/targets",
-    cta: "View target"
+    detail: "GPU memory is above your configured warning threshold. Review the target or tune alert policy.",
+    href: "/dashboard/settings",
+    cta: "Adjust threshold"
   },
   {
     title: "Route around OpenAI degradation",
@@ -80,7 +80,7 @@ function CompactChart({ title, detail, children }: { title: string; detail: stri
 }
 
 export default function DashboardOverviewPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, operationalThresholds } = useAppState();
   function simulateAction(action: string, target: string) {
     showToast(`${action} opened`);
     addAudit(action, target);
@@ -108,7 +108,7 @@ export default function DashboardOverviewPage() {
                     <div className="text-4xl font-semibold">92</div>
                     <div className="pb-1 text-xs text-slate-300">Ops score</div>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-slate-300">Stable overall. Review 3 operator items before scaling traffic.</p>
+                  <p className="mt-4 text-sm leading-6 text-slate-300">Stable overall. GPU warnings currently trigger at {operationalThresholds.gpuMemoryWarning}% memory.</p>
                 </div>
                 <div className="grid gap-0 divide-y divide-slate-200 md:grid-cols-2 md:divide-x md:divide-y-0 xl:grid-cols-4">
                   {systemTiles.map((tile) => (
