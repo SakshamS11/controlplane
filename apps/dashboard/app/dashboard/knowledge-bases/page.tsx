@@ -14,6 +14,50 @@ const knowledgeSeed = [
 
 const sourceTypes = ["Uploaded documents", "SharePoint folder", "Google Drive folder", "S3 bucket", "Internal policies", "SOPs", "Contracts", "Claims documents", "HR policies", "Finance policies", "Product FAQ", "Engineering docs"];
 
+const sourceConnectionCopy: Record<string, { locationLabel: string; credentialLabel: string; placeholder: string; credentialPlaceholder: string; action: string; note: string }> = {
+  "Uploaded documents": {
+    locationLabel: "Upload batch",
+    credentialLabel: "Credential",
+    placeholder: "legal-contracts-q2-upload",
+    credentialPlaceholder: "Not required for manual uploads",
+    action: "Select files",
+    note: "Upload files, assign access, then run indexing."
+  },
+  "SharePoint folder": {
+    locationLabel: "SharePoint folder URL",
+    credentialLabel: "Microsoft credential reference",
+    placeholder: "https://company.sharepoint.com/sites/legal/contracts",
+    credentialPlaceholder: "secret:sharepoint-legal-readonly",
+    action: "Connect Microsoft",
+    note: "Connect with a read-only app permission or delegated admin consent."
+  },
+  "Google Drive folder": {
+    locationLabel: "Google Drive folder URL",
+    credentialLabel: "Google credential reference",
+    placeholder: "https://drive.google.com/drive/folders/...",
+    credentialPlaceholder: "secret:google-drive-engineering",
+    action: "Connect Google",
+    note: "Connect with a scoped service account or OAuth app."
+  },
+  "S3 bucket": {
+    locationLabel: "S3 bucket URI",
+    credentialLabel: "AWS access reference",
+    placeholder: "s3://acme-finance-policies/prod",
+    credentialPlaceholder: "secret:aws-role-finance-kb",
+    action: "Validate S3 access",
+    note: "Use a read-only IAM role or access key reference."
+  }
+};
+
+const defaultSourceConnection = {
+  locationLabel: "Source location",
+  credentialLabel: "Credential reference",
+  placeholder: "https://internal.company.com/source-or-folder",
+  credentialPlaceholder: "secret:source-readonly",
+  action: "Connect source",
+  note: "Connect the source, test access, then sync and index documents."
+};
+
 export default function KnowledgeBasesPage() {
   const [rows, setRows] = useState(knowledgeSeed);
   const [name, setName] = useState("Legal Contracts");
@@ -22,7 +66,12 @@ export default function KnowledgeBasesPage() {
   const [workspace, setWorkspace] = useState("Legal AI Assistant");
   const [departments, setDepartments] = useState("Legal");
   const [access, setAccess] = useState("Legal only");
+  const [sourceLocation, setSourceLocation] = useState("https://company.sharepoint.com/sites/legal/contracts");
+  const [credentialReference, setCredentialReference] = useState("secret:sharepoint-legal-readonly");
+  const [syncCadence, setSyncCadence] = useState("Every 6 hours");
+  const [connectionStatus, setConnectionStatus] = useState("Not connected");
   const { showToast, addAudit } = useAppState();
+  const connection = sourceConnectionCopy[source] ?? defaultSourceConnection;
 
   function saveKnowledgeBase() {
     const row = {
@@ -39,6 +88,25 @@ export default function KnowledgeBasesPage() {
     setRows((current) => [row, ...current.filter((item) => item.name !== name)]);
     showToast(`${name} knowledge base saved`);
     addAudit("Knowledge base saved", name, "Permission");
+  }
+
+  function connectSource() {
+    setConnectionStatus("Connected");
+    showToast(`${source} connected for ${name}`);
+    addAudit("Knowledge source connected", name, "Permission");
+  }
+
+  function testConnection() {
+    setConnectionStatus("Validated");
+    showToast(`${source} access validated`);
+    addAudit("Knowledge source validated", name, "Permission");
+  }
+
+  function changeSource(nextSource: string) {
+    setSource(nextSource);
+    setSourceLocation("");
+    setCredentialReference("");
+    setConnectionStatus("Not connected");
   }
 
   return (
@@ -61,10 +129,34 @@ export default function KnowledgeBasesPage() {
                 <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
               </label>
               <label className="text-sm font-medium text-slate-600">Source type
-                <select value={source} onChange={(event) => setSource(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                <select value={source} onChange={(event) => changeSource(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
                   {sourceTypes.map((item) => <option key={item}>{item}</option>)}
                 </select>
               </label>
+              <div className="rounded-md border border-cyan-100 bg-cyan-50/60 p-4">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="text-sm font-semibold text-cyan-950">Connect selected source</div>
+                  <StatusBadge value={connectionStatus} />
+                </div>
+                <div className="mt-4 grid gap-3">
+                  <label className="text-sm font-medium text-slate-600">{connection.locationLabel}
+                    <input value={sourceLocation} onChange={(event) => setSourceLocation(event.target.value)} placeholder={connection.placeholder} className="mt-2 min-h-10 w-full rounded-md border border-cyan-100 bg-white px-3 text-sm" />
+                  </label>
+                  <label className="text-sm font-medium text-slate-600">{connection.credentialLabel}
+                    <input value={credentialReference} onChange={(event) => setCredentialReference(event.target.value)} placeholder={connection.credentialPlaceholder} className="mt-2 min-h-10 w-full rounded-md border border-cyan-100 bg-white px-3 text-sm" />
+                  </label>
+                  <label className="text-sm font-medium text-slate-600">Sync cadence
+                    <select value={syncCadence} onChange={(event) => setSyncCadence(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-cyan-100 bg-white px-3 text-sm">
+                      {["Manual only", "Hourly", "Every 6 hours", "Daily"].map((item) => <option key={item}>{item}</option>)}
+                    </select>
+                  </label>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <ActionButton onClick={connectSource}>{connection.action}</ActionButton>
+                  <ActionButton variant="secondary" onClick={testConnection}>Test connection</ActionButton>
+                </div>
+                <div className="mt-3 text-xs leading-5 text-cyan-900">{connection.note}</div>
+              </div>
               <div className="grid gap-3 md:grid-cols-2">
                 <label className="text-sm font-medium text-slate-600">Document count
                   <input value={documents} onChange={(event) => setDocuments(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />

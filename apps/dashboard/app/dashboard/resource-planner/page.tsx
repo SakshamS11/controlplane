@@ -50,6 +50,87 @@ const routingSuggestions = [
   { scenario: "Marketing drafting", route: "Gemini first; GPT-5 only for executive content", reason: "Simple drafting can use a cheaper model while preserving high-quality fallback." }
 ];
 
+const departmentSuggestions: Record<string, { monthlyBudget: number; localGpu: number; maxConcurrent: number; fallbackPolicy: string; models: string[]; knowledgeBases: string[]; agents: string[]; status: string; reason: string; capacityAction: string; costAction: string }> = {
+  Claims: {
+    monthlyBudget: 14200,
+    localGpu: 36,
+    maxConcurrent: 28,
+    fallbackPolicy: "Sensitive data local only",
+    models: ["Qwen 32B", "Llama 3.1 8B"],
+    knowledgeBases: ["Claims SOPs"],
+    agents: ["Claims Summary Agent"],
+    status: "Under-allocated",
+    reason: "Claims peaks during late morning, has rising queue wait time, and should keep sensitive claims workflows local.",
+    capacityAction: "Reclaim 8% local GPU from Finance before increasing Claims allocation.",
+    costAction: "Keep cloud spend capped and avoid external fallback for claims documents."
+  },
+  Legal: {
+    monthlyBudget: 8500,
+    localGpu: 18,
+    maxConcurrent: 16,
+    fallbackPolicy: "Sensitive data local only",
+    models: ["Qwen 32B", "Claude"],
+    knowledgeBases: ["Legal Contracts"],
+    agents: ["Contract Review Agent"],
+    status: "Governance risk",
+    reason: "Legal needs Claude for drafting, but confidential contract review should use local retrieval and local models.",
+    capacityAction: "Reserve enough local capacity for confidential contract workflows.",
+    costAction: "Allow Claude only for non-sensitive drafting and summaries."
+  },
+  Engineering: {
+    monthlyBudget: 16000,
+    localGpu: 26,
+    maxConcurrent: 34,
+    fallbackPolicy: "Best quality",
+    models: ["DeepSeek Coder", "Claude", "GPT-5"],
+    knowledgeBases: ["Engineering Docs", "Product FAQ"],
+    agents: ["Code Review Agent"],
+    status: "Healthy",
+    reason: "Engineering has high volume but balanced latency and strong fit for coding-specialized routing.",
+    capacityAction: "Keep current local allocation and prioritize code requests during build windows.",
+    costAction: "Use DeepSeek Coder first, then Claude or GPT-5 for complex reviews."
+  },
+  Finance: {
+    monthlyBudget: 3500,
+    localGpu: 10,
+    maxConcurrent: 8,
+    fallbackPolicy: "Local first",
+    models: ["Qwen 32B"],
+    knowledgeBases: ["Finance Policies"],
+    agents: ["Finance Analysis Agent"],
+    status: "Over-allocated",
+    reason: "Finance has low actual local utilization compared with reserved capacity.",
+    capacityAction: "Reduce reserved local GPU from 30% to 10% and make 20% available to Claims or Legal.",
+    costAction: "Keep external model access restricted for finance policies."
+  },
+  "Customer Support": {
+    monthlyBudget: 5200,
+    localGpu: 8,
+    maxConcurrent: 40,
+    fallbackPolicy: "Cheapest cloud",
+    models: ["Llama 3.1 8B", "Gemini"],
+    knowledgeBases: ["Product FAQ", "Claims SOPs"],
+    agents: ["Support Triage Agent"],
+    status: "Healthy",
+    reason: "Support has repeated questions and benefits from cheaper routing, response caching, and Product FAQ access.",
+    capacityAction: "Keep local allocation small and prioritize concurrency over large-model access.",
+    costAction: "Route repeated or simple support traffic to Llama 3.1 8B or Gemini."
+  },
+  Marketing: {
+    monthlyBudget: 2400,
+    localGpu: 0,
+    maxConcurrent: 14,
+    fallbackPolicy: "Cheapest cloud",
+    models: ["Gemini", "Claude"],
+    knowledgeBases: ["Product FAQ"],
+    agents: [],
+    status: "Cost risk",
+    reason: "Most Marketing usage is drafting and summarization, so GPT-5 full access is expensive for the workload.",
+    capacityAction: "Do not reserve local GPU for Marketing until usage justifies it.",
+    costAction: "Use Gemini for standard content and keep Claude for higher-risk copy review."
+  }
+};
+
 const teamUsage = [
   { department: "Claims", users: 42, requests: "31,400", tokens: "8.7M", cost: "AED 3,900", peak: "10:00-13:00", gpu: "28%", cloud: "AED 880", latency: "940 ms", status: "Under-allocated" },
   { department: "Legal", users: 18, requests: "12,700", tokens: "3.1M", cost: "AED 3,100", peak: "14:00-17:00", gpu: "10%", cloud: "AED 2,420", latency: "1,040 ms", status: "Governance risk" },
@@ -152,6 +233,7 @@ export default function ResourcePlannerPage() {
   const [kbAccess, setKbAccess] = useState<Matrix>(initialKbAccess);
   const [agentAccess, setAgentAccess] = useState<Matrix>(initialAgentAccess);
   const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
+  const departmentSuggestion = departmentSuggestions[selectedDepartment];
   const totalReserved = Object.values(currentReservedCapacity).reduce((sum, value) => sum + value, 0);
   const currentDepartmentCapacity = currentReservedCapacity[selectedDepartment] ?? 0;
   const proposedTotalReserved = totalReserved - currentDepartmentCapacity + localGpu;
@@ -196,6 +278,19 @@ export default function ResourcePlannerPage() {
   function saveSimulation() {
     showToast(`${selectedDepartment} planner policy simulated`);
     addAudit("Resource planner simulation updated", selectedDepartment, "Permission");
+  }
+
+  function applyDepartmentSuggestion() {
+    const activeSuggestedModels = departmentSuggestion.models.filter((model) => activeModelOptions.includes(model));
+    setMonthlyBudget(departmentSuggestion.monthlyBudget);
+    setLocalGpu(departmentSuggestion.localGpu);
+    setMaxConcurrent(departmentSuggestion.maxConcurrent);
+    setFallbackPolicy(departmentSuggestion.fallbackPolicy);
+    setAllowedModels(activeSuggestedModels.length > 0 ? activeSuggestedModels : allowedModels);
+    setSelectedKbs(departmentSuggestion.knowledgeBases);
+    setAssignedAgents(departmentSuggestion.agents);
+    showToast(`${selectedDepartment} resource suggestion applied`);
+    addAudit("Resource planner suggestion applied", selectedDepartment, "Permission");
   }
 
   function addTeamMember() {
@@ -393,6 +488,37 @@ export default function ResourcePlannerPage() {
                 <h2 className="mt-2 text-lg font-semibold">Tune department policy and preview impact</h2>
               </div>
               <ActionButton variant="secondary" onClick={saveSimulation}>Save simulation</ActionButton>
+            </div>
+
+            <div className="mb-5 rounded-md border border-cyan-100 bg-cyan-50/70 p-4">
+              <div className="flex flex-col justify-between gap-3 lg:flex-row lg:items-start">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-cyan-950">{selectedDepartment} auto-suggested resource plan</span>
+                    <StatusBadge value={departmentSuggestion.status} />
+                  </div>
+                  <p className="mt-2 text-sm leading-6 text-cyan-900">{departmentSuggestion.reason}</p>
+                </div>
+                <ActionButton onClick={applyDepartmentSuggestion}>Apply suggestion</ActionButton>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <div className="rounded-md border border-cyan-100 bg-white p-3">
+                  <div className="text-xs text-slate-500">Budget / GPU / concurrency</div>
+                  <div className="mt-1 text-sm font-semibold">AED {departmentSuggestion.monthlyBudget.toLocaleString()} / {departmentSuggestion.localGpu}% / {departmentSuggestion.maxConcurrent}</div>
+                </div>
+                <div className="rounded-md border border-cyan-100 bg-white p-3">
+                  <div className="text-xs text-slate-500">Models</div>
+                  <div className="mt-1 text-sm font-semibold">{departmentSuggestion.models.join(", ")}</div>
+                </div>
+                <div className="rounded-md border border-cyan-100 bg-white p-3">
+                  <div className="text-xs text-slate-500">Knowledge and agents</div>
+                  <div className="mt-1 text-sm font-semibold">{[...departmentSuggestion.knowledgeBases, ...departmentSuggestion.agents].join(", ") || "No agent required"}</div>
+                </div>
+              </div>
+              <div className="mt-3 grid gap-3 md:grid-cols-2">
+                <div className="rounded-md border border-cyan-100 bg-white p-3 text-sm leading-6 text-slate-700"><span className="font-semibold text-slate-950">Capacity:</span> {departmentSuggestion.capacityAction}</div>
+                <div className="rounded-md border border-cyan-100 bg-white p-3 text-sm leading-6 text-slate-700"><span className="font-semibold text-slate-950">Cost:</span> {departmentSuggestion.costAction}</div>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-2">
