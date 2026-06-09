@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { LockKeyhole, ShieldCheck, SlidersHorizontal, UserRoundCog, Users } from "lucide-react";
-import { Card, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { LockKeyhole, MailPlus, ShieldCheck, SlidersHorizontal, UserRoundCog, Users } from "lucide-react";
+import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { departments, permissionModels } from "@/lib/mock-data";
 
 function formatTokens(value: number) {
@@ -16,13 +16,35 @@ function usagePercent(used: number, limit: number) {
 }
 
 const tabs = [
+  { id: "members", label: "Team members" },
   { id: "departments", label: "Department limits" },
   { id: "users", label: "Individual limits" },
   { id: "models", label: "Model permissions" }
 ];
 
+const initialTeamMembers: Record<string, string[]> = {
+  Engineering: ["maya@acme.ai", "omar@acme.ai", "devops@acme.ai"],
+  Legal: ["leena@acme.ai", "contracts@acme.ai"],
+  Claims: ["farah@acme.ai", "claims.ops@acme.ai"],
+  Finance: ["daniel@acme.ai"],
+  "Customer Support": ["nadia@acme.ai", "support.lead@acme.ai"],
+  Marketing: ["yusuf@acme.ai"]
+};
+
+const teamPolicySummary: Record<string, { workspace: string; knowledge: string; agents: string; rule: string }> = {
+  Engineering: { workspace: "Engineering Copilot", knowledge: "Engineering Docs", agents: "Code Review Agent", rule: "GPT-5, Claude, DeepSeek Coder" },
+  Legal: { workspace: "Legal AI Assistant", knowledge: "Legal Contracts", agents: "Contract Review Agent", rule: "Claude and Qwen Local, restricted external use" },
+  Claims: { workspace: "Claims AI Assistant", knowledge: "Claims SOPs", agents: "Claims Summary Agent", rule: "External models blocked" },
+  Finance: { workspace: "Finance AI Desk", knowledge: "Finance Policies", agents: "Finance Analysis Agent", rule: "Local-first, Claude approval required" },
+  "Customer Support": { workspace: "Support Desk", knowledge: "Product FAQ", agents: "Support Triage Agent", rule: "Gemini and Llama Local" },
+  Marketing: { workspace: "Marketing Studio", knowledge: "Brand and Product FAQ", agents: "Drafting Assistant", rule: "Gemini first, GPT-5 capped" }
+};
+
 export default function DepartmentsPage() {
-  const [activeTab, setActiveTab] = useState("departments");
+  const [activeTab, setActiveTab] = useState("members");
+  const [memberEmail, setMemberEmail] = useState("");
+  const [memberDepartment, setMemberDepartment] = useState("Legal");
+  const [teamMembers, setTeamMembers] = useState(initialTeamMembers);
   const {
     permissions,
     togglePermission,
@@ -30,35 +52,66 @@ export default function DepartmentsPage() {
     updateDepartmentTokenBudget,
     toggleDepartmentHardLimit,
     userTokenBudgets,
-    updateUserTokenBudget
+    updateUserTokenBudget,
+    showToast,
+    addAudit
   } = useAppState();
 
   const totalLimit = Object.values(departmentTokenBudgets).reduce((sum, item) => sum + item.monthlyLimit, 0);
   const totalUsed = Object.values(departmentTokenBudgets).reduce((sum, item) => sum + item.used, 0);
+  const totalMembers = Object.values(teamMembers).reduce((sum, items) => sum + items.length, 0);
+
+  function addMember() {
+    const email = memberEmail.trim().toLowerCase();
+    if (!email || !email.includes("@")) {
+      showToast("Enter a valid email address");
+      return;
+    }
+
+    setTeamMembers((current) => ({
+      ...current,
+      [memberDepartment]: current[memberDepartment].includes(email) ? current[memberDepartment] : [...current[memberDepartment], email]
+    }));
+    setMemberEmail("");
+    showToast(`${email} added to ${memberDepartment}`);
+    addAudit("Department member added", `${email} -> ${memberDepartment}`, "Permission");
+  }
+
+  function removeMember(department: string, email: string) {
+    setTeamMembers((current) => ({
+      ...current,
+      [department]: current[department].filter((item) => item !== email)
+    }));
+    showToast(`${email} removed from ${department}`);
+    addAudit("Department member removed", `${email} -> ${department}`, "Permission");
+  }
 
   return (
     <>
-      <PageHeader eyebrow="Governance" title="Departments, model access, and token controls" description="Manage who can use which models, how many tokens each department can spend, and individual exceptions from one compact governance workspace." />
+      <PageHeader eyebrow="Governance" title="Teams and departments" description="Add users by email, assign them to departments, and control each team's models, knowledge, workspaces, agents, and token limits." />
       <Section>
-        <div className="mb-5 grid gap-4 md:grid-cols-3">
+        <div className="mb-5 grid gap-4 md:grid-cols-4">
           <Card className="p-5">
-            <div className="flex items-center gap-3"><Users className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">6 departments</div><div className="text-xs text-slate-500">Mapped to model access</div></div></div>
+            <div className="flex items-center gap-3"><Users className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{departments.length} departments</div><div className="text-xs text-slate-500">Mapped to workspaces</div></div></div>
           </Card>
           <Card className="p-5">
-            <div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">24 active policies</div><div className="text-xs text-slate-500">Updated instantly in demo state</div></div></div>
+            <div className="flex items-center gap-3"><MailPlus className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">{totalMembers} users</div><div className="text-xs text-slate-500">Assigned by email</div></div></div>
           </Card>
           <Card className="p-5">
-            <div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">{formatTokens(totalUsed)} / {formatTokens(totalLimit)} tokens</div><div className="text-xs text-slate-500">Monthly governed usage</div></div></div>
+            <div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">24 active policies</div><div className="text-xs text-slate-500">Access enforced in mock state</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">{formatTokens(totalUsed)} / {formatTokens(totalLimit)}</div><div className="text-xs text-slate-500">Monthly governed tokens</div></div></div>
           </Card>
         </div>
 
         <Card className="overflow-hidden">
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 xl:flex-row xl:items-center">
             <div>
-              <h2 className="font-semibold">Governance controls</h2>
-              <p className="mt-1 text-sm text-slate-600">Switch between control surfaces instead of scrolling through every setting.</p>
+              <h2 className="font-semibold">Team control center</h2>
+              <p className="mt-1 text-sm text-slate-600">Add people, then immediately review access, budgets, and model permissions.</p>
             </div>
-            <div role="tablist" aria-label="Governance control sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
+            <div role="tablist" aria-label="Team governance sections" className="grid grid-cols-2 gap-1 rounded-md border border-slate-200 bg-slate-50 p-1 md:grid-cols-4">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -72,6 +125,49 @@ export default function DepartmentsPage() {
               ))}
             </div>
           </div>
+
+          {activeTab === "members" ? (
+            <div className="grid gap-5 p-5 xl:grid-cols-[380px_1fr]">
+              <div className="rounded-lg border border-slate-200 bg-white p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><MailPlus size={15} /> Add team member</div>
+                <h3 className="mt-2 text-lg font-semibold">Invite by email</h3>
+                <div className="mt-4 space-y-3">
+                  <label className="text-sm font-medium text-slate-600">Email
+                    <input value={memberEmail} onChange={(event) => setMemberEmail(event.target.value)} placeholder="name@company.com" className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                  </label>
+                  <label className="text-sm font-medium text-slate-600">Department
+                    <select value={memberDepartment} onChange={(event) => setMemberDepartment(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                      {departments.map((department) => <option key={department}>{department}</option>)}
+                    </select>
+                  </label>
+                  <ActionButton onClick={addMember}><MailPlus size={14} /> Add user</ActionButton>
+                </div>
+                <div className="mt-5 rounded-md border border-cyan-100 bg-cyan-50 p-3 text-sm leading-6 text-cyan-950">
+                  Users inherit access from their department, workspace, model policy, knowledge bases, assigned agents, and token limits.
+                </div>
+              </div>
+
+              <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <DataTable
+                  columns={["Department", "Users", "Workspace", "Knowledge access", "Agents", "Policy"]}
+                  rows={departments.map((department) => [
+                    <span key="department" className="font-semibold">{department}</span>,
+                    <div key="users" className="flex max-w-sm flex-wrap gap-2">
+                      {teamMembers[department].map((email) => (
+                        <button key={email} onClick={() => removeMember(department, email)} className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-700 hover:bg-red-50 hover:text-red-700" title="Click to remove">
+                          {email}
+                        </button>
+                      ))}
+                    </div>,
+                    teamPolicySummary[department].workspace,
+                    teamPolicySummary[department].knowledge,
+                    teamPolicySummary[department].agents,
+                    <div key="policy" className="space-y-1"><StatusBadge value="Enforced" /><div className="text-xs text-slate-500">{teamPolicySummary[department].rule}</div></div>
+                  ])}
+                />
+              </div>
+            </div>
+          ) : null}
 
           {activeTab === "departments" ? (
             <div className="p-5">

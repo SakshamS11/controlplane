@@ -37,15 +37,15 @@ const actionQueue = [
     title: "Route around OpenAI degradation",
     severity: "Warning",
     detail: "GPT-5 provider latency is elevated. Review provider health and fallback model access.",
-    href: "/dashboard/models",
-    cta: "Review models"
+    href: "/dashboard/routing-policies",
+    cta: "Apply route"
   }
 ];
 
 const systemTiles = [
   { label: "Primary server", value: "Acme Azure GPU Server", href: "/dashboard/targets/acme", cta: "View server" },
   { label: "Governance posture", value: "24 policies enforced", href: "/dashboard/departments", cta: "Review access" },
-  { label: "Provider health", value: "OpenAI degraded", href: "/dashboard/models", cta: "Review models" },
+  { label: "Provider health", value: "OpenAI degraded", href: "/dashboard/routing-policies", cta: "Apply route" },
   { label: "Cost watch", value: "GPT-5 near threshold", href: "/dashboard/monitoring", cta: "Open monitoring" }
 ];
 

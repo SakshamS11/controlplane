@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import {
   Activity,
   Bell,
+  Bot,
   Boxes,
   Building2,
   CheckCircle2,
@@ -21,6 +22,7 @@ import {
   PanelLeftOpen,
   MonitorDot,
   Play,
+  Route,
   ScrollText,
   Settings,
   ShieldCheck,
@@ -221,9 +223,13 @@ function ToastStack() {
 const nav = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/dashboard/targets", label: "Servers", icon: Server },
-  { href: "/dashboard/models", label: "Models", icon: Sparkles },
+  { href: "/dashboard/models", label: "Models & Providers", icon: Sparkles },
   { href: "/dashboard/stacks", label: "Stacks", icon: Layers },
-  { href: "/dashboard/departments", label: "Departments", icon: Building2 },
+  { href: "/dashboard/departments", label: "Teams", icon: Building2 },
+  { href: "/dashboard/workspaces", label: "AI Workspaces", icon: Layers },
+  { href: "/dashboard/knowledge-bases", label: "Knowledge Bases", icon: Database },
+  { href: "/dashboard/agents", label: "Agents", icon: Bot },
+  { href: "/dashboard/routing-policies", label: "Routing Policies", icon: Route },
   { href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal },
   { href: "/dashboard/monitoring", label: "Monitoring", icon: MonitorDot },
   { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText },
@@ -371,7 +377,7 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
 }
 
 export function StatusBadge({ value }: { value: string }) {
-  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational"
+  const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational" || value === "Active" || value === "Enforced" || value === "Synced" || value === "Indexed"
     ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
     : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit" || value === "Under-allocated" || value === "Over-allocated" || value === "Cost risk"
       ? "bg-amber-50 text-amber-700 ring-amber-200"

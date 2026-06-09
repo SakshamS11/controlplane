@@ -17,6 +17,16 @@ export default function ModelsPage() {
   const [providerName, setProviderName] = useState("OpenAI");
   const [modelName, setModelName] = useState("GPT-5 mini");
   const [modelType, setModelType] = useState("Cloud");
+  const [endpoint, setEndpoint] = useState("https://api.openai.com/v1");
+  const [secretReference, setSecretReference] = useState("OPENAI_API_KEY");
+  const [inputCost, setInputCost] = useState("0.15");
+  const [outputCost, setOutputCost] = useState("0.60");
+  const [contextWindow, setContextWindow] = useState("128000");
+  const [sensitivity, setSensitivity] = useState("Public and internal");
+  const [gpuRequirement, setGpuRequirement] = useState("None");
+  const [vramRequirement, setVramRequirement] = useState("0 GB");
+  const [fallbackEligible, setFallbackEligible] = useState("Yes");
+  const [maxConcurrency, setMaxConcurrency] = useState("100");
   const { showToast, addAudit } = useAppState();
   const providerIssues = providerHealth.filter((provider) => provider.status === "Degraded" || provider.status === "Down");
   const visible = useMemo(() => models.filter((model) => {
@@ -111,15 +121,59 @@ export default function ModelsPage() {
                 </select>
               </label>
             </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-4">
-              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Endpoint:</span> API or local serving URL</div>
-              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Secrets:</span> Stored server-side only</div>
-              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Limits:</span> Context, cost, concurrency</div>
-              <div className="rounded-md border border-slate-200 p-3 text-xs"><span className="font-semibold">Access:</span> Departments and workspaces</div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-medium text-slate-600">Endpoint
+                <input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Secret reference
+                <input value={secretReference} onChange={(event) => setSecretReference(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-medium text-slate-600">Input cost / 1M tokens
+                <input value={inputCost} onChange={(event) => setInputCost(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Output cost / 1M tokens
+                <input value={outputCost} onChange={(event) => setOutputCost(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Context window
+                <input value={contextWindow} onChange={(event) => setContextWindow(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-3">
+              <label className="text-sm font-medium text-slate-600">Sensitivity fit
+                <select value={sensitivity} onChange={(event) => setSensitivity(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  <option>Public and internal</option>
+                  <option>Internal only</option>
+                  <option>Confidential with approval</option>
+                  <option>Confidential local-only</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-slate-600">Fallback eligible
+                <select value={fallbackEligible} onChange={(event) => setFallbackEligible(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  <option>Yes</option>
+                  <option>No</option>
+                  <option>Only for non-sensitive work</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-slate-600">Max concurrency
+                <input value={maxConcurrency} onChange={(event) => setMaxConcurrency(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+            </div>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              <label className="text-sm font-medium text-slate-600">GPU requirement
+                <input value={gpuRequirement} onChange={(event) => setGpuRequirement(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">VRAM requirement
+                <input value={vramRequirement} onChange={(event) => setVramRequirement(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+            </div>
+            <div className="mt-4 rounded-md border border-cyan-100 bg-cyan-50 p-3 text-sm leading-6 text-cyan-950">
+              Secrets stay server-side. The frontend stores only secret references, routing metadata, cost assumptions, and policy settings.
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <ActionButton onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
-              <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} added as ${modelType} model`); addAudit("Model/provider added", `${providerName} ${modelName}`, "Model"); }}><Plus size={14} /> Add model</ActionButton>
+              <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} added as ${modelType} model`); addAudit("Model/provider added", `${providerName} ${modelName} via ${endpoint}`, "Model"); }}><Plus size={14} /> Add model</ActionButton>
             </div>
           </Card>
           <Card className="p-5">
