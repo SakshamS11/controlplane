@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
@@ -17,7 +17,6 @@ import {
   KeyRound,
   Layers,
   LayoutDashboard,
-  Lock,
   PanelLeftClose,
   PanelLeftOpen,
   MonitorDot,
@@ -33,10 +32,6 @@ import {
 } from "lucide-react";
 
 import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds, initialPermissions, initialUserTokenBudgets, models as initialModels } from "@/lib/mock-data";
-
-export const DEMO_AUTH_KEY = "ai-control-plane-demo-authenticated";
-export const DEMO_EMAIL_HASH = "d66bee74";
-export const DEMO_PASSWORD_HASH = "c1aef9c0";
 
 type Toast = { id: number; message: string };
 type ModelRecord = (typeof initialModels)[number];
@@ -181,43 +176,6 @@ export function useAppState() {
   return value;
 }
 
-export function AuthGate({ children }: { children: ReactNode }) {
-  const [authorized, setAuthorized] = useState(false);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    setAuthorized(window.localStorage.getItem(DEMO_AUTH_KEY) === "true");
-    setReady(true);
-  }, []);
-
-  if (!ready) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#080d18] px-6 text-white">
-        <div className="h-10 w-10 animate-pulse rounded-lg bg-cyan-300" aria-label="Loading secure demo" />
-      </main>
-    );
-  }
-
-  if (!authorized) {
-    return (
-      <main className="grid min-h-screen place-items-center bg-[#080d18] px-6 text-white">
-        <section className="w-full max-w-md rounded-xl border border-white/10 bg-white/8 p-6 shadow-2xl backdrop-blur">
-          <div className="grid h-11 w-11 place-items-center rounded-lg bg-cyan-300 text-slate-950">
-            <Lock size={20} />
-          </div>
-          <h1 className="mt-5 text-2xl font-semibold">Secure demo access required</h1>
-          <p className="mt-3 text-sm leading-6 text-slate-300">Sign in to continue.</p>
-          <Link href="/" className="mt-5 inline-flex min-h-10 items-center justify-center rounded-md bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950">
-            Go to login
-          </Link>
-        </section>
-      </main>
-    );
-  }
-
-  return children;
-}
-
 function ToastStack() {
   const { toasts } = useAppState();
   return (
@@ -260,17 +218,17 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <div className="min-h-screen bg-[#f6f8fb] text-slate-950">
-      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#080d18] text-white transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-72"}`}>
+    <div className="min-h-screen bg-[#f4f7f2] text-[#071013]">
+      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#071013] text-white shadow-2xl shadow-[#071013]/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-72"}`}>
         <div className={`border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-cyan-300 text-slate-950 shadow-lg shadow-cyan-950/30">
+            <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#00d1b2] text-[#071013] shadow-lg shadow-[#00d1b2]/25">
               <Cloud size={19} />
             </div>
             {!collapsed ? <div className="min-w-0">
               <div className="font-semibold">AI Control Plane</div>
-              <div className="text-xs text-slate-400">Enterprise AI operations</div>
+              <div className="text-xs text-[#a9c7c0]">Enterprise AI operations</div>
             </div> : null}
           </Link>
             {!collapsed ? (
@@ -298,7 +256,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         <nav className={`flex-1 space-y-4 overflow-y-auto py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
           {navSections.map((section) => (
             <div key={section.label}>
-              {!collapsed ? <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{section.label}</div> : null}
+              {!collapsed ? <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[#6f8f88]">{section.label}</div> : null}
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
@@ -309,7 +267,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       aria-label={collapsed ? item.label : undefined}
-                      className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-white text-slate-950 shadow" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
+                      className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-[#00d1b2] text-[#071013] shadow shadow-[#00d1b2]/20" : "text-[#c7d8d4] hover:bg-white/10 hover:text-white"}`}
                     >
                       <Icon size={17} />
                       {!collapsed ? item.label : null}
@@ -321,10 +279,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         {!collapsed ? <div className="border-t border-white/10 p-4">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
+          <div className="rounded-lg border border-[#00d1b2]/20 bg-[#00d1b2]/8 p-4 shadow-xl shadow-black/20">
             <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck size={16} /> Governance mode</div>
-            <p className="mt-2 text-xs leading-5 text-slate-400">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
-            <div className="mt-4 flex items-center justify-between rounded-md bg-emerald-400/10 px-3 py-2 text-xs text-emerald-200">
+            <p className="mt-2 text-xs leading-5 text-[#a9c7c0]">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
+            <div className="mt-4 flex items-center justify-between rounded-md bg-[#b8f35a]/10 px-3 py-2 text-xs text-[#d9ff91]">
               <span>Policy engine</span>
               <span>Active</span>
             </div>
@@ -340,23 +298,15 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 }
 
 function TopBar() {
-  function logout() {
-    window.localStorage.removeItem(DEMO_AUTH_KEY);
-    window.location.href = "/";
-  }
-
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-6 backdrop-blur">
+    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#dce6df] bg-white/88 px-6 backdrop-blur">
       <div className="min-w-0">
         <div className="text-sm font-semibold">One operating layer for enterprise AI infrastructure.</div>
         <div className="truncate text-xs text-slate-500">Deploy AI anywhere. Govern it centrally. Operate it from one place.</div>
       </div>
       <div className="hidden items-center gap-2 md:flex">
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
-        <IconPill icon={<Lock size={15} />} label="Secure demo" />
-        <button onClick={logout} className="min-h-9 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
-          Sign out
-        </button>
+        <IconPill icon={<ShieldCheck size={15} />} label="Governance active" />
       </div>
     </header>
   );
@@ -368,11 +318,11 @@ function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="border-b border-slate-200 bg-white px-6 py-5">
+    <div className="border-b border-[#dce6df] bg-white px-6 py-5">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase text-cyan-700">{eyebrow}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-slate-950">{title}</h1>
+          <p className="text-xs font-semibold uppercase text-[#008f7a]">{eyebrow}</p>
+          <h1 className="mt-1 text-2xl font-semibold text-[#071013]">{title}</h1>
           {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
         </div>
         {action}
@@ -386,7 +336,7 @@ export function Section({ children }: { children: ReactNode }) {
 }
 
 export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
-  return <div id={id} className={`scroll-mt-24 rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)] ${className}`}>{children}</div>;
+  return <div id={id} className={`scroll-mt-24 rounded-lg border border-[#dce6df] bg-white shadow-[0_1px_2px_rgba(7,16,19,0.04),0_16px_40px_rgba(7,16,19,0.06)] ${className}`}>{children}</div>;
 }
 
 export function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail?: string; icon: ReactNode }) {
@@ -395,7 +345,7 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
       <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium text-slate-500">{label}</div>
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-cyan-50 text-cyan-700">{icon}</div>
+        <div className="grid h-9 w-9 place-items-center rounded-md bg-[#e4fff9] text-[#008f7a]">{icon}</div>
       </div>
       <div className="mt-4 text-2xl font-semibold">{value}</div>
       {detail ? <div className="mt-1 text-xs text-slate-500">{detail}</div> : null}
@@ -405,17 +355,17 @@ export function MetricCard({ label, value, detail, icon }: { label: string; valu
 
 export function StatusBadge({ value }: { value: string }) {
   const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational" || value === "Active" || value === "Enforced" || value === "Synced" || value === "Indexed" || value === "Published"
-    ? "bg-emerald-50 text-emerald-700 ring-emerald-200"
+    ? "bg-[#ecffd7] text-[#3f6f00] ring-[#c9f776]"
     : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit" || value === "Under-allocated" || value === "Over-allocated" || value === "Cost risk"
-      ? "bg-amber-50 text-amber-700 ring-amber-200"
+      ? "bg-[#fff2d6] text-[#9a5b00] ring-[#ffd07a]"
       : value === "Offline" || value === "Critical" || value === "High" || value === "Down" || value === "Governance risk" || value === "Disabled"
-        ? "bg-red-50 text-red-700 ring-red-200"
+        ? "bg-[#fff0ed] text-[#b93524] ring-[#ffb6aa]"
         : "bg-slate-100 text-slate-700 ring-slate-200";
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;
 }
 
 export function ActionButton({ children, onClick, variant = "primary" }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" }) {
-  const cls = variant === "primary" ? "bg-slate-950 text-white hover:bg-slate-800" : variant === "danger" ? "bg-red-600 text-white hover:bg-red-700" : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50";
+  const cls = variant === "primary" ? "bg-[#071013] text-white hover:bg-[#10272b]" : variant === "danger" ? "bg-[#ff6b57] text-white hover:bg-[#dd4f3e]" : "border border-[#dce6df] bg-white text-[#071013] hover:bg-[#f4f7f2]";
   return <button onClick={onClick} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${cls}`}>{children}</button>;
 }
 

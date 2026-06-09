@@ -2,9 +2,9 @@
 
 import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
-const colors = ["#0891b2", "#4f46e5", "#059669", "#d97706", "#dc2626", "#7c3aed"];
+const colors = ["#00d1b2", "#7c5cff", "#b8f35a", "#35c8ff", "#ff6b57", "#ffb84d"];
 
-export function AreaMetricChart({ data, dataKey, stroke = "#0891b2" }: { data: object[]; dataKey: string; stroke?: string }) {
+export function AreaMetricChart({ data, dataKey, stroke = "#00d1b2" }: { data: object[]; dataKey: string; stroke?: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
@@ -14,9 +14,9 @@ export function AreaMetricChart({ data, dataKey, stroke = "#0891b2" }: { data: o
             <stop offset="95%" stopColor={stroke} stopOpacity={0} />
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#64748b" />
-        <YAxis tick={{ fontSize: 11 }} stroke="#64748b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#dce6df" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#6f8f88" />
+        <YAxis tick={{ fontSize: 11 }} stroke="#6f8f88" />
         <Tooltip />
         <Area type="monotone" dataKey={dataKey} stroke={stroke} fill={`url(#fill-${dataKey})`} strokeWidth={2} />
       </AreaChart>
@@ -28,9 +28,9 @@ export function MultiLineChart({ data, keys }: { data: object[]; keys: { key: st
   return (
     <ResponsiveContainer width="100%" height="100%">
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#64748b" />
-        <YAxis tick={{ fontSize: 11 }} stroke="#64748b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#dce6df" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#6f8f88" />
+        <YAxis tick={{ fontSize: 11 }} stroke="#6f8f88" />
         <Tooltip />
         {keys.map((item) => <Line key={item.key} dataKey={item.key} name={item.name} stroke={item.color} dot={false} strokeWidth={2} />)}
       </LineChart>
@@ -42,11 +42,11 @@ export function BarMetricChart({ data, dataKey }: { data: object[]; dataKey: str
   return (
     <ResponsiveContainer width="100%" height="100%">
       <BarChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#64748b" />
-        <YAxis tick={{ fontSize: 11 }} stroke="#64748b" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#dce6df" />
+        <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#6f8f88" />
+        <YAxis tick={{ fontSize: 11 }} stroke="#6f8f88" />
         <Tooltip />
-        <Bar dataKey={dataKey} radius={[5, 5, 0, 0]} fill="#0891b2" />
+        <Bar dataKey={dataKey} radius={[5, 5, 0, 0]} fill="#00d1b2" />
       </BarChart>
     </ResponsiveContainer>
   );

@@ -4,12 +4,24 @@
 
 :root {
   color-scheme: light;
+  --brand-ink: #071013;
+  --brand-panel: #0d1b1e;
+  --brand-teal: #00d1b2;
+  --brand-teal-deep: #008f7a;
+  --brand-lime: #b8f35a;
+  --brand-coral: #ff6b57;
+  --brand-violet: #7c5cff;
+  --brand-sky: #35c8ff;
+  --brand-paper: #f4f7f2;
+  --brand-line: #dce6df;
 }
 
 body {
   margin: 0;
-  background: #eef1eb;
-  color: #101418;
+  background:
+    radial-gradient(circle at top left, rgba(0, 209, 178, 0.10), transparent 34rem),
+    linear-gradient(180deg, #f7faf6 0%, var(--brand-paper) 100%);
+  color: var(--brand-ink);
 }
 
 * {
@@ -20,4 +32,9 @@ button,
 input,
 select {
   font: inherit;
+}
+
+::selection {
+  background: rgba(0, 209, 178, 0.24);
+  color: var(--brand-ink);
 }
