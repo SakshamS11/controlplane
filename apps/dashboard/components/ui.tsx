@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createContext, useContext, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
@@ -28,6 +28,10 @@ import {
 } from "lucide-react";
 
 import { auditLogs, initialDepartmentTokenBudgets, initialPermissions, initialUserTokenBudgets } from "@/lib/mock-data";
+
+export const DEMO_AUTH_KEY = "ai-control-plane-demo-authenticated";
+export const DEMO_EMAIL_HASH = "d66bee74";
+export const DEMO_PASSWORD_HASH = "c1aef9c0";
 
 type Toast = { id: number; message: string };
 type AppState = {
@@ -149,6 +153,43 @@ export function useAppState() {
   return value;
 }
 
+export function AuthGate({ children }: { children: ReactNode }) {
+  const [authorized, setAuthorized] = useState(false);
+  const [ready, setReady] = useState(false);
+
+  useEffect(() => {
+    setAuthorized(window.localStorage.getItem(DEMO_AUTH_KEY) === "true");
+    setReady(true);
+  }, []);
+
+  if (!ready) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#080d18] px-6 text-white">
+        <div className="h-10 w-10 animate-pulse rounded-lg bg-cyan-300" aria-label="Loading secure demo" />
+      </main>
+    );
+  }
+
+  if (!authorized) {
+    return (
+      <main className="grid min-h-screen place-items-center bg-[#080d18] px-6 text-white">
+        <section className="w-full max-w-md rounded-xl border border-white/10 bg-white/8 p-6 shadow-2xl backdrop-blur">
+          <div className="grid h-11 w-11 place-items-center rounded-lg bg-cyan-300 text-slate-950">
+            <Lock size={20} />
+          </div>
+          <h1 className="mt-5 text-2xl font-semibold">Secure demo access required</h1>
+          <p className="mt-3 text-sm leading-6 text-slate-300">This preview is gated so casual visitors cannot browse the product mockup.</p>
+          <Link href="/" className="mt-5 inline-flex min-h-10 items-center justify-center rounded-md bg-cyan-300 px-4 py-2 text-sm font-semibold text-slate-950">
+            Go to login
+          </Link>
+        </section>
+      </main>
+    );
+  }
+
+  return children;
+}
+
 function ToastStack() {
   const { toasts } = useAppState();
   return (
@@ -222,6 +263,11 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 }
 
 function TopBar() {
+  function logout() {
+    window.localStorage.removeItem(DEMO_AUTH_KEY);
+    window.location.href = "/";
+  }
+
   return (
     <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-slate-200 bg-white/90 px-6 backdrop-blur">
       <div className="min-w-0">
@@ -230,7 +276,10 @@ function TopBar() {
       </div>
       <div className="hidden items-center gap-2 md:flex">
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
-        <IconPill icon={<Lock size={15} />} label="Mock demo" />
+        <IconPill icon={<Lock size={15} />} label="Secure demo" />
+        <button onClick={logout} className="min-h-9 rounded-md border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2">
+          Sign out
+        </button>
       </div>
     </header>
   );

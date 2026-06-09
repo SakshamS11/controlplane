@@ -10,6 +10,7 @@ export default function AcmeTargetDetailPage() {
   const target = targets[0];
   const { showToast, addAudit } = useAppState();
   const [progress, setProgress] = useState(10);
+  const [activePanel, setActivePanel] = useState("metrics");
 
   function simulateDeploy() {
     setProgress(2);
@@ -85,41 +86,64 @@ export default function AcmeTargetDetailPage() {
           <MetricCard label="CPU usage" value="24%" detail="Low contention" icon={<Cpu size={18} />} />
           <MetricCard label="Disk usage" value="63%" detail="1.2 TB available" icon={<HardDrive size={18} />} />
         </div>
-        <div className="mt-6 grid gap-6 xl:grid-cols-3">
-          <ChartCard title="CPU/RAM over time" detail="Mock host telemetry"><MultiLineChart data={cpuRamSeries} keys={[{ key: "cpu", name: "CPU", color: "#0891b2" }, { key: "ram", name: "RAM", color: "#4f46e5" }]} /></ChartCard>
-          <ChartCard title="GPU utilization over time" detail="L40S utilization"><AreaMetricChart data={cpuRamSeries} dataKey="gpu" stroke="#059669" /></ChartCard>
-          <ChartCard title="Latency over time" detail="Gateway p50 latency"><AreaMetricChart data={cpuRamSeries} dataKey="latency" stroke="#d97706" /></ChartCard>
-        </div>
-        <div className="mt-6 grid gap-6 xl:grid-cols-[1fr_420px]">
-          <Card>
-            <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-              <div>
-                <h2 className="font-semibold">Running services</h2>
-                <p className="mt-1 text-xs text-slate-500">Restart actions are grouped at row level for fast service recovery.</p>
+        <div className="mt-6 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-[0_1px_2px_rgba(15,23,42,0.04),0_12px_32px_rgba(15,23,42,0.04)]">
+          <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 xl:flex-row xl:items-center">
+            <div>
+              <h2 className="font-semibold">Target workspace</h2>
+              <p className="mt-1 text-sm text-slate-600">Use tabs to focus on one operating task at a time.</p>
+            </div>
+            <div role="tablist" aria-label="Target workspace sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
+              {[
+                ["metrics", "Metrics"],
+                ["services", "Services"],
+                ["deployment", "Deployment"]
+              ].map(([id, label]) => (
+                <button key={id} role="tab" aria-selected={activePanel === id} onClick={() => setActivePanel(id)} className={`min-h-9 rounded px-3 text-sm font-medium transition ${activePanel === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {activePanel === "metrics" ? (
+            <div className="grid gap-6 p-5 xl:grid-cols-3">
+              <ChartCard title="CPU/RAM over time" detail="Mock host telemetry"><MultiLineChart data={cpuRamSeries} keys={[{ key: "cpu", name: "CPU", color: "#0891b2" }, { key: "ram", name: "RAM", color: "#4f46e5" }]} /></ChartCard>
+              <ChartCard title="GPU utilization over time" detail="L40S utilization"><AreaMetricChart data={cpuRamSeries} dataKey="gpu" stroke="#059669" /></ChartCard>
+              <ChartCard title="Latency over time" detail="Gateway p50 latency"><AreaMetricChart data={cpuRamSeries} dataKey="latency" stroke="#d97706" /></ChartCard>
+            </div>
+          ) : null}
+          {activePanel === "services" ? (
+            <div>
+              <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                <div>
+                  <h3 className="font-semibold">Running services</h3>
+                  <p className="mt-1 text-xs text-slate-500">Restart actions are grouped at row level for fast service recovery.</p>
+                </div>
+                <StatusBadge value="6/6 Running" />
               </div>
-              <StatusBadge value="6/6 Running" />
+              <DataTable
+                columns={["Service", "Status", "Port", "Recommended action", "Action"]}
+                rows={services.map((service) => [
+                  <span key="name" className="font-medium">{service.name}</span>,
+                  <StatusBadge key="status" value={service.status} />,
+                  <span key="port" className="font-mono text-xs">{service.port}</span>,
+                  <span key="recommended" className="inline-flex items-center gap-2 text-xs text-slate-600"><FileText size={13} /> Review logs before restart</span>,
+                  <ActionButton key="action" variant="secondary" onClick={() => { showToast(`${service.name} restart queued`); addAudit(`${service.name} service restarted`, service.name); }}><RotateCcw size={14} /> Restart</ActionButton>
+                ])}
+              />
             </div>
-            <DataTable
-              columns={["Service", "Status", "Port", "Recommended action", "Action"]}
-              rows={services.map((service) => [
-                <span key="name" className="font-medium">{service.name}</span>,
-                <StatusBadge key="status" value={service.status} />,
-                <span key="port" className="font-mono text-xs">{service.port}</span>,
-                <span key="recommended" className="inline-flex items-center gap-2 text-xs text-slate-600"><FileText size={13} /> Review logs before restart</span>,
-                <ActionButton key="action" variant="secondary" onClick={() => { showToast(`${service.name} restart queued`); addAudit(`${service.name} service restarted`, service.name); }}><RotateCcw size={14} /> Restart</ActionButton>
-              ])}
-            />
-          </Card>
-          <Card className="p-5">
-            <h2 className="font-semibold">Deployment timeline</h2>
-            <div className="mt-4 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-cyan-500 transition-all" style={{ width: `${progress}%` }} /></div>
-            <div className="mt-5 space-y-3">
-              {timeline.map((step, index) => {
-                const done = progress >= ((index + 1) / timeline.length) * 100;
-                return <div key={step} className="flex items-center gap-3 text-sm"><span className={`h-2.5 w-2.5 rounded-full ${done ? "bg-cyan-500" : "bg-slate-300"}`} />{step}</div>;
-              })}
+          ) : null}
+          {activePanel === "deployment" ? (
+            <div className="p-5">
+              <h3 className="font-semibold">Deployment timeline</h3>
+              <div className="mt-4 h-2 rounded-full bg-slate-100"><div className="h-2 rounded-full bg-cyan-500 transition-all" style={{ width: `${progress}%` }} /></div>
+              <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+                {timeline.map((step, index) => {
+                  const done = progress >= ((index + 1) / timeline.length) * 100;
+                  return <div key={step} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"><span className={`h-2.5 w-2.5 rounded-full ${done ? "bg-cyan-500" : "bg-slate-300"}`} />{step}</div>;
+                })}
+              </div>
             </div>
-          </Card>
+          ) : null}
         </div>
         <div className="mt-6 flex flex-wrap gap-2">
           <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>

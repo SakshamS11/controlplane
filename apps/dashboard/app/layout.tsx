@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Control Plane",
-  description: "Mockup-only enterprise AI infrastructure control plane"
+  title: "Secure Demo",
+  description: "Protected product preview"
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

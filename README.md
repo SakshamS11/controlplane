@@ -1,26 +1,6 @@
-# AI Control Plane Mockup MVP
+# Protected Dashboard Preview
 
-AI Control Plane is a polished mockup-only enterprise SaaS dashboard for demonstrating the product vision:
-
-> Deploy AI anywhere. Govern it centrally. Operate it from one place.
-
-This MVP is built for investor, client, and technical partner demos. It uses mock data only and does not include a backend, database, agents, cloud provisioning, Kubernetes, billing, SSO, or production AI stack deployment.
-
-## Tech stack
-
-- Next.js App Router
-- TypeScript
-- Tailwind CSS
-- Recharts
-- lucide-react
-- Mock data only
-
-## Project layout
-
-```text
-apps/dashboard          Next.js mockup app
-docs/mockup-scope.md    Scope notes
-```
+This repository contains a mockup-only Next.js dashboard preview.
 
 ## Local setup
 
@@ -45,7 +25,7 @@ npm run build
 
 ## Vercel deployment
 
-Create a new Vercel project and set:
+Use:
 
 ```text
 Root Directory: apps/dashboard
@@ -56,22 +36,8 @@ Output Directory: .next
 
 No environment variables are required.
 
-## Routes
+## Access
 
-- `/` landing page
-- `/dashboard` overview
-- `/dashboard/targets`
-- `/dashboard/targets/acme`
-- `/dashboard/models`
-- `/dashboard/stacks`
-- `/dashboard/departments`
-- `/dashboard/monitoring`
-- `/dashboard/audit-logs`
-- `/dashboard/settings`
+The deployed preview includes a client-side dummy login for casual access control. Share credentials privately with intended viewers.
 
-## Mock interactions
-
-- Action buttons show toast notifications.
-- Deploy/restart/rollback actions add local mock audit entries.
-- Department model permission toggles update local state.
-- No external APIs are called.
+For real privacy, make the GitHub repository private and enable Vercel Deployment Protection or password protection.
