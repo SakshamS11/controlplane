@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertTriangle, Filter, Gauge, Plus, RefreshCw, Route, Server, Sparkles } from "lucide-react";
+import { AlertTriangle, Filter, Gauge, PiggyBank, Plus, RefreshCw, Route, Server, ShieldCheck, Sparkles } from "lucide-react";
 import { useMemo, useState } from "react";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { providerHealth } from "@/lib/mock-data";
@@ -62,19 +62,39 @@ export default function ModelsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Model catalog" title="Unified model catalog" description="A single inventory of local models, hosted provider models, provider status, access policies, latency, and request volume." />
+      <PageHeader eyebrow="Model catalog" title="Models & Providers" description="Register local and cloud models once, then govern cost, sensitivity fit, fallback eligibility, routing, and workspace access everywhere." />
       <Section>
         <div className="mb-6 grid gap-4 md:grid-cols-3">
           <Card className="p-5">
             <div className="flex items-center gap-3"><Server className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">3 local models</div><div className="text-xs text-slate-500">Private infrastructure</div></div></div>
           </Card>
           <Card className="p-5">
-            <div className="flex items-center gap-3"><Sparkles className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">3 external providers</div><div className="text-xs text-slate-500">OpenAI, Anthropic, Google</div></div></div>
+            <div className="flex items-center gap-3"><Sparkles className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">3 external providers</div><div className="text-xs text-slate-500">OpenAI, Anthropic, Google</div></div></div>
           </Card>
           <Card className="p-5">
             <div className="flex items-center gap-3"><Gauge className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">128k monthly requests</div><div className="text-xs text-slate-500">Governed by department policy</div></div></div>
           </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><PiggyBank className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">61% graduation fit</div><div className="text-xs text-slate-500">Support can move local over time</div></div></div>
+          </Card>
+          <Card className="p-5">
+            <div className="flex items-center gap-3"><ShieldCheck className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">4 fallback-ready</div><div className="text-xs text-slate-500">Policy controlled alternatives</div></div></div>
+          </Card>
         </div>
+        <Card className="mb-6 p-5">
+          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+            <div>
+              <h2 className="font-semibold">Model Graduation Flywheel</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Start with cloud models for speed, identify repeated or sensitive workloads, then graduate stable traffic to owned local models with the same governance boundary.</p>
+            </div>
+            <StatusBadge value="Healthy" />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {["Observe demand", "Route by sensitivity", "Cache repeated answers", "Graduate to local capacity"].map((step) => (
+              <div key={step} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-sm font-semibold">{step}</div>
+            ))}
+          </div>
+        </Card>
         <Card id="provider-health" className="mb-6 p-5">
           <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -106,7 +126,7 @@ export default function ModelsPage() {
                   <div className="mt-4 space-y-2">
                     <button
                       onClick={() => { showToast("Critical GPT-5 traffic routed to Claude"); addAudit("Routing policy applied", "GPT-5 to Claude", "Model"); }}
-                      className="w-full rounded-md bg-slate-950 px-3 py-2 text-left text-xs font-semibold text-white hover:bg-slate-800"
+                      className="w-full rounded-md bg-[var(--brand-primary)] px-3 py-2 text-left text-xs font-semibold text-white hover:bg-[var(--brand-primary-dark)]"
                     >
                       Apply routing policy
                     </button>
@@ -130,7 +150,7 @@ export default function ModelsPage() {
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
           <Card id="integrate-model" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Models and providers</div>
-            <h2 className="mt-2 text-lg font-semibold">Add or integrate a model</h2>
+            <h2 className="mt-2 text-lg font-semibold">Register a governed model</h2>
             <p className="mt-2 text-sm leading-6 text-slate-600">Admins add cloud or local models here, test connectivity, and then assign them to departments, workspaces, agents, and routing policies.</p>
             <div className="mt-5 grid gap-4 md:grid-cols-3">
               <label className="text-sm font-medium text-slate-600">Provider
@@ -198,7 +218,7 @@ export default function ModelsPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <ActionButton onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
-              <ActionButton variant="secondary" onClick={addModel}><Plus size={14} /> Add model</ActionButton>
+              <ActionButton variant="secondary" onClick={addModel}><Plus size={14} /> Add to governed catalog</ActionButton>
             </div>
           </Card>
           <Card id="routing-suggestions" className="p-5">
@@ -213,11 +233,11 @@ export default function ModelsPage() {
           </Card>
         </div>
         <div className="mb-4 flex flex-wrap gap-2">
-          {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-slate-950 text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
+          {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
         </div>
         <Card id="model-catalog">
           <DataTable
-            columns={["Model", "Hosting", "Runtime", "Provider health", "Target", "Monthly requests", "Avg latency", "Access", "Action"]}
+            columns={["Model", "Hosting", "Runtime", "Provider health", "Target", "Monthly requests", "Avg latency", "Sensitivity fit", "Fallback", "Access", "Action"]}
             rows={visible.map((model) => {
               const health = getProviderHealth(model);
               return [
@@ -234,6 +254,8 @@ export default function ModelsPage() {
                 model.target,
                 model.requests,
                 model.latency,
+                model.hosting === "Local" ? "Confidential local-first" : "Public/internal with policy",
+                model.name === "GPT-5" ? "Claude or Qwen 32B" : model.hosting === "Local" ? "Local fallback only" : "Eligible by policy",
                 model.access,
                 <ActionButton key="action" variant="secondary" onClick={() => { showToast(`${model.name} policy opened`); addAudit(`${model.name} model policy viewed`, model.name, "Model"); }}><Sparkles size={14} /> Manage</ActionButton>
               ];

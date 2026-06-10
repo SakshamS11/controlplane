@@ -40,6 +40,15 @@ const teamPolicySummary: Record<string, { workspace: string; knowledge: string; 
   Marketing: { workspace: "Marketing Studio", knowledge: "Brand and Product FAQ", agents: "Drafting Assistant", rule: "Gemini first, GPT-5 capped" }
 };
 
+const departmentCostEvidence: Record<string, { cost: string; budget: string; evidenceGap: string }> = {
+  Engineering: { cost: "AED 58,400", budget: "AED 72,000", evidenceGap: "None" },
+  Legal: { cost: "AED 29,100", budget: "AED 34,000", evidenceGap: "External route review" },
+  Claims: { cost: "AED 46,200", budget: "AED 52,000", evidenceGap: "Capacity approval" },
+  Finance: { cost: "AED 8,600", budget: "AED 12,000", evidenceGap: "Retention policy" },
+  "Customer Support": { cost: "AED 18,500", budget: "AED 25,000", evidenceGap: "Cache approval" },
+  Marketing: { cost: "AED 31,500", budget: "AED 24,000", evidenceGap: "Budget exception" }
+};
+
 export default function DepartmentsPage() {
   const [activeTab, setActiveTab] = useState("members");
   const [memberEmail, setMemberEmail] = useState("");
@@ -90,7 +99,7 @@ export default function DepartmentsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Governance" title="Teams and departments" description="Add users by email, assign them to departments, and control each team's models, knowledge, workspaces, agents, and token limits." />
+      <PageHeader eyebrow="Governance" title="Teams" description="Add users by email, assign them to departments, and control each team's models, knowledge, workspaces, agents, budgets, and token limits." />
       <Section>
         <div className="mb-5 grid gap-4 md:grid-cols-4">
           <Card className="p-5">
@@ -151,7 +160,7 @@ export default function DepartmentsPage() {
 
               <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
                 <DataTable
-                  columns={["Department", "Users", "Workspace", "Knowledge access", "Agents", "Policy"]}
+                  columns={["Department", "Users", "Monthly cost", "Budget", "Workspace", "Models", "Knowledge", "Agents", "Evidence gap", "Policy"]}
                   rows={departments.map((department) => [
                     <span key="department" className="font-semibold">{department}</span>,
                     <div key="users" className="flex max-w-sm flex-wrap gap-2">
@@ -161,9 +170,13 @@ export default function DepartmentsPage() {
                         </button>
                       ))}
                     </div>,
+                    departmentCostEvidence[department].cost,
+                    departmentCostEvidence[department].budget,
                     teamPolicySummary[department].workspace,
+                    teamPolicySummary[department].rule,
                     teamPolicySummary[department].knowledge,
                     teamPolicySummary[department].agents,
+                    departmentCostEvidence[department].evidenceGap,
                     <div key="policy" className="space-y-1"><StatusBadge value="Enforced" /><div className="text-xs text-slate-500">{teamPolicySummary[department].rule}</div></div>
                   ])}
                 />

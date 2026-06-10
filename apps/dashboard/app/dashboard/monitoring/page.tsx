@@ -76,7 +76,7 @@ export default function MonitoringPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Observability" title="Monitoring dashboard" description="Infrastructure health, request volume, latency, cost, errors, department usage, and target service health in one place." />
+      <PageHeader eyebrow="Observability" title="Monitoring" description="Infrastructure health, request volume, latency, cost, errors, department usage, provider health, and drift alerts in one place." />
       <Section>
         <div id="monitoring-kpis" className="mb-6 grid scroll-mt-24 gap-4 md:grid-cols-2 xl:grid-cols-6">
           <MonitoringKpi label="Fleet GPU" value="71%" detail={`Warns at ${operationalThresholds.gpuMemoryWarning}%`} icon={<Gauge size={18} />} tone="emerald" />
@@ -86,6 +86,24 @@ export default function MonitoringPage() {
           <MonitoringKpi label="Est. cost" value="AED 18.4k" detail={`Watch ${operationalThresholds.monthlyCostWarning.toLocaleString()} AED`} icon={<WalletCards size={18} />} tone="indigo" />
           <MonitoringKpi label="Open issues" value={String(activeIssues)} detail={`${visibleAlerts.length} alerts visible`} icon={<Server size={18} />} tone={activeIssues ? "amber" : "emerald"} />
         </div>
+
+        <Card className="mb-6 p-5">
+          <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-center">
+            <div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase text-[var(--brand-primary)]"><AlertTriangle size={14} /> Alerts first</div>
+              <h2 className="mt-2 text-lg font-semibold">What needs attention right now</h2>
+            </div>
+            <ActionButton variant="secondary" onClick={() => simulateAction("Acknowledge visible alerts", "Monitoring")}>Acknowledge selected scope</ActionButton>
+          </div>
+          <div className="mt-4 grid gap-3 xl:grid-cols-5">
+            {visibleAlerts.slice(0, 5).map((alert) => (
+              <div key={alert.title} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-3">
+                <div className="text-sm font-semibold">{alert.title}</div>
+                <div className="mt-3 flex items-center justify-between gap-2"><span className="text-xs text-[var(--text-secondary)]">{alert.area}</span><StatusBadge value={alert.severity} /></div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         <Card id="monitoring-filters" className="mb-6 p-5">
           <div className="flex flex-col gap-5">
@@ -177,6 +195,23 @@ export default function MonitoringPage() {
             </Card>
           </div>
         </div>
+        <Card className="mt-6 p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold">Provider Drift Radar</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Tracks provider latency, failure mode, fallback readiness, and route safety.</p>
+            </div>
+            <StatusBadge value="Warning" />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {["OpenAI GPT-5 latency elevated", "Claude fallback ready for critical work", "Qwen 32B local route safe for sensitive work", "Gemini healthy for Marketing ladder"].map((item, index) => (
+              <div key={item} className="rounded-md border border-[var(--border-subtle)] bg-white p-3 text-sm">
+                <div className="font-semibold">{item}</div>
+                <div className="mt-2 text-xs text-[var(--text-secondary)]">{index === 0 ? "Route around now" : "No immediate action"}</div>
+              </div>
+            ))}
+          </div>
+        </Card>
         <div className="mt-6 grid gap-4 xl:grid-cols-4">
           {visibleAlerts.map((alert) => <Card key={alert.title} className="p-4"><AlertTriangle className="text-amber-600" size={18} /><div className="mt-3 text-sm font-semibold">{alert.title}</div><div className="mt-3 flex items-center justify-between gap-3"><StatusBadge value={alert.severity} /><ActionButton variant="secondary" onClick={() => simulateAction(`Open ${alert.area} alert`, alert.title)}>Open</ActionButton></div></Card>)}
         </div>

@@ -7,6 +7,7 @@ import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useApp
 const agentSeed = [
   {
     name: "Claims Summary Agent",
+    owner: "Claims Ops",
     department: "Claims",
     models: "Qwen 32B",
     knowledge: "Claims SOPs, Policy Documents",
@@ -14,10 +15,14 @@ const agentSeed = [
     approval: "Required before final decision",
     external: "Blocked",
     usage: "25 concurrent requests",
+    budget: "1.2M tokens/mo",
+    mcp: "Claims tools MCP",
+    killSwitch: "Armed",
     status: "Healthy"
   },
   {
     name: "Contract Review Agent",
+    owner: "Legal Ops",
     department: "Legal",
     models: "Claude, Qwen 32B",
     knowledge: "Legal Contracts",
@@ -25,10 +30,14 @@ const agentSeed = [
     approval: "Required for confidential matters",
     external: "Restricted",
     usage: "8 concurrent requests",
+    budget: "900K tokens/mo",
+    mcp: "Legal review MCP",
+    killSwitch: "Armed",
     status: "Governance risk"
   },
   {
     name: "Support Triage Agent",
+    owner: "Support Ops",
     department: "Customer Support",
     models: "Llama 3.1 8B, Gemini",
     knowledge: "Product FAQ",
@@ -36,10 +45,14 @@ const agentSeed = [
     approval: "Optional",
     external: "Allowed for non-sensitive tickets",
     usage: "40 concurrent requests",
+    budget: "1.8M tokens/mo",
+    mcp: "Ticketing MCP",
+    killSwitch: "Armed",
     status: "Healthy"
   },
   {
     name: "Code Review Agent",
+    owner: "Engineering",
     department: "Engineering",
     models: "DeepSeek Coder, Claude",
     knowledge: "Engineering Docs, Codebase Docs",
@@ -47,10 +60,14 @@ const agentSeed = [
     approval: "Required before merge",
     external: "Allowed",
     usage: "12 concurrent requests",
+    budget: "2.4M tokens/mo",
+    mcp: "Code review MCP",
+    killSwitch: "Armed",
     status: "Healthy"
   },
   {
     name: "Finance Analysis Agent",
+    owner: "Finance Ops",
     department: "Finance",
     models: "Qwen 32B",
     knowledge: "Finance Policies",
@@ -58,6 +75,9 @@ const agentSeed = [
     approval: "Required",
     external: "Approval required",
     usage: "6 concurrent requests",
+    budget: "500K tokens/mo",
+    mcp: "Finance tools MCP",
+    killSwitch: "Armed",
     status: "Healthy"
   }
 ];
@@ -76,7 +96,7 @@ export default function AgentsPage() {
   const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
 
   function saveAgent() {
-    const row = { name, department, models: selectedModels.join(", "), knowledge, tools, approval, external, usage, status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
+    const row = { name, owner: department, department, models: selectedModels.join(", "), knowledge, tools, approval, external, usage, budget: "Mock budget", mcp: "Allowlisted MCP", killSwitch: "Armed", status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
     setAgents((current) => [row, ...current.filter((item) => item.name !== name)]);
     showToast(`${name} agent saved`);
     addAudit("Custom agent saved", name, "Permission");
@@ -84,11 +104,11 @@ export default function AgentsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Agents" title="Custom agent assignment" description="Create or assign agents to departments with allowed models, knowledge bases, tools, human approval, external model restrictions, audit logging, and usage limits." />
+      <PageHeader eyebrow="Agents" title="Governed AI workers" description="Agents are controlled identities with owners, budgets, allowed models, knowledge, tools, approval rules, audit logs, and kill switches." />
       <Section>
         <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <Card className="p-5"><div className="flex items-center gap-3"><Bot className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{agents.length} agents</div><div className="text-xs text-slate-500">Assigned by department</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><Boxes className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">5 tool groups</div><div className="text-xs text-slate-500">Allowlisted actions</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><Bot className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{agents.length} governed identities</div><div className="text-xs text-slate-500">Owners and limits assigned</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><Boxes className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">5 tool/MCP groups</div><div className="text-xs text-slate-500">Allowlisted actions only</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><CheckCircle2 className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Human approval</div><div className="text-xs text-slate-500">Per agent rule</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Audit enforced</div><div className="text-xs text-slate-500">Agent changes and usage</div></div></div></Card>
         </div>
@@ -96,7 +116,8 @@ export default function AgentsPage() {
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <Card id="agent-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or assign</div>
-            <h2 className="mt-2 text-lg font-semibold">Agent configuration</h2>
+            <h2 className="mt-2 text-lg font-semibold">Agent command boundary</h2>
+            <p className="mt-1 text-sm text-slate-600">Configure what the agent identity can know, which tools it can call, who owns it, and when a human must approve output.</p>
             <div className="mt-5 space-y-4">
               <label className="text-sm font-medium text-slate-600">Agent name
                 <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
@@ -129,24 +150,28 @@ export default function AgentsPage() {
                   <option>Approval required</option>
                 </select>
               </label>
-              <ActionButton onClick={saveAgent}><Plus size={14} /> Save agent</ActionButton>
+              <ActionButton onClick={saveAgent}><Plus size={14} /> Save governed agent</ActionButton>
             </div>
           </Card>
 
           <div className="space-y-6">
             <Card id="agent-list" className="overflow-hidden">
               <DataTable
-                columns={["Agent", "Department", "Models", "Knowledge bases", "Tools", "Human approval", "External models", "Usage", "Status", "Action"]}
+                columns={["Agent", "Owner", "Department", "Models", "Knowledge bases", "Tools/MCP", "Budget", "Human approval", "External models", "Usage", "Kill switch", "Risk", "Audit", "Action"]}
                 rows={agents.map((agent) => [
                   <span key="name" className="font-semibold">{agent.name}</span>,
+                  agent.owner,
                   agent.department,
                   agent.models,
                   agent.knowledge,
-                  agent.tools,
+                  <span key="tools">{agent.tools}<span className="block text-xs text-slate-500">{agent.mcp}</span></span>,
+                  agent.budget,
                   agent.approval,
                   agent.external,
                   agent.usage,
+                  <StatusBadge key="kill" value={agent.killSwitch} />,
                   <StatusBadge key="status" value={agent.status} />,
+                  <StatusBadge key="audit" value="Enabled" />,
                   <ActionButton key="action" variant="secondary" onClick={() => {
                     setName(agent.name);
                     setDepartment(agent.department);
@@ -167,12 +192,14 @@ export default function AgentsPage() {
                 <LockKeyhole className="mt-1 text-cyan-700" size={20} />
                 <div>
                   <h2 className="font-semibold">Agent safety boundary</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-600">Agents inherit the same model, knowledge, budget, and audit boundaries as their assigned department. Tools are allowlisted and sensitive outcomes can require human approval before final action.</p>
+                  <p className="mt-2 text-sm leading-6 text-slate-600">Agents are never free-form automation. They inherit department policy, use allowlisted tools/MCP servers, respect budgets, and can be stopped with a kill switch.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-4">
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Assigned users and departments</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Allowed models and knowledge</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Human approval rules</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Usage limits and audit logs</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm">MCP/tool governance</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm">Agent Command Center kill switch</div>
                   </div>
                 </div>
               </div>

@@ -1,14 +1,18 @@
 "use client";
 
-import { Bell, Building2, Cloud, Database, Gauge, KeyRound, Settings, SlidersHorizontal } from "lucide-react";
+import { Bell, Building2, Cloud, Database, Gauge, KeyRound, Settings, ShieldCheck, SlidersHorizontal } from "lucide-react";
 import { Card, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const settings = [
   { title: "Organization profile", text: "Name, workspace slug, and billing contact placeholder", icon: Building2 },
+  { title: "Provider settings", text: "Cloud provider references, model gateway defaults, and secret names", icon: Cloud },
   { title: "Agent install settings", text: "Mock install script URL, token duration, and target labels", icon: KeyRound },
+  { title: "Data residency", text: "Default regions, local-only departments, and restricted knowledge routing", icon: Database },
   { title: "Data retention", text: "Prompt, metric, and event retention policies", icon: Database },
   { title: "Audit log retention", text: "Enterprise evidence export and retention windows", icon: Settings },
-  { title: "Notification settings", text: "Alert routing for email, Slack, and webhooks", icon: Bell }
+  { title: "Notification settings", text: "Alert routing for email, Slack, and webhooks", icon: Bell },
+  { title: "Workspace publishing defaults", text: "Default Open WebUI launch rules, audit capture, and invite behavior", icon: SlidersHorizontal },
+  { title: "Compliance settings", text: "ISO/IEC 42001 readiness labels, evidence retention, and reviewer routing", icon: ShieldCheck }
 ];
 
 const providers = [
@@ -35,6 +39,13 @@ export default function SettingsPage() {
     <>
       <PageHeader eyebrow="Settings" title="Workspace settings" description="Configure organization defaults, providers, agents, notifications, and the operational thresholds that drive alerts." />
       <Section>
+        <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+          <Card className="p-5"><div className="text-sm font-semibold">Acme Corp</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Organization profile</div></Card>
+          <Card className="p-5"><div className="text-sm font-semibold">UAE North</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Preferred data residency</div></Card>
+          <Card className="p-5"><div className="text-sm font-semibold">365 days</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Audit retention</div></Card>
+          <Card className="p-5"><div className="text-sm font-semibold">Open WebUI</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Default workspace interface</div></Card>
+          <Card className="p-5"><div className="text-sm font-semibold">Readiness support</div><div className="mt-1 text-xs text-[var(--text-secondary)]">No certification claim</div></Card>
+        </div>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
           <Card id="thresholds" className="p-5">
             <div className="flex items-start justify-between gap-4">

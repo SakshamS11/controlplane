@@ -6,6 +6,7 @@ import { createContext, useContext, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
+  AlertTriangle,
   Bell,
   Bot,
   Boxes,
@@ -13,10 +14,12 @@ import {
   CheckCircle2,
   Cloud,
   Database,
+  FileCheck2,
   Gauge,
   KeyRound,
   Layers,
   LayoutDashboard,
+  Search,
   PanelLeftClose,
   PanelLeftOpen,
   MonitorDot,
@@ -28,6 +31,7 @@ import {
   Server,
   SlidersHorizontal,
   Sparkles,
+  WalletCards,
   X
 } from "lucide-react";
 
@@ -208,27 +212,50 @@ const navSections = [
   ] },
   { label: "Govern", items: [
     { href: "/dashboard/departments", label: "Teams", icon: Building2 },
-    { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText }
+    { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText },
+    { href: "/dashboard/compliance", label: "Compliance Readiness", icon: FileCheck2 }
   ] },
-  { label: "Optimize", items: [{ href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal }] },
+  { label: "Optimize", items: [
+    { href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal },
+    { href: "/dashboard/cost-capacity", label: "Cost & Capacity", icon: WalletCards }
+  ] },
   { label: "Settings", items: [{ href: "/dashboard/settings", label: "Settings", icon: Settings }] }
 ];
+
+const pageActions: Record<string, { href: string; label: string }> = {
+  "/dashboard": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
+  "/dashboard/targets": { href: "/dashboard/targets", label: "Add Server" },
+  "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
+  "/dashboard/monitoring": { href: "/dashboard/monitoring", label: "Open Alerts" },
+  "/dashboard/stacks": { href: "/dashboard/stacks", label: "Deploy Stack" },
+  "/dashboard/models": { href: "/dashboard/models#integrate-model", label: "Add Model" },
+  "/dashboard/routing-policies": { href: "/dashboard/routing-policies#routing-form", label: "Create Policy" },
+  "/dashboard/workspaces": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
+  "/dashboard/knowledge-bases": { href: "/dashboard/knowledge-bases#kb-form", label: "Add Source" },
+  "/dashboard/agents": { href: "/dashboard/agents#agent-form", label: "Create Agent" },
+  "/dashboard/departments": { href: "/dashboard/departments", label: "Invite User" },
+  "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
+  "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
+  "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run Simulator" },
+  "/dashboard/cost-capacity": { href: "/dashboard/cost-capacity", label: "Review Savings" },
+  "/dashboard/settings": { href: "/dashboard/settings#thresholds", label: "Configure" }
+};
 
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   return (
-    <div className="min-h-screen bg-[#f4f7f2] text-[#071013]">
-      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[#071013] text-white shadow-2xl shadow-[#071013]/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-72"}`}>
-        <div className={`border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
+    <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
+      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-[19rem]"}`}>
+        <div className={`border-b border-white/10 py-6 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
-            <div className="grid h-9 w-9 place-items-center rounded-lg bg-[#00d1b2] text-[#071013] shadow-lg shadow-[#00d1b2]/25">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-lg">
               <Cloud size={19} />
             </div>
             {!collapsed ? <div className="min-w-0">
-              <div className="font-semibold">AI Control Plane</div>
-              <div className="text-xs text-[#a9c7c0]">Enterprise AI operations</div>
+              <div className="font-semibold tracking-tight">AI Control Plane</div>
+              <div className="text-xs text-slate-400">Enterprise AI operations</div>
             </div> : null}
           </Link>
             {!collapsed ? (
@@ -253,10 +280,10 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             <PanelLeftOpen size={18} />
           </button>
         ) : null}
-        <nav className={`flex-1 space-y-4 overflow-y-auto py-4 ${collapsed ? "px-2" : "px-3"}`} aria-label="Dashboard navigation">
+        <nav className={`flex-1 space-y-5 overflow-y-auto py-5 ${collapsed ? "px-2" : "px-4"}`} aria-label="Dashboard navigation">
           {navSections.map((section) => (
             <div key={section.label}>
-              {!collapsed ? <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-wide text-[#6f8f88]">{section.label}</div> : null}
+              {!collapsed ? <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{section.label}</div> : null}
               <div className="space-y-1">
                 {section.items.map((item) => {
                   const Icon = item.icon;
@@ -267,8 +294,9 @@ export function DashboardShell({ children }: { children: ReactNode }) {
                       href={item.href}
                       title={collapsed ? item.label : undefined}
                       aria-label={collapsed ? item.label : undefined}
-                      className={`flex items-center rounded-md py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-[#00d1b2] text-[#071013] shadow shadow-[#00d1b2]/20" : "text-[#c7d8d4] hover:bg-white/10 hover:text-white"}`}
+                      className={`relative flex items-center rounded-lg py-2.5 text-sm transition ${collapsed ? "justify-center px-2" : "gap-3 px-3"} ${active ? "bg-white/10 text-white shadow-sm ring-1 ring-white/10" : "text-slate-300 hover:bg-white/10 hover:text-white"}`}
                     >
+                      {active ? <span className="absolute left-0 top-2 bottom-2 w-1 rounded-r-full bg-[var(--brand-primary)]" /> : null}
                       <Icon size={17} />
                       {!collapsed ? item.label : null}
                     </Link>
@@ -279,17 +307,17 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         {!collapsed ? <div className="border-t border-white/10 p-4">
-          <div className="rounded-lg border border-[#00d1b2]/20 bg-[#00d1b2]/8 p-4 shadow-xl shadow-black/20">
+          <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
             <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck size={16} /> Governance mode</div>
-            <p className="mt-2 text-xs leading-5 text-[#a9c7c0]">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
-            <div className="mt-4 flex items-center justify-between rounded-md bg-[#b8f35a]/10 px-3 py-2 text-xs text-[#d9ff91]">
+            <p className="mt-2 text-xs leading-5 text-slate-400">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
+            <div className="mt-4 flex items-center justify-between rounded-md bg-[rgba(16,185,129,0.10)] px-3 py-2 text-xs text-emerald-200">
               <span>Policy engine</span>
               <span>Active</span>
             </div>
           </div>
         </div> : null}
       </aside>
-      <div className={`transition-all duration-200 ${collapsed ? "lg:pl-20" : "lg:pl-72"}`}>
+      <div className={`transition-all duration-200 ${collapsed ? "lg:pl-20" : "lg:pl-[19rem]"}`}>
         <TopBar />
         {children}
       </div>
@@ -298,31 +326,58 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 }
 
 function TopBar() {
+  const pathname = usePathname();
+  const action = pageActions[pathname] ?? { href: pathname, label: "Take Action" };
+
   return (
-    <header className="sticky top-0 z-20 flex h-16 items-center justify-between border-b border-[#dce6df] bg-white/88 px-6 backdrop-blur">
-      <div className="min-w-0">
-        <div className="text-sm font-semibold">One operating layer for enterprise AI infrastructure.</div>
-        <div className="truncate text-xs text-slate-500">Deploy AI anywhere. Govern it centrally. Operate it from one place.</div>
+    <header className="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-white/95 px-6 py-3 backdrop-blur">
+      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+      <div className="min-w-0 space-y-1">
+        <div className="flex flex-wrap items-center gap-2 text-sm">
+          <span className="font-semibold text-[var(--text-primary)]">Acme Corp</span>
+          <span className="text-[var(--text-secondary)]">Production</span>
+          <span className="hidden text-slate-300 md:inline">/</span>
+          <span className="inline-flex items-center gap-2 rounded-full bg-[rgba(245,158,11,0.12)] px-2.5 py-1 text-xs font-semibold text-[var(--status-warning)]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-warning)]" />
+            AI Ops Status: Warning
+          </span>
+          <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
+        </div>
+        <div className="truncate text-xs text-slate-500">One operating layer for enterprise AI infrastructure.</div>
       </div>
-      <div className="hidden items-center gap-2 md:flex">
+      <div className="flex flex-wrap items-center gap-2">
+        <label className="sr-only" htmlFor="global-time-range">Time range</label>
+        <select id="global-time-range" defaultValue="Last 30 days" className="min-h-10 rounded-md border border-[var(--border-subtle)] bg-white px-3 text-sm font-medium text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]">
+          <option>Last 24 hours</option>
+          <option>Last 7 days</option>
+          <option>Last 30 days</option>
+          <option>This quarter</option>
+        </select>
+        <div className="relative min-w-[240px] flex-1 xl:w-80 xl:flex-none">
+          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
+          <input aria-label="Search or command" placeholder="Search or run command..." className="min-h-10 w-full rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] pl-9 pr-3 text-sm text-[var(--text-primary)] shadow-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]" />
+        </div>
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
-        <IconPill icon={<ShieldCheck size={15} />} label="Governance active" />
+        <Link href={action.href} className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-primary-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2">
+          {action.label}
+        </Link>
+      </div>
       </div>
     </header>
   );
 }
 
 function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
-  return <div className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-medium text-slate-700">{icon}{label}</div>;
+  return <div className="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-xs font-medium text-slate-700">{icon}{label}</div>;
 }
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="border-b border-[#dce6df] bg-white px-6 py-5">
+    <div className="border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-6 py-7">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
-          <p className="text-xs font-semibold uppercase text-[#008f7a]">{eyebrow}</p>
-          <h1 className="mt-1 text-2xl font-semibold text-[#071013]">{title}</h1>
+          <p className="text-xs font-semibold uppercase text-[var(--brand-primary)]">{eyebrow}</p>
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{title}</h1>
           {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
         </div>
         {action}
@@ -332,52 +387,80 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow: s
 }
 
 export function Section({ children }: { children: ReactNode }) {
-  return <section className="p-6 xl:p-8">{children}</section>;
+  return <section className="mx-auto max-w-[1680px] p-6 xl:p-8 2xl:p-10">{children}</section>;
 }
 
 export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
-  return <div id={id} className={`scroll-mt-24 rounded-lg border border-[#dce6df] bg-white shadow-[0_1px_2px_rgba(7,16,19,0.04),0_16px_40px_rgba(7,16,19,0.06)] ${className}`}>{children}</div>;
+  return <div id={id} className={`scroll-mt-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[0_1px_2px_rgba(17,24,39,0.04),0_16px_40px_rgba(17,24,39,0.06)] ${className}`}>{children}</div>;
 }
 
-export function MetricCard({ label, value, detail, icon }: { label: string; value: string; detail?: string; icon: ReactNode }) {
+export function SectionCard({ title, children, detail, action, className = "", id }: { title?: string; children: ReactNode; detail?: string; action?: ReactNode; className?: string; id?: string }) {
+  return (
+    <Card id={id} className={className}>
+      {title || detail || action ? (
+        <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-5 py-4 md:flex-row md:items-start">
+          <div>
+            {title ? <h2 className="font-semibold text-[var(--text-primary)]">{title}</h2> : null}
+            {detail ? <p className="mt-1 text-sm leading-6 text-[var(--text-secondary)]">{detail}</p> : null}
+          </div>
+          {action}
+        </div>
+      ) : null}
+      {children}
+    </Card>
+  );
+}
+
+export function MetricCard({ label, value, detail, icon, status, trend }: { label: string; value: string; detail?: string; icon: ReactNode; status?: string; trend?: string }) {
   return (
     <Card className="relative overflow-hidden p-5">
-      <div className="absolute inset-x-0 top-0 h-1 bg-cyan-500" />
+      <div className="absolute inset-x-0 top-0 h-1 bg-[var(--brand-primary)]" />
       <div className="flex items-center justify-between">
-        <div className="text-sm font-medium text-slate-500">{label}</div>
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-[#e4fff9] text-[#008f7a]">{icon}</div>
+        <div className="text-sm font-medium text-[var(--text-secondary)]">{label}</div>
+        <div className="grid h-9 w-9 place-items-center rounded-md bg-[rgba(22,199,232,0.12)] text-[var(--brand-accent)]">{icon}</div>
       </div>
-      <div className="mt-4 text-2xl font-semibold">{value}</div>
-      {detail ? <div className="mt-1 text-xs text-slate-500">{detail}</div> : null}
+      <div className="mt-4 text-2xl font-semibold text-[var(--text-primary)]">{value}</div>
+      {detail || trend || status ? (
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
+          {trend ? <span className="font-medium text-[var(--brand-primary)]">{trend}</span> : null}
+          {detail ? <span>{detail}</span> : null}
+          {status ? <StatusBadge value={status} /> : null}
+        </div>
+      ) : null}
     </Card>
   );
 }
 
 export function StatusBadge({ value }: { value: string }) {
   const cls = value === "Healthy" || value === "Running" || value === "Connected" || value === "Online" || value === "Success" || value === "Operational" || value === "Active" || value === "Enforced" || value === "Synced" || value === "Indexed" || value === "Published"
-    ? "bg-[#ecffd7] text-[#3f6f00] ring-[#c9f776]"
+    ? "bg-[rgba(16,185,129,0.10)] text-[var(--status-healthy)] ring-[rgba(16,185,129,0.28)]"
     : value === "Warning" || value === "Open" || value === "Medium" || value === "Degraded" || value === "Near limit" || value === "Under-allocated" || value === "Over-allocated" || value === "Cost risk"
-      ? "bg-[#fff2d6] text-[#9a5b00] ring-[#ffd07a]"
+      ? "bg-[rgba(245,158,11,0.12)] text-[var(--status-warning)] ring-[rgba(245,158,11,0.30)]"
       : value === "Offline" || value === "Critical" || value === "High" || value === "Down" || value === "Governance risk" || value === "Disabled"
-        ? "bg-[#fff0ed] text-[#b93524] ring-[#ffb6aa]"
-        : "bg-slate-100 text-slate-700 ring-slate-200";
+        ? "bg-[rgba(225,29,72,0.10)] text-[var(--status-critical)] ring-[rgba(225,29,72,0.24)]"
+        : "bg-slate-100 text-[var(--status-offline)] ring-slate-200";
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;
 }
 
+export function RiskBadge({ level }: { level: "Low" | "Medium" | "High" | "Critical" | "Governance risk" | "Cost risk" }) {
+  const value = level === "Low" ? "Healthy" : level;
+  return <StatusBadge value={value} />;
+}
+
 export function ActionButton({ children, onClick, variant = "primary" }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" }) {
-  const cls = variant === "primary" ? "bg-[#071013] text-white hover:bg-[#10272b]" : variant === "danger" ? "bg-[#ff6b57] text-white hover:bg-[#dd4f3e]" : "border border-[#dce6df] bg-white text-[#071013] hover:bg-[#f4f7f2]";
-  return <button onClick={onClick} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2 ${cls}`}>{children}</button>;
+  const cls = variant === "primary" ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]" : variant === "danger" ? "bg-[var(--status-critical)] text-white hover:bg-rose-700" : "border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] hover:bg-[var(--surface-muted)]";
+  return <button onClick={onClick} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 ${cls}`}>{children}</button>;
 }
 
 export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
   return (
     <div className="overflow-auto">
       <table className="w-full min-w-[760px] text-left text-sm">
-        <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase text-slate-500">
+        <thead className="border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] text-xs uppercase text-[var(--text-secondary)]">
           <tr>{columns.map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {rows.map((row, index) => <tr key={index} className="hover:bg-slate-50">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-4 align-middle">{cell}</td>)}</tr>)}
+          {rows.map((row, index) => <tr key={index} className="hover:bg-[var(--surface-muted)]">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-4 align-middle">{cell}</td>)}</tr>)}
         </tbody>
       </table>
     </div>
@@ -392,9 +475,29 @@ export function ChartCard({ title, children, detail }: { title: string; children
           <h2 className="font-semibold">{title}</h2>
           {detail ? <p className="mt-1 text-xs text-slate-500">{detail}</p> : null}
         </div>
-        <Gauge size={17} className="text-slate-400" />
+        <Gauge size={17} className="text-[var(--brand-primary)]" />
       </div>
       <div className="h-72">{children}</div>
+    </Card>
+  );
+}
+
+export function RecommendedActionCard({ title, evidence, recommendation, impact, status = "Warning", actionLabel = "Review", onAction }: { title: string; evidence: string; recommendation: string; impact: string; status?: string; actionLabel?: string; onAction?: () => void }) {
+  return (
+    <Card className="p-5">
+      <div className="flex items-start justify-between gap-3">
+        <div className="grid h-9 w-9 shrink-0 place-items-center rounded-md bg-[rgba(91,61,255,0.10)] text-[var(--brand-primary)]">
+          <AlertTriangle size={17} />
+        </div>
+        <StatusBadge value={status} />
+      </div>
+      <h3 className="mt-4 text-sm font-semibold text-[var(--text-primary)]">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]"><span className="font-medium text-[var(--text-primary)]">Evidence:</span> {evidence}</p>
+      <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]"><span className="font-medium text-[var(--text-primary)]">Recommendation:</span> {recommendation}</p>
+      <div className="mt-3 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-sm font-medium text-[var(--brand-primary-dark)]">{impact}</div>
+      <div className="mt-4">
+        <ActionButton onClick={onAction}>{actionLabel}</ActionButton>
+      </div>
     </Card>
   );
 }

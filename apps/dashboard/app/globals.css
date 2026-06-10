@@ -4,24 +4,29 @@
 
 :root {
   color-scheme: light;
-  --brand-ink: #071013;
-  --brand-panel: #0d1b1e;
-  --brand-teal: #00d1b2;
-  --brand-teal-deep: #008f7a;
-  --brand-lime: #b8f35a;
-  --brand-coral: #ff6b57;
-  --brand-violet: #7c5cff;
-  --brand-sky: #35c8ff;
-  --brand-paper: #f4f7f2;
-  --brand-line: #dce6df;
+  --brand-primary: #5B3DFF;
+  --brand-primary-dark: #2B1B78;
+  --brand-accent: #16C7E8;
+  --surface-main: #FAF9F6;
+  --surface-muted: #EEF1F6;
+  --surface-dark: #090D1A;
+  --surface-graphite: #111827;
+  --surface-card: #FFFFFF;
+  --text-primary: #111827;
+  --text-secondary: #64748B;
+  --border-subtle: #E5E7EB;
+  --status-healthy: #10B981;
+  --status-warning: #F59E0B;
+  --status-critical: #E11D48;
+  --status-offline: #64748B;
 }
 
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(0, 209, 178, 0.10), transparent 34rem),
-    linear-gradient(180deg, #f7faf6 0%, var(--brand-paper) 100%);
-  color: var(--brand-ink);
+    radial-gradient(circle at top left, rgba(91, 61, 255, 0.07), transparent 34rem),
+    linear-gradient(180deg, var(--surface-main) 0%, var(--surface-muted) 100%);
+  color: var(--text-primary);
 }
 
 * {
@@ -34,7 +39,14 @@ select {
   font: inherit;
 }
 
+button,
+a,
+input,
+select {
+  outline-color: var(--brand-primary);
+}
+
 ::selection {
-  background: rgba(0, 209, 178, 0.24);
-  color: var(--brand-ink);
+  background: rgba(91, 61, 255, 0.18);
+  color: var(--text-primary);
 }

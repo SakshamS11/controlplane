@@ -5,6 +5,11 @@ import { AlertTriangle, ArrowRightLeft, CheckCircle2, Plus, Route, ShieldCheck, 
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const policySeed = [
+  { name: "Sovereignty Router", scope: "Legal and Claims", task: "Confidential retrieval", sensitivity: "Restricted", primary: "Qwen 32B", fallback: "No external fallback for restricted KBs", blocked: "GPT-5, Claude, Gemini", status: "Healthy" },
+  { name: "Marketing Cost Ladder", scope: "Marketing Studio", task: "Drafting and summarization", sensitivity: "Public", primary: "Gemini", fallback: "Claude, then GPT-5 for executive copy", blocked: "GPT-5 full by default", status: "Cost risk" },
+  { name: "Provider Degradation", scope: "All external workspaces", task: "Provider incident routing", sensitivity: "Internal", primary: "Claude", fallback: "Qwen 32B for sensitive work", blocked: "Degraded provider routes", status: "Warning" },
+  { name: "Budget Circuit Breaker", scope: "Marketing and Engineering", task: "Budget protection", sensitivity: "Internal", primary: "Cheapest approved model", fallback: "Approval, then hard stop", blocked: "Over-budget premium model", status: "Healthy" },
+  { name: "Prompt Firewall", scope: "All workspaces", task: "Sensitive prompt inspection", sensitivity: "Confidential", primary: "Local-safe model", fallback: "Human approval", blocked: "Unsafe external route", status: "Healthy" },
   { name: "Legal confidential review", scope: "Legal AI Assistant", task: "Contract review", sensitivity: "Confidential", primary: "Qwen 32B", fallback: "Claude for non-sensitive drafting", blocked: "GPT-5, Gemini", status: "Governance risk" },
   { name: "Claims sensitive workflow", scope: "Claims AI Assistant", task: "Claim summarization", sensitivity: "Restricted", primary: "Qwen 32B", fallback: "No external fallback", blocked: "GPT-5, Claude, Gemini", status: "Healthy" },
   { name: "Engineering code assist", scope: "Engineering Copilot", task: "Code review", sensitivity: "Internal", primary: "DeepSeek Coder", fallback: "Claude, then GPT-5", blocked: "None", status: "Healthy" },
@@ -37,7 +42,7 @@ export default function RoutingPoliciesPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Routing" title="Routing policies" description="Define how work moves between local and cloud models based on department, workspace, sensitivity, provider health, cost, latency, and fallback eligibility." />
+      <PageHeader eyebrow="Routing" title="Routing Policies" description="Control where AI work runs based on sensitivity, provider health, budget, latency, fallback eligibility, and whether data must stay local." />
       <Section>
         <Card id="incident-action" className="mb-6 overflow-hidden border-amber-200">
           <div className="grid gap-4 bg-amber-50 px-5 py-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -45,7 +50,7 @@ export default function RoutingPoliciesPage() {
               <AlertTriangle className="mt-1 text-amber-700" size={20} />
               <div>
                 <div className="text-sm font-semibold text-amber-950">OpenAI degraded 48 seconds ago</div>
-                <p className="mt-1 text-sm text-amber-900">Elevated latency on GPT-5 requests. Route critical work to Claude or Qwen 32B while the provider recovers.</p>
+                <p className="mt-1 text-sm text-amber-900">Elevated latency on GPT-5 requests. Apply a governed fallback instead of asking admins to manually coordinate model changes.</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -57,10 +62,21 @@ export default function RoutingPoliciesPage() {
 
         <div className="mb-5 grid gap-4 md:grid-cols-4">
           <Card className="p-5"><div className="flex items-center gap-3"><Route className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{policies.length} policies</div><div className="text-xs text-slate-500">Workspace aware</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><Sparkles className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">Model suggestions</div><div className="text-xs text-slate-500">Based on task and sensitivity</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><Sparkles className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">Model suggestions</div><div className="text-xs text-slate-500">Based on task and sensitivity</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Confidential safe</div><div className="text-xs text-slate-500">Local-only options</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><CheckCircle2 className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Audit covered</div><div className="text-xs text-slate-500">Every route change</div></div></div></Card>
         </div>
+        <Card className="mb-6 p-5">
+              <h2 className="font-semibold">Control-plane routing modules</h2>
+          <div className="mt-4 grid gap-3 md:grid-cols-5">
+            {["Sovereignty Router", "Marketing Cost Ladder", "Provider Degradation", "Budget Circuit Breaker", "Prompt Firewall"].map((item) => (
+              <div key={item} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-3 text-sm">
+                <div className="font-semibold">{item}</div>
+                <div className="mt-2 text-xs text-[var(--text-secondary)]">Configured as simulated policy</div>
+              </div>
+            ))}
+          </div>
+        </Card>
 
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <Card id="routing-form" className="p-5">

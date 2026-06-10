@@ -336,8 +336,8 @@ export default function ResourcePlannerPage() {
     <>
       <PageHeader
         eyebrow="Resource Planner"
-        title="Department AI capacity planner"
-        description="Recommend AI capacity, budget, model access, knowledge access, and agent access by department based on usage, cost, latency, GPU utilization, and governance risk."
+        title="AI Resource Planner"
+        description="The planning engine that turns usage into recommendations for cost, capacity, model mix, knowledge access, agent access, and governance improvements."
       />
       <Section>
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
@@ -347,11 +347,25 @@ export default function ResourcePlannerPage() {
           <Card className="p-4"><div className="text-xs text-slate-500">Over-allocated teams</div><div className="mt-2 text-2xl font-semibold">2</div><div className="mt-1 text-xs text-slate-500">Finance and Marketing</div></Card>
           <Card className="p-4"><div className="text-xs text-slate-500">Governance risks</div><div className="mt-2 text-2xl font-semibold">1</div><div className="mt-1 text-xs text-slate-500">Legal confidential workflow</div></Card>
         </div>
+        <Card className="mb-6 p-5">
+          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
+            <div>
+              <h2 className="font-semibold">Traffic Time Machine simulation</h2>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Replay demand against alternate routing, semantic cache, budget circuit breakers, and local-model graduation. Your AI spend becomes an owned AI asset over time.</p>
+            </div>
+            <StatusBadge value="Healthy" />
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-4">
+            {["Model Graduation Flywheel", "Semantic Cache", "Budget Circuit Breakers", "ISO readiness recommendations"].map((item) => (
+              <div key={item} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-sm font-semibold">{item}</div>
+            ))}
+          </div>
+        </Card>
 
         <Card id="usage" className="mb-6 overflow-hidden">
           <div className="border-b border-slate-200 px-5 py-4">
             <h2 className="font-semibold">Team usage overview</h2>
-            <p className="mt-1 text-sm text-slate-500">Department-level demand, spend, latency, and allocation posture.</p>
+            <p className="mt-1 text-sm text-slate-500">Department-level demand, spend, latency, allocation posture, and governance risk in one planning view.</p>
           </div>
           <DataTable
             columns={["Department", "Active users", "Requests", "Tokens", "AI cost", "Peak window", "GPU allocation", "Cloud spend", "Avg latency", "Status"]}
@@ -485,7 +499,7 @@ export default function ResourcePlannerPage() {
             <div className="mb-5 flex items-start justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><SlidersHorizontal size={15} /> Capacity policy simulator</div>
-                <h2 className="mt-2 text-lg font-semibold">Tune department policy and preview impact</h2>
+                <h2 className="mt-2 text-lg font-semibold">Tune policy and preview tradeoffs</h2>
               </div>
               <ActionButton variant="secondary" onClick={saveSimulation}>Save simulation</ActionButton>
             </div>
@@ -558,7 +572,7 @@ export default function ResourcePlannerPage() {
               <div className="rounded-md border border-slate-200 p-4"><div className="text-xs text-slate-500">Risk level</div><div className="mt-2"><StatusBadge value={projected.risk} /></div></div>
               <div className="rounded-md border border-cyan-100 bg-cyan-50 p-4 text-sm leading-6 text-cyan-900">{projected.recommendation}</div>
               <div className={`rounded-md border p-4 text-sm leading-6 ${overbookedCapacity > 0 ? "border-amber-200 bg-amber-50 text-amber-950" : "border-emerald-200 bg-emerald-50 text-emerald-950"}`}>
-                <div className="font-semibold">Capacity action</div>
+                <div className="font-semibold">Capacity decision</div>
                 <div className="mt-1">{capacityDecision}</div>
                 {overbookedCapacity > 0 && totalReclaimable < overbookedCapacity ? (
                   <div className="mt-2">Recommended next step: add an on-prem GPU replica or increase cloud model credits for Claude/GPT fallback.</div>

@@ -82,6 +82,7 @@ export default function WorkspacesPage() {
 
   function togglePublish(workspace: Workspace) {
     const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
+    if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface in the demo.`)) return;
     setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: next, status: next === "Disabled" ? "Offline" : item.status } : item));
     showToast(`${workspace.name} ${next.toLowerCase()}`);
     addAudit("Workspace publish state changed", workspace.name, "Permission");
@@ -89,11 +90,20 @@ export default function WorkspacesPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Workspaces" title="AI workspaces" description="Create and publish governed team AI experiences, then send users into Open WebUI or a custom chat with the right models, knowledge, agents, and policies." />
+      <PageHeader eyebrow="Workspaces" title="AI Workspaces" description="Create the interface users actually open, then govern its models, knowledge, agents, budget, routing, audit, and launch URL from the control plane." />
       <Section>
+        <Card className="mb-5 p-5">
+          <div className="grid gap-3 md:grid-cols-4">
+            {["Create workspace", "Select interface", "Attach policy", "Publish to users"].map((step, index) => (
+              <div key={step} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-sm">
+                <span className="font-semibold text-[var(--brand-primary)]">{index + 1}. </span>{step}
+              </div>
+            ))}
+          </div>
+        </Card>
         <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <Card className="p-5"><div className="flex items-center gap-3"><Layers className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{workspaces.length} workspaces</div><div className="text-xs text-slate-500">Team AI surfaces</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><ExternalLink className="text-indigo-600" size={20} /><div><div className="text-sm font-semibold">3 published</div><div className="text-xs text-slate-500">Launchable links</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><Layers className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{workspaces.length} governed interfaces</div><div className="text-xs text-slate-500">Open WebUI, chat, or API</div></div></div></Card>
+          <Card className="p-5"><div className="flex items-center gap-3"><ExternalLink className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">3 published</div><div className="text-xs text-slate-500">Ready for users</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Knowledge scoped</div><div className="text-xs text-slate-500">Workspace and department</div></div></div></Card>
           <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Audit enabled</div><div className="text-xs text-slate-500">For launch and admin changes</div></div></div></Card>
         </div>
@@ -101,7 +111,8 @@ export default function WorkspacesPage() {
         <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
           <Card id="workspace-form" className="p-5">
             <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
-            <h2 className="mt-2 text-lg font-semibold">Workspace configuration</h2>
+            <h2 className="mt-2 text-lg font-semibold">Workspace publishing workflow</h2>
+            <p className="mt-1 text-sm text-slate-600">A workspace is the governed front door into Open WebUI, custom chat, or API-only access.</p>
             <div className="mt-5 space-y-4">
               <label className="text-sm font-medium text-slate-600">Workspace name
                 <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
@@ -146,20 +157,26 @@ export default function WorkspacesPage() {
                   <option>Approval required</option>
                 </select>
               </label>
-              <ActionButton onClick={saveWorkspace}><Save size={14} /> Save workspace</ActionButton>
+              <ActionButton onClick={saveWorkspace}><Save size={14} /> Save and stage workspace</ActionButton>
             </div>
           </Card>
 
           <div className="space-y-6">
             <Card id="workspace-list" className="overflow-hidden">
               <DataTable
-                columns={["Workspace", "Department", "Interface", "Status", "Allowed models", "Launch", "Invite", "Manage"]}
+                columns={["Workspace", "Department", "Run location", "Interface", "Status", "Allowed models", "Knowledge", "Agents", "Budget", "Routing", "Audit/evidence", "Launch", "Invite", "Manage"]}
                 rows={workspaces.map((workspace) => [
                   <span key="name" className="font-semibold">{workspace.name}</span>,
                   workspace.department,
+                  workspace.interface.includes("Open WebUI") ? "Open WebUI URL" : workspace.interface === "API only" ? "API gateway" : "Custom chat URL",
                   workspace.interface,
                   <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
                   workspace.allowedModels.join(", "),
+                  workspace.knowledgeBases.join(", "),
+                  workspace.agents.join(", "),
+                  workspace.tokenBudget,
+                  workspace.routingPolicy,
+                  <div key="audit" className="space-y-1"><StatusBadge value={workspace.audit} /><div className="text-xs text-slate-500">ISO evidence ready</div></div>,
                   <div key="launch" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => setSelectedWorkspace(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
                     <button onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
@@ -177,6 +194,7 @@ export default function WorkspacesPage() {
                 <ShieldCheck className="mt-1 text-cyan-700" size={20} />
                 <div>
                   <h2 className="font-semibold">Workspace access boundary</h2>
+                  <p className="mt-1 text-sm text-slate-600">The launch URL is not enough by itself. Access is decided by user, department, model, knowledge base, routing policy, and audit setting.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Users:</span> department and invite list</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Models:</span> active catalog models only</div>
@@ -226,10 +244,10 @@ function WorkspaceLaunchModal({ workspace, onClose, onCopy, onInvite, onPolicy }
         <InfoRow label="External rule" value={workspace.externalRule} />
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
-        <a href={workspace.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-slate-950 px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-slate-800"><ExternalLink size={14} /> Open</a>
+        <a href={workspace.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><ExternalLink size={14} /> Open workspace</a>
         <ActionButton variant="secondary" onClick={onCopy}><Copy size={14} /> Copy URL</ActionButton>
         <ActionButton variant="secondary" onClick={onInvite}><MailPlus size={14} /> Invite users</ActionButton>
-        <ActionButton variant="secondary" onClick={onPolicy}><ShieldCheck size={14} /> Manage policy</ActionButton>
+        <ActionButton variant="secondary" onClick={onPolicy}><ShieldCheck size={14} /> Manage governance policy</ActionButton>
       </div>
     </Modal>
   );
