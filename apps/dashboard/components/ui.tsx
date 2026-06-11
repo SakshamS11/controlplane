@@ -110,8 +110,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         monthlyLimit: limit
       }
     }));
-    showToast(`${department} token limit updated`);
-    addAudit("Department token limit updated", department, "Permission");
+    showToast(`${department} team token limit updated`);
+    addAudit("Team token limit updated", department, "Permission");
   }
 
   function toggleDepartmentHardLimit(department: string) {
@@ -122,8 +122,8 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
         hardLimit: !current[department].hardLimit
       }
     }));
-    showToast(`${department} hard limit updated`);
-    addAudit("Department hard limit updated", department, "Permission");
+    showToast(`${department} team hard limit updated`);
+    addAudit("Team hard limit updated", department, "Permission");
   }
 
   function updateUserTokenBudget(id: string, limit: number) {
