@@ -246,8 +246,8 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
     <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
-      <aside className={`fixed inset-y-0 left-0 z-30 hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-[19rem]"}`}>
-        <div className={`border-b border-white/10 py-6 ${collapsed ? "px-4" : "px-6"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-[19rem]"}`}>
+        <div className={`shrink-0 border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
             <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-lg">
@@ -262,7 +262,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 onClick={() => setCollapsed(true)}
-                className="rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300"
+                className="rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
                 aria-label="Collapse sidebar"
               >
                 <PanelLeftClose size={17} />
@@ -274,13 +274,13 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           <button
             type="button"
             onClick={() => setCollapsed(false)}
-            className="mx-auto mt-3 rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-cyan-300"
+            className="mx-auto mt-3 rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
             aria-label="Expand sidebar"
           >
             <PanelLeftOpen size={18} />
           </button>
         ) : null}
-        <nav className={`flex-1 space-y-5 overflow-y-auto py-5 ${collapsed ? "px-2" : "px-4"}`} aria-label="Dashboard navigation">
+        <nav className={`min-h-0 flex-1 space-y-4 overflow-y-auto overscroll-contain py-4 ${collapsed ? "px-2" : "px-4"}`} aria-label="Dashboard navigation">
           {navSections.map((section) => (
             <div key={section.label}>
               {!collapsed ? <div className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{section.label}</div> : null}
@@ -306,14 +306,16 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             </div>
           ))}
         </nav>
-        {!collapsed ? <div className="border-t border-white/10 p-4">
-          <div className="rounded-lg border border-white/10 bg-white/5 p-4 shadow-xl shadow-black/20">
-            <div className="flex items-center gap-2 text-sm font-medium"><ShieldCheck size={16} /> Governance mode</div>
-            <p className="mt-2 text-xs leading-5 text-slate-400">Mock controls simulate policy enforcement across models, APIs, and apps.</p>
-            <div className="mt-4 flex items-center justify-between rounded-md bg-[rgba(16,185,129,0.10)] px-3 py-2 text-xs text-emerald-200">
-              <span>Policy engine</span>
-              <span>Active</span>
+        {!collapsed ? <div className="shrink-0 border-t border-white/10 p-3">
+          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 shadow-xl shadow-black/20">
+            <div className="flex min-w-0 items-center gap-2">
+              <ShieldCheck size={15} className="shrink-0 text-emerald-300" />
+              <div className="min-w-0">
+                <div className="truncate text-xs font-semibold">Governance mode</div>
+                <div className="truncate text-[10px] text-slate-400">Policies enforced</div>
+              </div>
             </div>
+            <span className="h-2 w-2 shrink-0 rounded-full bg-[var(--status-healthy)]" title="Policy engine active" />
           </div>
         </div> : null}
       </aside>
@@ -330,7 +332,7 @@ function TopBar() {
   const action = pageActions[pathname] ?? { href: pathname, label: "Take Action" };
 
   return (
-    <header className="sticky top-0 z-20 border-b border-[var(--border-subtle)] bg-white/95 px-6 py-3 backdrop-blur">
+    <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-6 py-3 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-center gap-2 text-sm">
