@@ -1,10 +1,10 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Line, LineChart, Pie, PieChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
 const colors = ["#5B3DFF", "#16C7E8", "#10B981", "#F59E0B", "#E11D48", "#64748B"];
 
-export function AreaMetricChart({ data, dataKey, stroke = "#5B3DFF" }: { data: object[]; dataKey: string; stroke?: string }) {
+export function AreaMetricChart({ data, dataKey, stroke = "#5B3DFF", threshold, thresholdLabel }: { data: object[]; dataKey: string; stroke?: string; threshold?: number; thresholdLabel?: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <AreaChart data={data}>
@@ -18,6 +18,14 @@ export function AreaMetricChart({ data, dataKey, stroke = "#5B3DFF" }: { data: o
         <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="#64748B" />
         <YAxis tick={{ fontSize: 11 }} stroke="#64748B" />
         <Tooltip />
+        {threshold !== undefined ? (
+          <ReferenceLine
+            y={threshold}
+            stroke="#F59E0B"
+            strokeDasharray="5 4"
+            label={thresholdLabel ? { value: thresholdLabel, position: "insideTopRight", fill: "#92400E", fontSize: 10 } : undefined}
+          />
+        ) : null}
         <Area type="monotone" dataKey={dataKey} stroke={stroke} fill={`url(#fill-${dataKey})`} strokeWidth={2} />
       </AreaChart>
     </ResponsiveContainer>
