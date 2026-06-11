@@ -436,7 +436,7 @@ export default function ResourcePlannerPage() {
       <Section>
         <nav
           aria-label="Resource Planner sections"
-          className="sticky top-[84px] z-10 mb-5 overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-white/95 p-1.5 shadow-sm backdrop-blur xl:top-[65px]"
+          className="z-10 mb-5 overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-white/95 p-1.5 shadow-sm backdrop-blur xl:sticky xl:top-[65px]"
         >
           <div className="flex min-w-max gap-1">
             {plannerTabs.map((tab) => (

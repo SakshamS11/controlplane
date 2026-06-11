@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -100,6 +100,15 @@ export default function DeploymentTargetsPage() {
   const [installOpen, setInstallOpen] = useState(false);
   const [activeFilter, setActiveFilter] = useState<Filter>("All");
   const { addAudit, showToast } = useAppState();
+
+  useEffect(() => {
+    function syncRegisterAction() {
+      if (window.location.hash === "#register-agent") setInstallOpen(true);
+    }
+    syncRegisterAction();
+    window.addEventListener("hashchange", syncRegisterAction);
+    return () => window.removeEventListener("hashchange", syncRegisterAction);
+  }, []);
 
   const filteredTargets = useMemo(() => targets.filter((target) => {
     const capacity = serverCapacity[target.id as keyof typeof serverCapacity];

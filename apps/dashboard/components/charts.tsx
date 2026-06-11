@@ -60,6 +60,64 @@ export function BarMetricChart({ data, dataKey }: { data: object[]; dataKey: str
   );
 }
 
+export function ForecastLineChart({
+  data,
+  actualKey,
+  forecastKey,
+  budget,
+  warning
+}: {
+  data: object[];
+  actualKey: string;
+  forecastKey: string;
+  budget: number;
+  warning: number;
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#64748B" />
+        <YAxis tick={{ fontSize: 10 }} stroke="#64748B" />
+        <Tooltip />
+        <ReferenceLine y={budget} ifOverflow="extendDomain" stroke="#E11D48" strokeDasharray="4 4" label={{ value: "Budget", position: "insideTopRight", fill: "#9F1239", fontSize: 10 }} />
+        <ReferenceLine y={warning} ifOverflow="extendDomain" stroke="#F59E0B" strokeDasharray="4 4" label={{ value: "80% warning", position: "insideBottomRight", fill: "#92400E", fontSize: 10 }} />
+        <Line type="monotone" dataKey={actualKey} name="Actual" stroke="#5B3DFF" strokeWidth={2.5} dot={{ r: 3 }} connectNulls />
+        <Line type="monotone" dataKey={forecastKey} name="Forecast" stroke="#16C7E8" strokeWidth={2.5} strokeDasharray="6 5" dot={{ r: 3 }} connectNulls />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
+export function ComparisonBarChart({
+  data,
+  keys
+}: {
+  data: object[];
+  keys: { key: string; name: string; color: string; opacity?: number }[];
+}) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#64748B" />
+        <YAxis tick={{ fontSize: 10 }} stroke="#64748B" />
+        <Tooltip />
+        {keys.map((item) => (
+          <Bar
+            key={item.key}
+            dataKey={item.key}
+            name={item.name}
+            fill={item.color}
+            fillOpacity={item.opacity ?? 1}
+            radius={[4, 4, 0, 0]}
+          />
+        ))}
+      </BarChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function DonutChart({ data }: { data: { name: string; value: number }[] }) {
   return (
     <ResponsiveContainer width="100%" height="100%">

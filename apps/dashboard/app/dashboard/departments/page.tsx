@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Dispatch, ReactNode, SetStateAction } from "react";
 import {
   FileCheck2,
@@ -241,6 +241,15 @@ export default function DepartmentsPage() {
     .filter((model) => model.status === "Running" || model.status === "Connected")
     .map((model) => model.name);
 
+  useEffect(() => {
+    function syncCreateAction() {
+      if (window.location.hash === "#create-team") setCreateOpen(true);
+    }
+    syncCreateAction();
+    window.addEventListener("hashchange", syncCreateAction);
+    return () => window.removeEventListener("hashchange", syncCreateAction);
+  }, []);
+
   function inviteMember() {
     const email = memberEmail.trim().toLowerCase();
     if (!email || !email.includes("@")) {
@@ -264,9 +273,10 @@ export default function DepartmentsPage() {
   }
 
   function createTeam() {
-    showToast("Team created in mock state");
+    showToast("Team created (simulation)");
     addAudit("Team created", "New team", "Permission");
     setCreateOpen(false);
+    window.history.replaceState(null, "", window.location.pathname);
   }
 
   function toggleLocalAccess(
@@ -493,18 +503,18 @@ export default function DepartmentsPage() {
           ) : null}
 
           {activeTab === "knowledge" ? (
-            <AccessMatrix title="Knowledge access matrix" description="Authorized knowledge is enforced across assigned workspaces, agents, APIs, and retrieval flows." columns={knowledgeBases} values={knowledgeAccess} onToggle={(team, item) => toggleLocalAccess(setKnowledgeAccess, "Knowledge", team, item)} />
+            <AccessMatrix title="Knowledge access matrix" description="Controls retrieval across workspaces, agents, and APIs." columns={knowledgeBases} values={knowledgeAccess} onToggle={(team, item) => toggleLocalAccess(setKnowledgeAccess, "Knowledge", team, item)} />
           ) : null}
 
           {activeTab === "agents" ? (
-            <AccessMatrix title="Agent access matrix" description="Assign governed AI workers to teams while preserving their model, tool, approval, and budget policies." columns={governedAgents} values={agentAccess} onToggle={(team, item) => toggleLocalAccess(setAgentAccess, "Agent", team, item)} />
+            <AccessMatrix title="Agent access matrix" description="Assign agents while preserving their governance policies." columns={governedAgents} values={agentAccess} onToggle={(team, item) => toggleLocalAccess(setAgentAccess, "Agent", team, item)} />
           ) : null}
 
           {activeTab === "evidence" ? (
             <div className="p-4">
               <div className="mb-3 flex items-start gap-3">
                 <FileCheck2 size={18} className="mt-0.5 text-[var(--brand-primary)]" />
-                <div><h3 className="font-semibold text-[var(--text-primary)]">Team evidence gaps</h3><p className="mt-0.5 text-xs text-[var(--text-secondary)]">ISO/IEC 42001 readiness support signals only. This does not represent or guarantee certification.</p></div>
+                <div><h3 className="font-semibold text-[var(--text-primary)]">Team evidence gaps</h3><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Readiness support only; not certification.</p></div>
               </div>
               <div className="overflow-auto rounded-md border border-[var(--border-subtle)]">
                 <table className="w-full min-w-[720px] text-left text-sm">

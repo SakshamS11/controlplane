@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Copy, ExternalLink, Layers, LockKeyhole, MailPlus, Plus, Power, Save, ShieldCheck, Users } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Copy, ExternalLink, Layers, LockKeyhole, MailPlus, Plus, Power, Save, ShieldCheck } from "lucide-react";
 import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { departments as departmentOptions, workspaces as initialWorkspaces } from "@/lib/mock-data";
 
@@ -13,6 +13,8 @@ const agentOptions = ["Claims Summary Agent", "Contract Review Agent", "Support 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"workspaces" | "boundary">("workspaces");
   const [name, setName] = useState("Legal AI Assistant");
   const [interfaceType, setInterfaceType] = useState("Open WebUI");
   const [launchUrl, setLaunchUrl] = useState("https://legal-ai.controlplane.example.com");
@@ -26,6 +28,15 @@ export default function WorkspacesPage() {
   const [externalRule, setExternalRule] = useState("Restricted for confidential matters");
   const { showToast, addAudit, modelCatalog } = useAppState();
   const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
+
+  useEffect(() => {
+    function syncCreateAction() {
+      if (window.location.hash === "#workspace-form") setEditorOpen(true);
+    }
+    syncCreateAction();
+    window.addEventListener("hashchange", syncCreateAction);
+    return () => window.removeEventListener("hashchange", syncCreateAction);
+  }, []);
 
   function toggleValue(value: string, list: string[], setter: (items: string[]) => void) {
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
@@ -54,6 +65,7 @@ export default function WorkspacesPage() {
     setRoutingPolicy(workspace.routingPolicy);
     setTokenBudget(workspace.tokenBudget);
     setExternalRule(workspace.externalRule);
+    setEditorOpen(true);
     showToast(`${workspace.name} loaded for editing`);
     addAudit("AI workspace opened", workspace.name, "Permission");
   }
@@ -78,6 +90,18 @@ export default function WorkspacesPage() {
     setWorkspaces((current) => [row, ...current.filter((item) => item.name !== name)]);
     showToast(`${name} workspace saved`);
     addAudit("AI workspace saved", name, "Permission");
+    setEditorOpen(false);
+    window.history.replaceState(null, "", window.location.pathname);
+  }
+
+  function openCreateWorkspace() {
+    setName("New AI Workspace");
+    setPublishStatus("Draft");
+    setSelectedModels(activeModelOptions.slice(0, 1));
+    setKnowledge([]);
+    setDepartments([]);
+    setAgents([]);
+    setEditorOpen(true);
   }
 
   function togglePublish(workspace: Workspace) {
@@ -90,122 +114,113 @@ export default function WorkspacesPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Workspaces" title="AI Workspaces" description="Create the interface users actually open, then govern its models, knowledge, agents, budget, routing, audit, and launch URL from the control plane." />
+      <PageHeader
+        eyebrow="Workspaces"
+        title="AI Workspaces"
+        description="Publish governed Open WebUI, custom chat, or API interfaces for teams."
+        action={<ActionButton onClick={openCreateWorkspace}><Plus size={15} /> Create Workspace</ActionButton>}
+      />
       <Section>
-        <Card className="mb-5 p-5">
-          <div className="grid gap-3 md:grid-cols-4">
-            {["Create workspace", "Select interface", "Attach policy", "Publish to users"].map((step, index) => (
-              <div key={step} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-sm">
-                <span className="font-semibold text-[var(--brand-primary)]">{index + 1}. </span>{step}
-              </div>
-            ))}
-          </div>
-        </Card>
-        <div className="mb-5 grid gap-4 md:grid-cols-4">
-          <Card className="p-5"><div className="flex items-center gap-3"><Layers className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">{workspaces.length} governed interfaces</div><div className="text-xs text-slate-500">Open WebUI, chat, or API</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><ExternalLink className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">3 published</div><div className="text-xs text-slate-500">Ready for users</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">Knowledge scoped</div><div className="text-xs text-slate-500">Workspace and department</div></div></div></Card>
-          <Card className="p-5"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">Audit enabled</div><div className="text-xs text-slate-500">For launch and admin changes</div></div></div></Card>
+        <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <Card className="p-4"><div className="flex items-center gap-3"><Layers className="text-[var(--brand-accent)]" size={18} /><div><div className="text-sm font-semibold">{workspaces.length} interfaces</div><div className="text-xs text-slate-500">Governed workspaces</div></div></div></Card>
+          <Card className="p-4"><div className="flex items-center gap-3"><ExternalLink className="text-[var(--brand-primary)]" size={18} /><div><div className="text-sm font-semibold">3 published</div><div className="text-xs text-slate-500">Ready for users</div></div></div></Card>
+          <Card className="p-4"><div className="flex items-center gap-3"><LockKeyhole className="text-slate-700" size={18} /><div><div className="text-sm font-semibold">Knowledge scoped</div><div className="text-xs text-slate-500">Authorization enforced</div></div></div></Card>
+          <Card className="p-4"><div className="flex items-center gap-3"><ShieldCheck className="text-emerald-600" size={18} /><div><div className="text-sm font-semibold">Audit enabled</div><div className="text-xs text-slate-500">All workspace changes</div></div></div></Card>
         </div>
 
-        <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-          <Card id="workspace-form" className="p-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Create or edit</div>
-            <h2 className="mt-2 text-lg font-semibold">Workspace publishing workflow</h2>
-            <p className="mt-1 text-sm text-slate-600">A workspace is the governed front door into Open WebUI, custom chat, or API-only access.</p>
-            <div className="mt-5 space-y-4">
-              <label className="text-sm font-medium text-slate-600">Workspace name
-                <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-600">Interface
-                  <select value={interfaceType} onChange={(event) => setInterfaceType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                    <option>Open WebUI</option>
-                    <option>Open WebUI / custom chat</option>
-                    <option>Custom chat</option>
-                    <option>API only</option>
-                  </select>
-                </label>
-                <label className="text-sm font-medium text-slate-600">Publish status
-                  <select value={publishStatus} onChange={(event) => setPublishStatus(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                    <option>Published</option>
-                    <option>Draft</option>
-                    <option>Disabled</option>
-                  </select>
-                </label>
-              </div>
-              <label className="text-sm font-medium text-slate-600">Launch URL
-                <input value={launchUrl} onChange={(event) => setLaunchUrl(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <Checklist title="Allowed models" options={activeModelOptions} values={selectedModels} onToggle={(item) => toggleValue(item, selectedModels, setSelectedModels)} />
-              <Checklist title="Knowledge bases" options={knowledgeOptions} values={knowledge} onToggle={(item) => toggleValue(item, knowledge, setKnowledge)} />
-              <Checklist title="Departments" options={departmentOptions} values={departments} onToggle={(item) => toggleValue(item, departments, setDepartments)} />
-              <Checklist title="Assigned agents" options={agentOptions} values={agents} onToggle={(item) => toggleValue(item, agents, setAgents)} />
-              <div className="grid gap-3 md:grid-cols-2">
-                <label className="text-sm font-medium text-slate-600">Routing policy
-                  <input value={routingPolicy} onChange={(event) => setRoutingPolicy(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-                </label>
-                <label className="text-sm font-medium text-slate-600">Token budget
-                  <input value={tokenBudget} onChange={(event) => setTokenBudget(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-                </label>
-              </div>
-              <label className="text-sm font-medium text-slate-600">External model rule
-                <select value={externalRule} onChange={(event) => setExternalRule(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Restricted for confidential matters</option>
-                  <option>Blocked</option>
-                  <option>Allowed</option>
-                  <option>Approval required</option>
-                </select>
-              </label>
-              <ActionButton onClick={saveWorkspace}><Save size={14} /> Save and stage workspace</ActionButton>
-            </div>
-          </Card>
-
-          <div className="space-y-6">
-            <Card id="workspace-list" className="overflow-hidden">
+        <Card className="overflow-hidden">
+          <div className="flex overflow-x-auto border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1.5">
+            {[
+              ["workspaces", "Published Workspaces"],
+              ["boundary", "Access Boundary"]
+            ].map(([id, label]) => (
+              <button key={id} type="button" onClick={() => setActiveTab(id as "workspaces" | "boundary")} className={`rounded-md px-3 py-2 text-xs font-medium ${activeTab === id ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-secondary)] hover:bg-white"}`}>{label}</button>
+            ))}
+          </div>
+          {activeTab === "workspaces" ? (
+            <div id="workspace-list">
               <DataTable
-                columns={["Workspace", "Department", "Run location", "Interface", "Status", "Allowed models", "Knowledge", "Agents", "Budget", "Routing", "Audit/evidence", "Launch", "Invite", "Manage"]}
+                columns={["Workspace", "Team", "Interface", "Status", "Allowed models", "Launch", "Manage"]}
                 rows={workspaces.map((workspace) => [
                   <span key="name" className="font-semibold">{workspace.name}</span>,
                   workspace.department,
-                  workspace.interface.includes("Open WebUI") ? "Open WebUI URL" : workspace.interface === "API only" ? "API gateway" : "Custom chat URL",
                   workspace.interface,
                   <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
                   workspace.allowedModels.join(", "),
-                  workspace.knowledgeBases.join(", "),
-                  workspace.agents.join(", "),
-                  workspace.tokenBudget,
-                  workspace.routingPolicy,
-                  <div key="audit" className="space-y-1"><StatusBadge value={workspace.audit} /><div className="text-xs text-slate-500">ISO evidence ready</div></div>,
                   <div key="launch" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => setSelectedWorkspace(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
                     <button onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
                   </div>,
-                  <ActionButton key="invite" variant="secondary" onClick={() => inviteWorkspace(workspace)}><MailPlus size={14} /> Invite</ActionButton>,
                   <div key="manage" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Edit</ActionButton>
                     <button onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
                   </div>
                 ])}
               />
-            </Card>
-            <Card id="workspace-auth" className="p-5">
+            </div>
+          ) : (
+            <div id="workspace-auth" className="p-5">
               <div className="flex items-start gap-3">
-                <ShieldCheck className="mt-1 text-cyan-700" size={20} />
+                <ShieldCheck className="mt-1 text-[var(--brand-primary)]" size={20} />
                 <div>
                   <h2 className="font-semibold">Workspace access boundary</h2>
-                  <p className="mt-1 text-sm text-slate-600">The launch URL is not enough by itself. Access is decided by user, department, model, knowledge base, routing policy, and audit setting.</p>
+                  <p className="mt-1 text-sm text-slate-600">Users must pass team, model, knowledge, and routing checks.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-3">
-                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Users:</span> department and invite list</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Users:</span> team and invite list</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Models:</span> active catalog models only</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">Knowledge:</span> workspace-approved KBs only</div>
                   </div>
                 </div>
               </div>
-            </Card>
-          </div>
-        </div>
+            </div>
+          )}
+        </Card>
       </Section>
+      {editorOpen ? (
+        <Modal title="Create or edit AI workspace" onClose={() => setEditorOpen(false)}>
+          <div id="workspace-form" className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+            <label className="text-sm font-medium text-slate-600">Workspace name
+              <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+            </label>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="text-sm font-medium text-slate-600">Interface
+                <select value={interfaceType} onChange={(event) => setInterfaceType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  <option>Open WebUI</option><option>Open WebUI / custom chat</option><option>Custom chat</option><option>API only</option>
+                </select>
+              </label>
+              <label className="text-sm font-medium text-slate-600">Publish status
+                <select value={publishStatus} onChange={(event) => setPublishStatus(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  <option>Published</option><option>Draft</option><option>Disabled</option>
+                </select>
+              </label>
+            </div>
+            <label className="text-sm font-medium text-slate-600">Launch URL
+              <input value={launchUrl} onChange={(event) => setLaunchUrl(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+            </label>
+            <Checklist title="Allowed models" options={activeModelOptions} values={selectedModels} onToggle={(item) => toggleValue(item, selectedModels, setSelectedModels)} />
+            <Checklist title="Knowledge bases" options={knowledgeOptions} values={knowledge} onToggle={(item) => toggleValue(item, knowledge, setKnowledge)} />
+            <Checklist title="Teams" options={departmentOptions} values={departments} onToggle={(item) => toggleValue(item, departments, setDepartments)} />
+            <Checklist title="Assigned agents" options={agentOptions} values={agents} onToggle={(item) => toggleValue(item, agents, setAgents)} />
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="text-sm font-medium text-slate-600">Routing policy
+                <input value={routingPolicy} onChange={(event) => setRoutingPolicy(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+              <label className="text-sm font-medium text-slate-600">Token budget
+                <input value={tokenBudget} onChange={(event) => setTokenBudget(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              </label>
+            </div>
+            <label className="text-sm font-medium text-slate-600">External model rule
+              <select value={externalRule} onChange={(event) => setExternalRule(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                <option>Restricted for confidential matters</option><option>Blocked</option><option>Allowed</option><option>Approval required</option>
+              </select>
+            </label>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <ActionButton variant="secondary" onClick={() => setEditorOpen(false)}>Cancel</ActionButton>
+            <ActionButton onClick={saveWorkspace}><Save size={14} /> Save workspace</ActionButton>
+          </div>
+        </Modal>
+      ) : null}
       {selectedWorkspace ? (
         <WorkspaceLaunchModal
           workspace={selectedWorkspace}
@@ -227,7 +242,7 @@ function WorkspaceLaunchModal({ workspace, onClose, onCopy, onInvite, onPolicy }
     <Modal title={`Launch ${workspace.name}`} onClose={onClose}>
       <div className="grid gap-4 md:grid-cols-[1fr_180px]">
         <div>
-          <div className="text-xs font-semibold uppercase text-cyan-700">{workspace.interface}</div>
+          <div className="text-xs font-semibold uppercase text-[var(--brand-primary)]">{workspace.interface}</div>
           <div className="mt-2 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">{workspace.launchUrl}</div>
         </div>
         <div className="rounded-md border border-slate-200 p-3">
@@ -263,7 +278,7 @@ function Checklist({ title, options, values, onToggle }: { title: string; option
       <div className="mb-2 text-sm font-medium text-slate-600">{title}</div>
       <div className="grid gap-2 sm:grid-cols-2">
         {options.map((option) => (
-          <button key={option} type="button" onClick={() => onToggle(option)} className={`rounded-md border px-3 py-2 text-left text-sm ${values.includes(option) ? "border-cyan-200 bg-cyan-50 text-cyan-900" : "border-slate-200 bg-white text-slate-700"}`}>
+          <button key={option} type="button" onClick={() => onToggle(option)} className={`rounded-md border px-3 py-2 text-left text-sm ${values.includes(option) ? "border-[rgba(91,61,255,0.24)] bg-[rgba(91,61,255,0.07)] text-[var(--brand-primary-dark)]" : "border-slate-200 bg-white text-slate-700"}`}>
             {option}
           </button>
         ))}

@@ -26,7 +26,7 @@ export default function AcmeTargetDetailPage() {
       <PageHeader
         eyebrow="Server detail"
         title="Acme Azure GPU Server"
-        description="A focused control-room view for server health, GPU telemetry, service actions, and stack deployment history."
+        description="Inspect server health, GPU telemetry, services, and deployment history."
         action={<div className="flex flex-wrap gap-2"><ActionButton onClick={simulateDeploy}><UploadCloud size={16} /> Deploy Stack</ActionButton><MockAction label="View Logs" auditTarget={target.name} /></div>}
       />
       <Section>
@@ -45,7 +45,7 @@ export default function AcmeTargetDetailPage() {
                 <div className="flex flex-col justify-between gap-4 lg:flex-row">
                   <div>
                     <h2 className="text-lg font-semibold">Private AI Basic is serving traffic normally.</h2>
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">All six services are running. GPU utilization is elevated but stable, and the gateway latency remains inside the demo target range.</p>
+                    <p className="mt-2 max-w-2xl text-sm text-slate-600">Six services are healthy; GPU and latency remain within configured limits.</p>
                   </div>
                   <StatusBadge value="Online" />
                 </div>
@@ -75,7 +75,7 @@ export default function AcmeTargetDetailPage() {
               <MockAction label="Upgrade Stack" auditTarget={target.name} />
               <MockAction label="View Logs" auditTarget={target.name} />
               <ActionButton variant="danger" onClick={() => {
-                if (!window.confirm("Rollback Acme Azure GPU Server stack in the demo? This simulates a controlled rollback command and records an audit event.")) return;
+                if (!window.confirm("Simulate rollback? No infrastructure changes will be made; an audit event will be recorded.")) return;
                 showToast("Rollback command queued");
                 addAudit("Rollback command queued", target.name);
               }}>Rollback</ActionButton>
@@ -94,7 +94,7 @@ export default function AcmeTargetDetailPage() {
           <div className="flex flex-col justify-between gap-4 border-b border-slate-200 bg-white px-5 py-4 xl:flex-row xl:items-center">
             <div>
               <h2 className="font-semibold">Server workspace</h2>
-              <p className="mt-1 text-sm text-slate-600">Use tabs to focus on one operating task at a time.</p>
+              <p className="mt-1 text-sm text-slate-600">Metrics, services, and deployment activity.</p>
             </div>
             <div role="tablist" aria-label="Server workspace sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
               {[
@@ -156,7 +156,7 @@ export default function AcmeTargetDetailPage() {
           <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
             <div>
               <h2 className="font-semibold">Logs preview</h2>
-              <p className="mt-1 text-sm text-slate-600">Bounded mock logs from the agent command center. No arbitrary shell access is exposed.</p>
+              <p className="mt-1 text-sm text-slate-600">Bounded agent logs; arbitrary shell access is blocked.</p>
             </div>
             <StatusBadge value="Healthy" />
           </div>

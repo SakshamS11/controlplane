@@ -232,7 +232,7 @@ const navSections = [
 
 const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
-  "/dashboard/targets": { href: "/dashboard/targets", label: "Add Server" },
+  "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
   "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
   "/dashboard/monitoring": { href: "/dashboard/monitoring", label: "Open Alerts" },
   "/dashboard/stacks": { href: "/dashboard/stacks", label: "Deploy Stack" },
@@ -241,7 +241,7 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/workspaces": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
   "/dashboard/knowledge-bases": { href: "/dashboard/knowledge-bases#kb-form", label: "Add Source" },
   "/dashboard/agents": { href: "/dashboard/agents#agent-form", label: "Create Agent" },
-  "/dashboard/departments": { href: "/dashboard/departments", label: "Invite User" },
+  "/dashboard/departments": { href: "/dashboard/departments#create-team", label: "Create Team" },
   "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
   "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
   "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run Simulator" },
@@ -254,7 +254,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
   const [collapsed, setCollapsed] = useState(false);
   return (
     <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
-      <aside className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-20" : "w-[19rem]"}`}>
+      <aside className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
         <div className={`shrink-0 border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
@@ -327,7 +327,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </div> : null}
       </aside>
-      <div className={`transition-all duration-200 ${collapsed ? "lg:pl-20" : "lg:pl-[19rem]"}`}>
+      <div className={`min-w-0 transition-all duration-200 ${collapsed ? "lg:pl-[4.5rem]" : "lg:pl-[16.25rem]"}`}>
         <TopBar />
         {children}
       </div>
@@ -402,7 +402,7 @@ function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-6 py-3 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur">
+    <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2.5 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0 space-y-1">
         <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -413,9 +413,9 @@ function TopBar() {
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-warning)]" />
             AI Ops Status: Warning
           </span>
-          <span className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
+          <span aria-label="Demo Mode. Simulated actions only; no infrastructure changes are made." title="Simulated actions only. No infrastructure changes are made." className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
         </div>
-        <div className="truncate text-xs text-slate-500">One operating layer for enterprise AI infrastructure.</div>
+        <div className="truncate text-xs text-slate-500">Fleet, models, workspaces, and governance.</div>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         <label className="sr-only" htmlFor="global-time-range">Time range</label>
@@ -483,7 +483,17 @@ function TopBar() {
           ) : null}
         </div>
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
-        <Link href={action.href} className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-primary-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2">
+        <Link
+          href={action.href}
+          onClick={(event) => {
+            const [actionPath, actionHash] = action.href.split("#");
+            if (actionHash && actionPath === pathname && window.location.hash === `#${actionHash}`) {
+              event.preventDefault();
+              window.dispatchEvent(new HashChangeEvent("hashchange"));
+            }
+          }}
+          className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-primary-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2"
+        >
           {action.label}
         </Link>
       </div>
@@ -498,12 +508,12 @@ function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
   return (
-    <div className="border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-6 py-7">
+    <div className="border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-5 sm:px-6">
       <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
         <div>
           <p className="text-xs font-semibold uppercase text-[var(--brand-primary)]">{eyebrow}</p>
-          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-[var(--text-primary)]">{title}</h1>
-          {description ? <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">{description}</p> : null}
+          <h1 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">{title}</h1>
+          {description ? <p className="mt-1.5 max-w-3xl text-sm leading-5 text-slate-600">{description}</p> : null}
         </div>
         {action}
       </div>
@@ -512,11 +522,11 @@ export function PageHeader({ eyebrow, title, description, action }: { eyebrow: s
 }
 
 export function Section({ children }: { children: ReactNode }) {
-  return <section className="mx-auto max-w-[1680px] p-6 xl:p-8 2xl:p-10">{children}</section>;
+  return <section className="mx-auto max-w-[1720px] p-4 sm:p-6 xl:p-7">{children}</section>;
 }
 
 export function Card({ children, className = "", id }: { children: ReactNode; className?: string; id?: string }) {
-  return <div id={id} className={`scroll-mt-24 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[0_1px_2px_rgba(17,24,39,0.04),0_16px_40px_rgba(17,24,39,0.06)] ${className}`}>{children}</div>;
+  return <div id={id} className={`scroll-mt-28 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-card)] shadow-[0_1px_2px_rgba(17,24,39,0.04),0_12px_30px_rgba(17,24,39,0.05)] ${className}`}>{children}</div>;
 }
 
 export function SectionCard({ title, children, detail, action, className = "", id }: { title?: string; children: ReactNode; detail?: string; action?: ReactNode; className?: string; id?: string }) {
@@ -538,13 +548,13 @@ export function SectionCard({ title, children, detail, action, className = "", i
 
 export function MetricCard({ label, value, detail, icon, status, trend }: { label: string; value: string; detail?: string; icon: ReactNode; status?: string; trend?: string }) {
   return (
-    <Card className="relative overflow-hidden p-5">
+    <Card className="relative overflow-hidden p-4">
       <div className="absolute inset-x-0 top-0 h-1 bg-[var(--brand-primary)]" />
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium text-[var(--text-secondary)]">{label}</div>
-        <div className="grid h-9 w-9 place-items-center rounded-md bg-[rgba(22,199,232,0.12)] text-[var(--brand-accent)]">{icon}</div>
+        <div className="grid h-8 w-8 place-items-center rounded-md bg-[rgba(22,199,232,0.12)] text-[var(--brand-accent)]">{icon}</div>
       </div>
-      <div className="mt-4 text-2xl font-semibold text-[var(--text-primary)]">{value}</div>
+      <div className="mt-2 text-xl font-semibold text-[var(--text-primary)]">{value}</div>
       {detail || trend || status ? (
         <div className="mt-2 flex flex-wrap items-center gap-2 text-xs text-[var(--text-secondary)]">
           {trend ? <span className="font-medium text-[var(--brand-primary)]">{trend}</span> : null}
@@ -585,7 +595,7 @@ export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNod
           <tr>{columns.map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {rows.map((row, index) => <tr key={index} className="hover:bg-[var(--surface-muted)]">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-4 align-middle">{cell}</td>)}</tr>)}
+          {rows.map((row, index) => <tr key={index} className="hover:bg-[var(--surface-muted)]">{row.map((cell, cellIndex) => <td key={cellIndex} className="px-4 py-3.5 align-middle">{cell}</td>)}</tr>)}
         </tbody>
       </table>
     </div>
@@ -602,7 +612,7 @@ export function ChartCard({ title, children, detail }: { title: string; children
         </div>
         <Gauge size={17} className="text-[var(--brand-primary)]" />
       </div>
-      <div className="h-72">{children}</div>
+      <div className="h-56 sm:h-60">{children}</div>
     </Card>
   );
 }
@@ -640,12 +650,12 @@ export function EmptyMock({ title, text }: { title: string; text: string }) {
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
     <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4">
-      <div className="w-full max-w-2xl rounded-xl bg-white shadow-2xl">
+      <div role="dialog" aria-modal="true" aria-labelledby="app-modal-title" className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-2xl">
         <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 className="font-semibold">{title}</h2>
-          <button onClick={onClose} className="rounded-md p-1.5 hover:bg-slate-100"><X size={18} /></button>
+          <h2 id="app-modal-title" className="font-semibold">{title}</h2>
+          <button type="button" aria-label="Close dialog" onClick={onClose} className="rounded-md p-1.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"><X size={18} /></button>
         </div>
-        <div className="p-5">{children}</div>
+        <div className="max-h-[calc(92vh-57px)] overflow-y-auto p-5">{children}</div>
       </div>
     </div>
   );

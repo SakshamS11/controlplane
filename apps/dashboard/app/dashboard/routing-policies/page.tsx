@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -76,6 +76,18 @@ export default function RoutingPoliciesPage() {
     .filter((model) => model.status === "Running" || model.status === "Connected")
     .map((model) => model.name);
 
+  useEffect(() => {
+    function syncCreateAction() {
+      if (window.location.hash === "#routing-form") {
+        setDraft({ ...emptyPolicy, primary: "Qwen 32B" });
+        setEditorOpen(true);
+      }
+    }
+    syncCreateAction();
+    window.addEventListener("hashchange", syncCreateAction);
+    return () => window.removeEventListener("hashchange", syncCreateAction);
+  }, []);
+
   const visiblePolicies = useMemo(() => policies.filter((policy) => {
     if (filter === "Sensitive") return policy.sensitivity === "Confidential" || policy.sensitivity === "Restricted";
     if (filter === "Cost risk") return policy.status === "Cost risk" || policy.name.includes("Budget") || policy.name.includes("Cost");
@@ -109,6 +121,7 @@ export default function RoutingPoliciesPage() {
     showToast(`${saved.name} routing policy saved`);
     addAudit("Routing policy saved", saved.name, "Model");
     setEditorOpen(false);
+    window.history.replaceState(null, "", window.location.pathname);
   }
 
   function applyIncidentRoute(target: string) {

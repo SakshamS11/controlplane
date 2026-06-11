@@ -29,6 +29,10 @@ body {
   color: var(--text-primary);
 }
 
+html {
+  scroll-padding-top: 7rem;
+}
+
 * {
   box-sizing: border-box;
 }

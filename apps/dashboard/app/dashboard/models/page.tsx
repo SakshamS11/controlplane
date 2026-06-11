@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
   AlertTriangle,
@@ -78,6 +78,15 @@ export default function ModelsPage() {
   const [maxConcurrency, setMaxConcurrency] = useState("100");
   const { showToast, addAudit, modelCatalog, addModelToCatalog } = useAppState();
 
+  useEffect(() => {
+    function syncCreateAction() {
+      if (window.location.hash === "#integrate-model") setAddOpen(true);
+    }
+    syncCreateAction();
+    window.addEventListener("hashchange", syncCreateAction);
+    return () => window.removeEventListener("hashchange", syncCreateAction);
+  }, []);
+
   const visible = useMemo(() => modelCatalog.filter((model) => {
     const health = getProviderHealth(model);
     if (filter === "Provider issue") return health?.status === "Degraded" || health?.status === "Down";
@@ -102,6 +111,7 @@ export default function ModelsPage() {
     });
     addAudit("Model/provider configured", `${providerName} ${modelName} via ${endpoint}`, "Model");
     setAddOpen(false);
+    window.history.replaceState(null, "", window.location.pathname);
   }
 
   return (

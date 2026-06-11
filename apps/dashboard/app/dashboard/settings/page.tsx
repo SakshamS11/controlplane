@@ -37,14 +37,14 @@ export default function SettingsPage() {
 
   return (
     <>
-      <PageHeader eyebrow="Settings" title="Workspace settings" description="Configure organization defaults, providers, agents, notifications, and the operational thresholds that drive alerts." />
+      <PageHeader eyebrow="Settings" title="Workspace settings" description="Configure organization defaults, integrations, retention, and alert thresholds." />
       <Section>
         <div className="mb-6 grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <Card className="p-5"><div className="text-sm font-semibold">Acme Corp</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Organization profile</div></Card>
           <Card className="p-5"><div className="text-sm font-semibold">UAE North</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Preferred data residency</div></Card>
           <Card className="p-5"><div className="text-sm font-semibold">365 days</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Audit retention</div></Card>
           <Card className="p-5"><div className="text-sm font-semibold">Open WebUI</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Default workspace interface</div></Card>
-          <Card className="p-5"><div className="text-sm font-semibold">Readiness support</div><div className="mt-1 text-xs text-[var(--text-secondary)]">No certification claim</div></Card>
+          <Card className="p-5"><div className="text-sm font-semibold">Readiness support</div><div className="mt-1 text-xs text-[var(--text-secondary)]">Evidence preparation</div></Card>
         </div>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
           <Card id="thresholds" className="p-5">
@@ -52,7 +52,7 @@ export default function SettingsPage() {
               <div>
                 <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><SlidersHorizontal size={15} /> Alert thresholds</div>
                 <h2 className="mt-2 text-lg font-semibold">Define your safe operating ranges</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-600">These values decide when the overview, monitoring page, and alert queue show warnings or critical infrastructure events.</p>
+                <p className="mt-2 text-sm text-slate-600">These thresholds drive warnings and critical alerts.</p>
               </div>
               <Gauge className="text-cyan-700" size={22} />
             </div>
@@ -90,7 +90,7 @@ export default function SettingsPage() {
           <div id="settings-tiles" className="grid scroll-mt-24 gap-4 md:grid-cols-2">
             {settings.map((item) => {
               const Icon = item.icon;
-              return <Card key={item.title} className="p-5"><Icon className="text-cyan-700" size={20} /><h2 className="mt-4 font-semibold">{item.title}</h2><p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p><button onClick={() => showToast(`${item.title} opened`)} className="mt-4 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium">Configure</button></Card>;
+              return <Card key={item.title} className="p-5"><Icon className="text-cyan-700" size={20} /><h2 className="mt-4 font-semibold">{item.title}</h2><p className="mt-2 text-sm text-slate-600">{item.text}</p><button onClick={() => showToast(`${item.title} opened`)} className="mt-4 rounded-md border border-slate-200 px-3 py-2 text-sm font-medium">Configure</button></Card>;
             })}
           </div>
         </div>
