@@ -1,11 +1,24 @@
 "use client";
 
-import { AlertTriangle, Filter, Gauge, PiggyBank, Plus, RefreshCw, Route, Server, ShieldCheck, Sparkles } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
-import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import type { ReactNode } from "react";
+import {
+  AlertTriangle,
+  ChevronRight,
+  Cloud,
+  Gauge,
+  PiggyBank,
+  Plus,
+  RefreshCw,
+  Server,
+  ShieldCheck,
+  Sparkles
+} from "lucide-react";
+import { ActionButton, Card, Modal, Section, StatusBadge, useAppState } from "@/components/ui";
 import { providerHealth } from "@/lib/mock-data";
 
-const filters = ["All", "Local", "External", "Provider issue", "Running", "Department"];
+const filters = ["All", "Local", "External", "Provider issue", "Running"] as const;
 
 type ModelRow = {
   name: string;
@@ -18,13 +31,38 @@ type ModelRow = {
   access: string;
 };
 
+const modelGovernance: Record<string, {
+  sensitivity: string;
+  fallback: string;
+  cost: string;
+  workspaces: string;
+  graduation: string;
+}> = {
+  "Qwen 32B": { sensitivity: "Restricted", fallback: "Local fallback", cost: "Owned capacity", workspaces: "Claims, Legal", graduation: "Primary graduation target" },
+  "Llama 3.1 8B": { sensitivity: "Confidential", fallback: "Local fallback", cost: "Owned capacity", workspaces: "Support Desk", graduation: "Support traffic candidate" },
+  "DeepSeek Coder": { sensitivity: "Internal", fallback: "Claude / GPT-5", cost: "Owned capacity", workspaces: "Engineering Copilot", graduation: "Code workloads local" },
+  "GPT-5": { sensitivity: "Internal", fallback: "Claude / Qwen 32B", cost: "AED 7,200/mo", workspaces: "Engineering, Marketing", graduation: "Drafting can move cheaper/local" },
+  Claude: { sensitivity: "Confidential with policy", fallback: "Qwen 32B", cost: "AED 3,100/mo", workspaces: "Legal, Engineering", graduation: "Confidential review can move local" },
+  Gemini: { sensitivity: "Internal", fallback: "GPT-5 mini", cost: "AED 1,200/mo", workspaces: "Marketing Studio", graduation: "Keep for low-cost drafting" }
+};
+
+const routingRecommendations = [
+  { workload: "Legal confidential", route: "Qwen 32B first", rule: "Claude only for non-sensitive drafting", status: "Governance risk" },
+  { workload: "Claims sensitive", route: "Qwen 32B only", rule: "External models blocked", status: "Enforced" },
+  { workload: "Engineering code", route: "DeepSeek Coder", rule: "Claude or GPT-5 fallback when healthy", status: "Healthy" },
+  { workload: "Marketing drafting", route: "Gemini first", rule: "GPT-5 only for executive content", status: "Cost risk" }
+];
+
 function getProviderHealth(model: ModelRow) {
-  if (model.hosting === "Local") return providerHealth.find((provider) => provider.provider === "Ollama/vLLM");
+  if (model.hosting === "Local") {
+    return providerHealth.find((provider) => provider.provider === "Ollama/vLLM");
+  }
   return providerHealth.find((provider) => provider.provider === model.provider);
 }
 
 export default function ModelsPage() {
-  const [filter, setFilter] = useState("All");
+  const [filter, setFilter] = useState<(typeof filters)[number]>("All");
+  const [addOpen, setAddOpen] = useState(false);
   const [providerName, setProviderName] = useState("OpenAI");
   const [modelName, setModelName] = useState("GPT-5 mini");
   const [modelType, setModelType] = useState("Cloud");
@@ -39,12 +77,17 @@ export default function ModelsPage() {
   const [fallbackEligible, setFallbackEligible] = useState("Yes");
   const [maxConcurrency, setMaxConcurrency] = useState("100");
   const { showToast, addAudit, modelCatalog, addModelToCatalog } = useAppState();
-  const providerIssues = providerHealth.filter((provider) => provider.status === "Degraded" || provider.status === "Down");
+
   const visible = useMemo(() => modelCatalog.filter((model) => {
     const health = getProviderHealth(model);
     if (filter === "Provider issue") return health?.status === "Degraded" || health?.status === "Down";
-    return filter === "All" || filter === "Department" || model.hosting === filter || model.status === filter;
+    return filter === "All" || model.hosting === filter || model.status === filter;
   }), [filter, modelCatalog]);
+
+  function applyRouting(target: string) {
+    showToast(`Routing policy applied for ${target}`);
+    addAudit("Routing policy applied", target, "Model");
+  }
 
   function addModel() {
     addModelToCatalog({
@@ -58,211 +101,178 @@ export default function ModelsPage() {
       access: "Unassigned"
     });
     addAudit("Model/provider configured", `${providerName} ${modelName} via ${endpoint}`, "Model");
+    setAddOpen(false);
   }
 
   return (
     <>
-      <PageHeader eyebrow="Model catalog" title="Models & Providers" description="Register local and cloud models once, then govern cost, sensitivity fit, fallback eligibility, routing, and workspace access everywhere." />
       <Section>
-        <div className="mb-6 grid gap-4 md:grid-cols-3">
-          <Card className="p-5">
-            <div className="flex items-center gap-3"><Server className="text-cyan-700" size={20} /><div><div className="text-sm font-semibold">3 local models</div><div className="text-xs text-slate-500">Private infrastructure</div></div></div>
-          </Card>
-          <Card className="p-5">
-            <div className="flex items-center gap-3"><Sparkles className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">3 external providers</div><div className="text-xs text-slate-500">OpenAI, Anthropic, Google</div></div></div>
-          </Card>
-          <Card className="p-5">
-            <div className="flex items-center gap-3"><Gauge className="text-emerald-600" size={20} /><div><div className="text-sm font-semibold">128k monthly requests</div><div className="text-xs text-slate-500">Governed by department policy</div></div></div>
-          </Card>
-          <Card className="p-5">
-            <div className="flex items-center gap-3"><PiggyBank className="text-[var(--brand-primary)]" size={20} /><div><div className="text-sm font-semibold">61% graduation fit</div><div className="text-xs text-slate-500">Support can move local over time</div></div></div>
-          </Card>
-          <Card className="p-5">
-            <div className="flex items-center gap-3"><ShieldCheck className="text-slate-700" size={20} /><div><div className="text-sm font-semibold">4 fallback-ready</div><div className="text-xs text-slate-500">Policy controlled alternatives</div></div></div>
-          </Card>
+        <div className="mb-4 flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] pb-4 lg:flex-row lg:items-center">
+          <div>
+            <p className="text-xs font-semibold uppercase text-[var(--brand-primary)]">AI Platform</p>
+            <h1 className="mt-1 text-2xl font-semibold text-[var(--text-primary)]">Models &amp; Providers</h1>
+            <p className="mt-1 text-sm text-[var(--text-secondary)]">
+              Govern local and external models, provider health, sensitivity, fallback eligibility, and routing.
+            </p>
+          </div>
+          <ActionButton onClick={() => setAddOpen(true)}><Plus size={15} /> Add Model</ActionButton>
         </div>
-        <Card className="mb-6 p-5">
-          <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-center">
-            <div>
-              <h2 className="font-semibold">Model Graduation Flywheel</h2>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">Start with cloud models for speed, identify repeated or sensitive workloads, then graduate stable traffic to owned local models with the same governance boundary.</p>
+
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+          {[
+            { label: "Available models", value: String(modelCatalog.length), detail: "Governed catalog", icon: <Sparkles size={16} /> },
+            { label: "Local models", value: "3", detail: "Owned infrastructure", icon: <Server size={16} /> },
+            { label: "External providers", value: "3", detail: "One degraded", icon: <Cloud size={16} /> },
+            { label: "Fallback-ready", value: "4", detail: "Policy alternatives", icon: <ShieldCheck size={16} /> },
+            { label: "Graduation fit", value: "61%", detail: "Support can move local", icon: <PiggyBank size={16} /> }
+          ].map((metric) => (
+            <Card key={metric.label} className="p-4">
+              <div className="flex items-start justify-between gap-2">
+                <div><p className="text-xs text-[var(--text-secondary)]">{metric.label}</p><p className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{metric.value}</p><p className="mt-0.5 text-xs text-[var(--text-secondary)]">{metric.detail}</p></div>
+                <span className="grid h-8 w-8 place-items-center rounded-md bg-[rgba(91,61,255,0.10)] text-[var(--brand-primary)]">{metric.icon}</span>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        <Card className="mt-3 overflow-hidden">
+          <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 md:flex-row md:items-center">
+            <div className="flex items-center gap-3">
+              <span className="grid h-9 w-9 place-items-center rounded-md bg-[rgba(245,158,11,0.12)] text-[var(--status-warning)]"><AlertTriangle size={17} /></span>
+              <div><h2 className="font-semibold text-[var(--text-primary)]">Provider Health: Warning</h2><p className="text-xs text-[var(--text-secondary)]">OpenAI GPT-5 latency is elevated. Approved fallbacks are ready.</p></div>
             </div>
-            <StatusBadge value="Healthy" />
-          </div>
-          <div className="mt-4 grid gap-3 md:grid-cols-4">
-            {["Observe demand", "Route by sensitivity", "Cache repeated answers", "Graduate to local capacity"].map((step) => (
-              <div key={step} className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-sm font-semibold">{step}</div>
-            ))}
-          </div>
-        </Card>
-        <Card id="provider-health" className="mb-6 p-5">
-          <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <h2 className="text-base font-semibold">External provider health</h2>
-              <p className="mt-1 text-sm text-slate-500">Provider incidents are tracked separately from on-prem server health so admins can reroute work quickly.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              {providerIssues.length ? <span className="text-sm font-medium text-amber-700">{providerIssues.length} provider issue</span> : null}
-              <StatusBadge value={providerIssues.length ? "Warning" : "Operational"} />
-              <ActionButton variant="secondary" onClick={() => showToast("Provider status refreshed")}>
-                <RefreshCw size={14} /> Refresh
-              </ActionButton>
+            <div className="flex gap-2">
+              <ActionButton variant="secondary" onClick={() => showToast("Provider status refreshed")}><RefreshCw size={14} /> Refresh</ActionButton>
+              <ActionButton onClick={() => applyRouting("OpenAI GPT-5 degradation")}>Apply routing policy</ActionButton>
             </div>
           </div>
-          <div className="mt-4 grid gap-3 lg:grid-cols-4">
+          <div className="grid gap-px bg-[var(--border-subtle)] md:grid-cols-2 xl:grid-cols-4">
             {providerHealth.map((provider) => (
-              <div key={provider.provider} className="rounded-md border border-slate-200 p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <div className="font-semibold">{provider.provider}</div>
-                    <div className="mt-1 text-xs text-slate-500">{provider.lastChecked}</div>
-                  </div>
-                  <StatusBadge value={provider.status} />
-                </div>
-                <div className="mt-3 text-sm text-slate-600">{provider.impact}</div>
-                <div className="mt-3 text-xs font-medium uppercase tracking-wide text-slate-400">Action</div>
-                <div className="mt-1 text-sm font-medium text-slate-800">{provider.action}</div>
-                {provider.provider === "OpenAI" ? (
-                  <div className="mt-4 space-y-2">
-                    <button
-                      onClick={() => { showToast("Critical GPT-5 traffic routed to Claude"); addAudit("Routing policy applied", "GPT-5 to Claude", "Model"); }}
-                      className="w-full rounded-md bg-[var(--brand-primary)] px-3 py-2 text-left text-xs font-semibold text-white hover:bg-[var(--brand-primary-dark)]"
-                    >
-                      Apply routing policy
-                    </button>
-                    <button
-                      onClick={() => { showToast("Sensitive GPT-5 traffic routed to Qwen 32B"); addAudit("Routing policy applied", "GPT-5 to Qwen 32B", "Model"); }}
-                      className="w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-left text-xs font-semibold text-slate-800 hover:bg-slate-50"
-                    >
-                      Route sensitive work to Qwen 32B
-                    </button>
-                    <ol className="list-decimal space-y-1 pl-4 text-xs leading-5 text-slate-500">
-                      <li>Confirm Claude or Qwen 32B is enabled.</li>
-                      <li>Select affected departments or workspaces.</li>
-                      <li>Apply fallback from GPT-5 to the approved model.</li>
-                    </ol>
-                  </div>
-                ) : null}
+              <div key={provider.provider} className="bg-white p-4">
+                <div className="flex items-center justify-between gap-2"><p className="font-semibold">{provider.provider}</p><StatusBadge value={provider.status} /></div>
+                <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{provider.impact}</p>
+                <button type="button" onClick={() => provider.provider === "OpenAI" ? applyRouting(provider.provider) : showToast(`${provider.provider} provider details opened`)} className="mt-2 text-xs font-semibold text-[var(--brand-primary)]">
+                  {provider.provider === "OpenAI" ? provider.action : provider.status === "Self-hosted" ? "Open server telemetry" : "Review provider"} <ChevronRight className="inline" size={13} />
+                </button>
               </div>
             ))}
           </div>
         </Card>
-        <div className="mb-6 grid gap-6 xl:grid-cols-[1fr_420px]">
-          <Card id="integrate-model" className="p-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Plus size={15} /> Models and providers</div>
-            <h2 className="mt-2 text-lg font-semibold">Register a governed model</h2>
-            <p className="mt-2 text-sm leading-6 text-slate-600">Admins add cloud or local models here, test connectivity, and then assign them to departments, workspaces, agents, and routing policies.</p>
-            <div className="mt-5 grid gap-4 md:grid-cols-3">
-              <label className="text-sm font-medium text-slate-600">Provider
-                <input value={providerName} onChange={(event) => setProviderName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">Model name
-                <input value={modelName} onChange={(event) => setModelName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">Model type
-                <select value={modelType} onChange={(event) => setModelType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Cloud</option>
-                  <option>Local</option>
-                </select>
-              </label>
+
+        <Card id="model-catalog" className="mt-3 overflow-hidden">
+          <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 md:flex-row md:items-center">
+            <div><h2 className="font-semibold text-[var(--text-primary)]">Governed Model Catalog</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">{visible.length} models in the selected scope</p></div>
+            <div className="flex max-w-full gap-1 overflow-x-auto rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
+              {filters.map((item) => <button key={item} type="button" onClick={() => setFilter(item)} className={`shrink-0 rounded px-3 py-1.5 text-xs font-medium ${filter === item ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-secondary)] hover:bg-white"}`}>{item}</button>)}
             </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-600">Endpoint
-                <input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">Secret reference
-                <input value={secretReference} onChange={(event) => setSecretReference(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <label className="text-sm font-medium text-slate-600">Input cost / 1M tokens
-                <input value={inputCost} onChange={(event) => setInputCost(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">Output cost / 1M tokens
-                <input value={outputCost} onChange={(event) => setOutputCost(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">Context window
-                <input value={contextWindow} onChange={(event) => setContextWindow(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-3">
-              <label className="text-sm font-medium text-slate-600">Sensitivity fit
-                <select value={sensitivity} onChange={(event) => setSensitivity(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Public and internal</option>
-                  <option>Internal only</option>
-                  <option>Confidential with approval</option>
-                  <option>Confidential local-only</option>
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-600">Fallback eligible
-                <select value={fallbackEligible} onChange={(event) => setFallbackEligible(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Yes</option>
-                  <option>No</option>
-                  <option>Only for non-sensitive work</option>
-                </select>
-              </label>
-              <label className="text-sm font-medium text-slate-600">Max concurrency
-                <input value={maxConcurrency} onChange={(event) => setMaxConcurrency(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-            </div>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-600">GPU requirement
-                <input value={gpuRequirement} onChange={(event) => setGpuRequirement(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-              <label className="text-sm font-medium text-slate-600">VRAM requirement
-                <input value={vramRequirement} onChange={(event) => setVramRequirement(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-              </label>
-            </div>
-            <div className="mt-4 rounded-md border border-cyan-100 bg-cyan-50 p-3 text-sm leading-6 text-cyan-950">
-              Secrets stay server-side. The frontend stores only secret references, routing metadata, cost assumptions, and policy settings.
-            </div>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <ActionButton onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
-              <ActionButton variant="secondary" onClick={addModel}><Plus size={14} /> Add to governed catalog</ActionButton>
-            </div>
-          </Card>
-          <Card id="routing-suggestions" className="p-5">
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase text-cyan-700"><Route size={15} /> Routing recommendations</div>
-            <h2 className="mt-2 text-lg font-semibold">Suggest the best allowed model</h2>
-            <div className="mt-4 space-y-3 text-sm">
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Legal confidential:</span> Qwen 32B first; Claude only for non-sensitive drafting.</div>
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Claims sensitive:</span> Qwen 32B only; external models blocked.</div>
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Engineering code:</span> DeepSeek Coder, then Claude or GPT-5 if available.</div>
-              <div className="rounded-md border border-slate-200 p-3"><span className="font-semibold">Marketing drafting:</span> Gemini first; GPT-5 only for executive content.</div>
-            </div>
-          </Card>
-        </div>
-        <div className="mb-4 flex flex-wrap gap-2">
-          {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`rounded-md px-3 py-2 text-sm font-medium ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-slate-200 bg-white text-slate-700"}`}><Filter className="mr-2 inline" size={14} />{item}</button>)}
-        </div>
-        <Card id="model-catalog">
-          <DataTable
-            columns={["Model", "Hosting", "Runtime", "Provider health", "Target", "Monthly requests", "Avg latency", "Sensitivity fit", "Fallback", "Access", "Action"]}
-            rows={visible.map((model) => {
-              const health = getProviderHealth(model);
-              return [
-                <span key="name" className="font-semibold">{model.name}</span>,
-                model.hosting,
-                <StatusBadge key="runtime" value={model.status} />,
-                <div key="provider" className="flex min-w-40 flex-col gap-1">
-                  <div className="flex items-center gap-2">
-                    {health?.status === "Degraded" || health?.status === "Down" ? <AlertTriangle className="text-amber-600" size={14} /> : null}
-                    <span className="font-medium">{model.provider}</span>
-                  </div>
-                  <div><StatusBadge value={health?.status ?? "Unknown"} /></div>
-                </div>,
-                model.target,
-                model.requests,
-                model.latency,
-                model.hosting === "Local" ? "Confidential local-first" : "Public/internal with policy",
-                model.name === "GPT-5" ? "Claude or Qwen 32B" : model.hosting === "Local" ? "Local fallback only" : "Eligible by policy",
-                model.access,
-                <ActionButton key="action" variant="secondary" onClick={() => { showToast(`${model.name} policy opened`); addAudit(`${model.name} model policy viewed`, model.name, "Model"); }}><Sparkles size={14} /> Manage</ActionButton>
-              ];
-            })}
-          />
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[1040px] text-left text-sm">
+              <thead className="border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] text-xs uppercase text-[var(--text-secondary)]">
+                <tr>{["Model", "Hosting", "Runtime", "Provider Health", "Target", "Sensitivity Fit", "Status", "Action"].map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
+              </thead>
+              <tbody className="divide-y divide-[var(--border-subtle)]">
+                {visible.map((model) => {
+                  const health = getProviderHealth(model);
+                  const governance = modelGovernance[model.name] ?? { sensitivity: "Unassigned", fallback: "Not configured", cost: "Not configured", workspaces: "Unassigned", graduation: "Assess after usage" };
+                  return (
+                    <tr key={model.name} className="align-top hover:bg-[var(--surface-muted)]">
+                      <td className="px-4 py-3.5"><p className="font-semibold text-[var(--text-primary)]">{model.name}</p><p className="mt-0.5 text-xs text-[var(--text-secondary)]">{model.provider}</p></td>
+                      <td className="px-4 py-3.5">{model.hosting}</td>
+                      <td className="px-4 py-3.5">{model.provider}</td>
+                      <td className="px-4 py-3.5"><StatusBadge value={health?.status ?? "Unknown"} /></td>
+                      <td className="max-w-[170px] px-4 py-3.5 text-[var(--text-secondary)]">{model.target}</td>
+                      <td className="px-4 py-3.5"><span className="text-xs font-semibold text-[var(--brand-primary-dark)]">{governance.sensitivity}</span></td>
+                      <td className="px-4 py-3.5"><StatusBadge value={model.status} /></td>
+                      <td className="px-4 py-3.5">
+                        <details className="group">
+                          <summary className="cursor-pointer list-none whitespace-nowrap text-xs font-semibold text-[var(--brand-primary)]">View details <ChevronRight className="inline transition group-open:rotate-90" size={13} /></summary>
+                          <div className="mt-3 w-72 rounded-md border border-[var(--border-subtle)] bg-white p-3 text-xs shadow-lg">
+                            <div className="grid grid-cols-2 gap-2 text-[var(--text-secondary)]">
+                              <span>Monthly requests</span><strong className="text-right text-[var(--text-primary)]">{model.requests}</strong>
+                              <span>Average latency</span><strong className="text-right text-[var(--text-primary)]">{model.latency}</strong>
+                              <span>Fallback</span><strong className="text-right text-[var(--text-primary)]">{governance.fallback}</strong>
+                              <span>Cost</span><strong className="text-right text-[var(--text-primary)]">{governance.cost}</strong>
+                              <span>Allowed teams</span><strong className="text-right text-[var(--text-primary)]">{model.access}</strong>
+                              <span>Workspace access</span><strong className="text-right text-[var(--text-primary)]">{governance.workspaces}</strong>
+                            </div>
+                            <p className="mt-3 rounded bg-[var(--surface-muted)] p-2 font-medium text-[var(--brand-primary-dark)]">{governance.graduation}</p>
+                            <button type="button" onClick={() => { showToast(`${model.name} policy opened`); addAudit("Model policy reviewed", model.name, "Model"); }} className="mt-3 font-semibold text-[var(--brand-primary)]">Manage policy</button>
+                          </div>
+                        </details>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
         </Card>
+
+        <div className="mt-3 grid gap-3 xl:grid-cols-[0.8fr_1.2fr]">
+          <Card className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div><p className="text-xs font-semibold uppercase text-[var(--brand-primary)]">Model Graduation Flywheel</p><h2 className="mt-1 text-lg font-semibold">61% graduation fit</h2></div>
+              <Gauge size={20} className="text-[var(--brand-accent)]" />
+            </div>
+            <p className="mt-2 text-sm text-[var(--text-secondary)]">Repeated Support workloads can move from cloud spend to governed local capacity over time.</p>
+            <div className="mt-3 rounded-md bg-[var(--surface-muted)] p-3"><p className="text-xs text-[var(--text-secondary)]">Projected annual savings</p><p className="mt-1 text-xl font-semibold text-[var(--text-primary)]">AED 420,000</p></div>
+            <ActionButton onClick={() => { showToast("Graduation simulation opened"); addAudit("Model graduation simulated", "Support traffic", "Model"); }}><PiggyBank size={15} /> Simulate graduation</ActionButton>
+          </Card>
+
+          <Card className="overflow-hidden">
+            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
+              <div><h2 className="font-semibold">Routing Recommendations</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Best approved route by workload and sensitivity.</p></div>
+              <Link href="/dashboard/routing-policies" className="text-xs font-semibold text-[var(--brand-primary)]">Open routing policies</Link>
+            </div>
+            <div className="divide-y divide-[var(--border-subtle)]">
+              {routingRecommendations.map((recommendation) => (
+                <div key={recommendation.workload} className="grid gap-2 px-4 py-3 md:grid-cols-[150px_150px_1fr_auto] md:items-center">
+                  <p className="text-sm font-semibold">{recommendation.workload}</p>
+                  <p className="text-xs font-semibold text-[var(--brand-primary-dark)]">{recommendation.route}</p>
+                  <p className="text-xs text-[var(--text-secondary)]">{recommendation.rule}</p>
+                  <button type="button" onClick={() => applyRouting(recommendation.workload)} className="text-xs font-semibold text-[var(--brand-primary)]">Apply</button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
       </Section>
+
+      {addOpen ? (
+        <Modal title="Register a governed model" onClose={() => setAddOpen(false)}>
+          <div className="max-h-[68vh] overflow-y-auto pr-1">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Field label="Provider"><input value={providerName} onChange={(event) => setProviderName(event.target.value)} className="field" /></Field>
+              <Field label="Model name"><input value={modelName} onChange={(event) => setModelName(event.target.value)} className="field" /></Field>
+              <Field label="Model type"><select value={modelType} onChange={(event) => setModelType(event.target.value)} className="field"><option>Cloud</option><option>Local</option></select></Field>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <Field label="Endpoint"><input value={endpoint} onChange={(event) => setEndpoint(event.target.value)} className="field" /></Field>
+              <Field label="Secret reference"><input value={secretReference} onChange={(event) => setSecretReference(event.target.value)} className="field" /></Field>
+            </div>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <Field label="Input cost / 1M tokens"><input value={inputCost} onChange={(event) => setInputCost(event.target.value)} className="field" /></Field>
+              <Field label="Output cost / 1M tokens"><input value={outputCost} onChange={(event) => setOutputCost(event.target.value)} className="field" /></Field>
+              <Field label="Context window"><input value={contextWindow} onChange={(event) => setContextWindow(event.target.value)} className="field" /></Field>
+              <Field label="Sensitivity fit"><select value={sensitivity} onChange={(event) => setSensitivity(event.target.value)} className="field"><option>Public and internal</option><option>Internal only</option><option>Confidential with approval</option><option>Confidential local-only</option></select></Field>
+              <Field label="Fallback eligible"><select value={fallbackEligible} onChange={(event) => setFallbackEligible(event.target.value)} className="field"><option>Yes</option><option>No</option><option>Only for non-sensitive work</option></select></Field>
+              <Field label="Max concurrency"><input value={maxConcurrency} onChange={(event) => setMaxConcurrency(event.target.value)} className="field" /></Field>
+              <Field label="GPU requirement"><input value={gpuRequirement} onChange={(event) => setGpuRequirement(event.target.value)} className="field" /></Field>
+              <Field label="VRAM requirement"><input value={vramRequirement} onChange={(event) => setVramRequirement(event.target.value)} className="field" /></Field>
+            </div>
+            <p className="mt-4 rounded-md bg-[var(--surface-muted)] p-3 text-xs leading-5 text-[var(--text-secondary)]">Secrets stay server-side. The frontend stores only secret references, routing metadata, cost assumptions, and policy settings.</p>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <ActionButton variant="secondary" onClick={() => { showToast(`${modelName} connection test passed`); addAudit("Model connection tested", modelName, "Model"); }}><Sparkles size={14} /> Test connection</ActionButton>
+            <ActionButton onClick={addModel}><Plus size={14} /> Add to governed catalog</ActionButton>
+          </div>
+        </Modal>
+      ) : null}
     </>
   );
+}
+
+function Field({ label, children }: { label: string; children: ReactNode }) {
+  return <label className="text-xs font-medium text-[var(--text-secondary)]">{label}<span className="mt-1.5 block [&_.field]:h-10 [&_.field]:w-full [&_.field]:rounded-md [&_.field]:border [&_.field]:border-[var(--border-subtle)] [&_.field]:bg-white [&_.field]:px-3 [&_.field]:text-sm [&_.field]:text-[var(--text-primary)]">{children}</span></label>;
 }

@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { createContext, useContext, useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import {
   Activity,
@@ -12,6 +12,7 @@ import {
   Boxes,
   Building2,
   CheckCircle2,
+  ChevronRight,
   Cloud,
   Database,
   FileCheck2,
@@ -39,6 +40,13 @@ import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds,
 
 type Toast = { id: number; message: string };
 type ModelRecord = (typeof initialModels)[number];
+type GlobalCommand = {
+  label: string;
+  detail: string;
+  icon: typeof Server;
+  href?: string;
+  command?: "route-gpt5";
+};
 type AppState = {
   toasts: Toast[];
   showToast: (message: string) => void;
@@ -329,7 +337,69 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
 function TopBar() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { showToast, addAudit } = useAppState();
   const action = pageActions[pathname] ?? { href: pathname, label: "Take Action" };
+  const commandInputRef = useRef<HTMLInputElement>(null);
+  const commandBarRef = useRef<HTMLDivElement>(null);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState("");
+
+  const commands = useMemo<GlobalCommand[]>(() => [
+    { label: "Open Claims On-Prem Node", detail: "Server · GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Show degraded providers", detail: "Monitoring · Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
+    { label: "Create Legal AI Workspace", detail: "Workspace · Governed interface", href: "/dashboard/workspaces", icon: Layers },
+    { label: "Review ISO evidence gaps", detail: "Governance · Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
+    { label: "Open Qwen 32B model", detail: "Model · Local and restricted-safe", href: "/dashboard/models", icon: Sparkles },
+    { label: "Route GPT-5 critical work to Claude", detail: "Command · Apply simulated route", command: "route-gpt5", icon: Route },
+    { label: "View agent kill switch controls", detail: "Agents · Safety controls", href: "/dashboard/agents", icon: Bot }
+  ], []);
+
+  const visibleCommands = useMemo(() => {
+    const query = commandQuery.trim().toLowerCase();
+    if (!query) return commands;
+    return commands.filter((command) => `${command.label} ${command.detail}`.toLowerCase().includes(query));
+  }, [commandQuery, commands]);
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setCommandOpen(true);
+        window.setTimeout(() => commandInputRef.current?.focus(), 0);
+      }
+      if (event.key === "Escape") {
+        setCommandOpen(false);
+        commandInputRef.current?.blur();
+      }
+    }
+
+    function handlePointerDown(event: MouseEvent) {
+      if (commandBarRef.current && !commandBarRef.current.contains(event.target as Node)) {
+        setCommandOpen(false);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("mousedown", handlePointerDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("mousedown", handlePointerDown);
+    };
+  }, []);
+
+  function runCommand(command: (typeof commands)[number]) {
+    setCommandOpen(false);
+    setCommandQuery("");
+    if (command.href) {
+      router.push(command.href);
+      return;
+    }
+    if (command.command === "route-gpt5") {
+      showToast("Critical GPT-5 work routed to Claude");
+      addAudit("Global command applied routing policy", "GPT-5 to Claude", "Model");
+    }
+  }
 
   return (
     <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-6 py-3 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur">
@@ -355,9 +425,62 @@ function TopBar() {
           <option>Last 30 days</option>
           <option>This quarter</option>
         </select>
-        <div className="relative min-w-[240px] flex-1 xl:w-80 xl:flex-none">
-          <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={15} />
-          <input aria-label="Search or command" placeholder="Search or run command..." className="min-h-10 w-full rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] pl-9 pr-3 text-sm text-[var(--text-primary)] shadow-sm focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]" />
+        <div ref={commandBarRef} className="relative min-w-[230px] flex-1 xl:w-72 xl:flex-none">
+          <Search className="pointer-events-none absolute left-3 top-[18px] -translate-y-1/2 text-slate-400" size={14} />
+          <input
+            ref={commandInputRef}
+            value={commandQuery}
+            onChange={(event) => {
+              setCommandQuery(event.target.value);
+              setCommandOpen(true);
+            }}
+            onFocus={() => setCommandOpen(true)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" && visibleCommands[0]) {
+                event.preventDefault();
+                runCommand(visibleCommands[0]);
+              }
+            }}
+            aria-label="Global Command Bar"
+            aria-expanded={commandOpen}
+            aria-controls="global-command-suggestions"
+            placeholder="Search or run command..."
+            className="h-9 w-full rounded-md border border-[var(--border-subtle)] bg-white/70 pl-9 pr-14 text-xs text-[var(--text-primary)] shadow-sm transition placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+          />
+          <kbd className="pointer-events-none absolute right-2 top-[18px] -translate-y-1/2 rounded border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-1.5 py-0.5 text-[10px] font-medium text-[var(--text-secondary)]">Ctrl K</kbd>
+          {commandOpen ? (
+            <div id="global-command-suggestions" className="absolute right-0 top-11 z-40 w-[min(420px,calc(100vw-2rem))] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-white shadow-2xl">
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2">
+                <span className="text-[10px] font-semibold uppercase text-[var(--text-secondary)]">Global Command Bar</span>
+                <span className="text-[10px] text-[var(--text-secondary)]">Enter to run · Esc to close</span>
+              </div>
+              <div className="max-h-80 overflow-y-auto p-1.5">
+                {visibleCommands.map((command) => {
+                  const CommandIcon = command.icon;
+                  return (
+                    <button
+                      key={command.label}
+                      type="button"
+                      onClick={() => runCommand(command)}
+                      className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left transition hover:bg-[var(--surface-muted)] focus:bg-[var(--surface-muted)] focus:outline-none"
+                    >
+                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-md bg-[rgba(91,61,255,0.09)] text-[var(--brand-primary)]">
+                        <CommandIcon size={15} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-medium text-[var(--text-primary)]">{command.label}</span>
+                        <span className="block truncate text-xs text-[var(--text-secondary)]">{command.detail}</span>
+                      </span>
+                      <ChevronRight size={14} className="shrink-0 text-slate-400" />
+                    </button>
+                  );
+                })}
+                {visibleCommands.length === 0 ? (
+                  <div className="px-3 py-8 text-center text-sm text-[var(--text-secondary)]">No matching commands</div>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
         </div>
         <IconPill icon={<Bell size={15} />} label="2 alerts" />
         <Link href={action.href} className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-primary-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2">
