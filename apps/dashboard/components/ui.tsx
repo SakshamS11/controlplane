@@ -343,8 +343,10 @@ function TopBar() {
   const primaryAction = pathname === "/dashboard";
   const commandInputRef = useRef<HTMLInputElement>(null);
   const commandBarRef = useRef<HTMLDivElement>(null);
+  const alertMenuRef = useRef<HTMLDivElement>(null);
   const [commandOpen, setCommandOpen] = useState(false);
   const [commandQuery, setCommandQuery] = useState("");
+  const [alertMenuOpen, setAlertMenuOpen] = useState(false);
 
   const commands = useMemo<GlobalCommand[]>(() => [
     { label: "Open Claims On-Prem Node", detail: "Server · GPU pressure", href: "/dashboard/targets", icon: Server },
@@ -371,6 +373,7 @@ function TopBar() {
       }
       if (event.key === "Escape") {
         setCommandOpen(false);
+        setAlertMenuOpen(false);
         commandInputRef.current?.blur();
       }
     }
@@ -378,6 +381,9 @@ function TopBar() {
     function handlePointerDown(event: MouseEvent) {
       if (commandBarRef.current && !commandBarRef.current.contains(event.target as Node)) {
         setCommandOpen(false);
+      }
+      if (alertMenuRef.current && !alertMenuRef.current.contains(event.target as Node)) {
+        setAlertMenuOpen(false);
       }
     }
 
@@ -404,7 +410,7 @@ function TopBar() {
 
   return (
     <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
-      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold text-[var(--text-primary)]">Acme Corp</span>
@@ -418,7 +424,7 @@ function TopBar() {
         </div>
         <div className="mt-1 hidden truncate text-xs text-slate-500 2xl:block">Fleet, models, workspaces, and governance.</div>
       </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 xl:flex-nowrap">
         <label className="sr-only" htmlFor="global-time-range">Time range</label>
         <select id="global-time-range" defaultValue="Last 30 days" className="hidden min-h-9 rounded-md border border-[var(--border-subtle)] bg-white px-3 text-sm font-medium text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] 2xl:block">
           <option>Last 24 hours</option>
@@ -483,7 +489,60 @@ function TopBar() {
             </div>
           ) : null}
         </div>
-        <IconPill icon={<Bell size={15} />} label="2 alerts" />
+        <div ref={alertMenuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setAlertMenuOpen((open) => !open)}
+            aria-label="Open active alerts"
+            aria-expanded={alertMenuOpen}
+            aria-controls="active-alerts-menu"
+            className={`relative inline-flex min-h-9 items-center gap-2 rounded-md border px-3 text-xs font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] ${alertMenuOpen ? "border-[rgba(91,61,255,0.28)] bg-[rgba(91,61,255,0.07)] text-[var(--brand-primary-dark)]" : "border-[var(--border-subtle)] bg-[var(--surface-muted)] text-slate-700 hover:border-slate-300 hover:bg-white"}`}
+          >
+            <Bell size={15} />
+            <span>3 alerts</span>
+            <span className="absolute -right-1 -top-1 grid h-4 min-w-4 place-items-center rounded-full bg-[var(--status-critical)] px-1 text-[9px] font-bold text-white">3</span>
+          </button>
+          {alertMenuOpen ? (
+            <div id="active-alerts-menu" className="absolute right-0 top-11 z-40 w-[min(390px,calc(100vw-2rem))] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-white shadow-[0_24px_60px_rgba(17,24,39,0.18)]">
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-4 py-3">
+                <div>
+                  <p className="text-xs font-semibold text-[var(--text-primary)]">Active alerts</p>
+                  <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Live demo values across fleet and providers.</p>
+                </div>
+                <StatusBadge value="Warning" />
+              </div>
+              <div className="divide-y divide-[var(--border-subtle)]">
+                <AlertMenuItem
+                  severity="Critical"
+                  title="Legal Sandbox agent offline"
+                  detail="No heartbeat for 42 minutes"
+                  value="Workspace unavailable"
+                  href="/dashboard/targets"
+                  onOpen={() => setAlertMenuOpen(false)}
+                />
+                <AlertMenuItem
+                  severity="Warning"
+                  title="Claims GPU pressure"
+                  detail="GPU 92% · VRAM 22/24 GB"
+                  value="Queue wait +18%"
+                  href="/dashboard/cost-capacity"
+                  onOpen={() => setAlertMenuOpen(false)}
+                />
+                <AlertMenuItem
+                  severity="Degraded"
+                  title="OpenAI GPT-5 latency"
+                  detail="p95 latency 1,480 ms"
+                  value="Fallback ready"
+                  href="/dashboard/routing-policies"
+                  onOpen={() => setAlertMenuOpen(false)}
+                />
+              </div>
+              <Link href="/dashboard/monitoring" onClick={() => setAlertMenuOpen(false)} className="flex min-h-10 items-center justify-between px-4 text-xs font-semibold text-[var(--brand-primary)] hover:bg-[var(--surface-muted)]">
+                View all monitoring alerts <ChevronRight size={14} />
+              </Link>
+            </div>
+          ) : null}
+        </div>
         <Link
           href={action.href}
           onClick={(event) => {
@@ -503,8 +562,28 @@ function TopBar() {
   );
 }
 
-function IconPill({ icon, label }: { icon: ReactNode; label: string }) {
-  return <div className="flex items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-xs font-medium text-slate-700">{icon}{label}</div>;
+function AlertMenuItem({ severity, title, detail, value, href, onOpen }: {
+  severity: string;
+  title: string;
+  detail: string;
+  value: string;
+  href: string;
+  onOpen: () => void;
+}) {
+  return (
+    <Link href={href} onClick={onOpen} className="group flex items-start gap-3 px-4 py-3 transition hover:bg-[var(--surface-muted)]">
+      <span className={`mt-1 h-2 w-2 shrink-0 rounded-full ${severity === "Critical" ? "bg-[var(--status-critical)]" : "bg-[var(--status-warning)]"}`} />
+      <span className="min-w-0 flex-1">
+        <span className="flex items-center justify-between gap-3">
+          <span className="truncate text-xs font-semibold text-[var(--text-primary)]">{title}</span>
+          <StatusBadge value={severity} />
+        </span>
+        <span className="mt-1 block text-[10px] text-[var(--text-secondary)]">{detail}</span>
+        <span className="mt-1 block text-[10px] font-semibold text-[var(--brand-primary-dark)]">{value}</span>
+      </span>
+      <ChevronRight size={14} className="mt-1 shrink-0 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-[var(--brand-primary)]" />
+    </Link>
+  );
 }
 
 export function PageHeader({ eyebrow, title, description, action }: { eyebrow: string; title: string; description?: string; action?: ReactNode }) {
@@ -650,11 +729,11 @@ export function EmptyMock({ title, text }: { title: string; text: string }) {
 
 export function Modal({ title, children, onClose }: { title: string; children: ReactNode; onClose: () => void }) {
   return (
-    <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/40 p-4">
-      <div role="dialog" aria-modal="true" aria-labelledby="app-modal-title" className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-          <h2 id="app-modal-title" className="font-semibold">{title}</h2>
-          <button type="button" aria-label="Close dialog" onClick={onClose} className="rounded-md p-1.5 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"><X size={18} /></button>
+    <div className="fixed inset-0 z-40 grid place-items-center bg-slate-950/50 p-4 backdrop-blur-sm">
+      <div role="dialog" aria-modal="true" aria-labelledby="app-modal-title" className="max-h-[92vh] w-full max-w-2xl overflow-hidden rounded-xl border border-white/70 bg-white shadow-[0_30px_90px_rgba(9,13,26,0.30)]">
+        <div className="flex items-center justify-between border-b border-slate-200 bg-[var(--surface-muted)] px-5 py-4">
+          <h2 id="app-modal-title" className="font-semibold text-[var(--text-primary)]">{title}</h2>
+          <button type="button" aria-label="Close dialog" onClick={onClose} className="rounded-md border border-transparent p-1.5 text-[var(--text-secondary)] transition hover:border-[var(--border-subtle)] hover:bg-white hover:text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"><X size={18} /></button>
         </div>
         <div className="max-h-[calc(92vh-57px)] overflow-y-auto p-5">{children}</div>
       </div>

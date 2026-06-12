@@ -186,7 +186,7 @@ export default function DashboardOverviewPage() {
   }
 
   function renderIssueAction(label: string, issue: (typeof actionIssues)[number]) {
-    const commonClass = "inline-flex min-h-7 items-center justify-center rounded-md px-2 text-[10px] font-semibold transition";
+    const commonClass = "inline-flex min-h-7 items-center justify-center rounded-md px-2 text-[10px] font-semibold shadow-sm transition hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-1";
     if (label === "Open Server") {
       return <Link key={label} href="/dashboard/targets" className={`${commonClass} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     }
@@ -216,16 +216,16 @@ export default function DashboardOverviewPage() {
 
   return (
     <Section>
-      <Card className="overflow-hidden bg-[var(--surface-dark)] text-white">
-        <div className="grid gap-3 px-4 py-3.5 xl:grid-cols-[minmax(0,1.35fr)_minmax(520px,1fr)] xl:items-center">
+      <Card className="overflow-hidden border-white/10 bg-[var(--surface-dark)] text-white shadow-[0_18px_45px_rgba(9,13,26,0.18)]">
+        <div className="grid gap-4 px-5 py-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(540px,1fr)] xl:items-center">
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="text-xs font-semibold uppercase text-cyan-200">AI operations control room</span>
               <StatusBadge value="Warning" />
               <span className="text-xs text-slate-400">Updated 48 seconds ago</span>
             </div>
-            <h1 className="mt-1.5 text-xl font-semibold">AI Ops Status: Warning</h1>
-            <p className="mt-1 text-xs leading-5 text-slate-300">Claims GPU is above 90%, Legal Sandbox agent is offline, and Marketing is trending over budget.</p>
+            <h1 className="mt-2 text-xl font-semibold">AI Ops Status: Warning</h1>
+            <p className="mt-1 max-w-2xl text-xs leading-5 text-slate-300">Claims GPU is above 90%, Legal Sandbox agent is offline, and Marketing is trending over budget.</p>
           </div>
           <div className="grid grid-cols-2 gap-px overflow-hidden rounded-md bg-white/10 sm:grid-cols-4">
             <DarkMetric label="Infrastructure" value="3/4 online" tone="warning" />
@@ -242,28 +242,32 @@ export default function DashboardOverviewPage() {
         </div>
       </Card>
 
-      <div className="mt-3 grid gap-3 xl:grid-cols-[minmax(0,1.35fr)_minmax(390px,0.8fr)]">
+      <div className="mt-3 grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
+        {kpis.map((item) => <CompactKpi key={item.label} {...item} />)}
+      </div>
+
+      <div className="mt-3 grid items-stretch gap-3 xl:grid-cols-[minmax(0,1.4fr)_minmax(410px,0.8fr)]">
         <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-2.5">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-3">
             <div>
               <h2 className="text-sm font-semibold">Immediate Action Center</h2>
               <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Prioritized by operational and governance impact.</p>
             </div>
-            <span className="text-xs font-semibold text-[var(--status-critical)]">5 open</span>
+            <span className="rounded-full bg-[rgba(225,29,72,0.09)] px-2.5 py-1 text-[10px] font-semibold text-[var(--status-critical)]">5 open</span>
           </div>
           <div className="divide-y divide-[var(--border-subtle)]">
             {actionIssues.map((issue) => (
-              <div key={issue.title} className="grid gap-2 px-3 py-2.5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div key={issue.title} className={`grid gap-2 border-l-2 px-3.5 py-3 transition-colors hover:bg-[var(--surface-muted)] lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center ${issue.severity === "Critical" ? "border-l-[var(--status-critical)]" : issue.severity === "Medium" ? "border-l-[var(--brand-primary)]" : "border-l-[var(--status-warning)]"}`}>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-1.5">
                     <StatusBadge value={issue.severity} />
                     <span className="text-[10px] font-semibold uppercase text-[var(--text-secondary)]">{issue.type}</span>
-                    <h3 className="text-xs font-semibold">{issue.title}</h3>
+                    <h3 className="text-xs font-semibold text-[var(--text-primary)]">{issue.title}</h3>
                   </div>
-                  <p className="mt-1 truncate text-[11px] text-[var(--text-secondary)]" title={`${issue.problem} Change: ${issue.change}`}>{issue.problem} <span className="font-medium text-[var(--text-primary)]">Change:</span> {issue.change}</p>
-                  <p className="mt-0.5 text-[10px] font-medium text-[var(--brand-primary-dark)]">{issue.impact}</p>
+                  <p className="mt-1 text-[11px] leading-4 text-[var(--text-secondary)]"><span>{issue.problem}</span> <span className="font-medium text-[var(--text-primary)]">Change:</span> {issue.change}</p>
+                  <p className="mt-1 text-[10px] font-semibold text-[var(--brand-primary-dark)]">{issue.impact}</p>
                 </div>
-                <div className="flex flex-wrap gap-1.5 lg:max-w-56 lg:justify-end">
+                <div className="flex flex-wrap gap-1.5 lg:max-w-60 lg:justify-end">
                   {issue.actions.map((label) => renderIssueAction(label, issue))}
                 </div>
               </div>
@@ -271,52 +275,55 @@ export default function DashboardOverviewPage() {
           </div>
         </Card>
 
-        <Card className="overflow-hidden">
-          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-2.5">
+        <Card className="flex overflow-hidden">
+          <div className="flex min-w-0 flex-1 flex-col">
+          <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-card)] px-4 py-3">
             <div>
               <h2 className="text-sm font-semibold">Infrastructure Status</h2>
               <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Fleet state and the next operator action.</p>
             </div>
             <Link href="/dashboard/targets" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open fleet</Link>
           </div>
-          <div className="divide-y divide-[var(--border-subtle)]">
+          <div className="grid flex-1 gap-px bg-[var(--border-subtle)] sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
             {infrastructure.map((item) => (
-              <div key={item.name} className="px-3 py-3">
-                <div className="flex items-start justify-between gap-2">
+              <div key={item.name} className="flex min-h-32 flex-col bg-white px-3.5 py-3.5 transition-colors hover:bg-[var(--surface-muted)]">
+                <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <div className="flex flex-wrap items-center gap-2"><h3 className="truncate text-xs font-semibold">{item.name}</h3><StatusBadge value={item.status} /></div>
-                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--text-secondary)]">
-                      <span>{item.agent}</span><span>{item.metric}</span><span>{item.detail}</span>
-                    </div>
+                    <h3 className="text-xs font-semibold leading-4">{item.name}</h3>
+                    <p className="mt-1 text-[10px] text-[var(--text-secondary)]">{item.agent}</p>
                   </div>
+                  <StatusBadge value={item.status} />
+                </div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-[10px]">
+                  <span className="rounded bg-[var(--surface-muted)] px-2 py-1.5 font-medium">{item.metric}</span>
+                  <span className="rounded bg-[var(--surface-muted)] px-2 py-1.5 text-[var(--text-secondary)]">{item.detail}</span>
+                </div>
+                <div className="mt-auto pt-3">
                   {item.action === "Restart Agent" ? (
-                    <button type="button" onClick={() => requestConfirmation({ title: "Restart Legal Sandbox agent", message: "Queue an allowlisted agent restart command for Legal Sandbox?", impact: "Legal workspace availability should return after the agent reconnects.", target: "Legal Sandbox", auditType: "Agent" })} className="shrink-0 text-[10px] font-semibold text-[var(--status-critical)] hover:underline">{item.action}</button>
+                    <button type="button" onClick={() => requestConfirmation({ title: "Restart Legal Sandbox agent", message: "Queue an allowlisted agent restart command for Legal Sandbox?", impact: "Legal workspace availability should return after the agent reconnects.", target: "Legal Sandbox", auditType: "Agent" })} className="text-[10px] font-semibold text-[var(--status-critical)] hover:underline">{item.action}</button>
                   ) : (
-                    <Link href={item.action === "Review Capacity" ? "/dashboard/cost-capacity" : "/dashboard/targets/acme"} className="shrink-0 text-[10px] font-semibold text-[var(--brand-primary)] hover:underline">{item.action}</Link>
+                    <Link href={item.action === "Review Capacity" ? "/dashboard/cost-capacity" : "/dashboard/targets/acme"} className="text-[10px] font-semibold text-[var(--brand-primary)] hover:underline">{item.action}</Link>
                   )}
                 </div>
               </div>
             ))}
           </div>
+          </div>
         </Card>
       </div>
 
-      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-8">
-        {kpis.map((item) => <CompactKpi key={item.label} {...item} />)}
-      </div>
-
       <Card className="mt-3 overflow-hidden">
-        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-2.5">
+        <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
           <div><h2 className="text-sm font-semibold">Recommended Changes</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Highest-value configuration changes for the current state.</p></div>
           <Link href="/dashboard/resource-planner" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open planner</Link>
         </div>
-        <div className="grid divide-y divide-[var(--border-subtle)] lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+        <div className="grid gap-px bg-[var(--border-subtle)] md:grid-cols-2 xl:grid-cols-5">
           {recommendedChanges.map((item) => (
-            <div key={item.change} className="flex min-h-28 flex-col px-3 py-3">
-              <p className="text-xs font-semibold">{item.change}</p>
+            <div key={item.change} className="group flex min-h-28 flex-col bg-white px-3.5 py-3.5 transition-colors hover:bg-[var(--surface-muted)]">
+              <p className="text-xs font-semibold leading-4">{item.change}</p>
               <p className="mt-1 text-[10px] text-[var(--text-secondary)]">{item.area}</p>
               <p className="mt-1 text-[10px] font-medium text-[var(--status-healthy)]">{item.impact}</p>
-              <button type="button" onClick={() => simulateAction("Review change", item.change)} className="mt-auto pt-2 text-left text-[10px] font-semibold text-[var(--brand-primary)]">Review</button>
+              <button type="button" onClick={() => simulateAction("Review change", item.change)} className="mt-auto inline-flex items-center gap-1 pt-3 text-left text-[10px] font-semibold text-[var(--brand-primary)] group-hover:text-[var(--brand-primary-dark)]">Review <ArrowRight size={11} /></button>
             </div>
           ))}
         </div>
@@ -434,10 +441,11 @@ function CompactKpi({ label, value, status, detail, icon: Icon }: {
 }) {
   const tone = status === "Healthy" ? "text-[var(--status-healthy)]" : status === "Critical" ? "text-[var(--status-critical)]" : "text-[var(--status-warning)]";
   return (
-    <Card className="p-3">
+    <Card className="group relative overflow-hidden p-3 transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_10px_26px_rgba(17,24,39,0.09)]">
+      <span className={`absolute inset-x-0 top-0 h-0.5 ${status === "Healthy" ? "bg-[var(--status-healthy)]" : status === "Critical" ? "bg-[var(--status-critical)]" : "bg-[var(--status-warning)]"}`} />
       <div className="flex items-start justify-between gap-2">
         <div><p className="text-[10px] text-[var(--text-secondary)]">{label}</p><p className="mt-1 whitespace-nowrap text-base font-semibold">{value}</p></div>
-        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[var(--surface-muted)] text-[var(--brand-primary)]"><Icon size={14} /></span>
+        <span className="grid h-7 w-7 shrink-0 place-items-center rounded-md bg-[var(--surface-muted)] text-[var(--brand-primary)] transition group-hover:bg-[rgba(91,61,255,0.10)]"><Icon size={14} /></span>
       </div>
       <p className={`mt-1 text-[10px] font-medium ${tone}`}>{detail}</p>
     </Card>
