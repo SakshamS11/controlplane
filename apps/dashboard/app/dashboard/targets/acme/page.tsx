@@ -96,11 +96,12 @@ export default function AcmeTargetDetailPage() {
               <h2 className="font-semibold">Server workspace</h2>
               <p className="mt-1 text-sm text-slate-600">Metrics, services, and deployment activity.</p>
             </div>
-            <div role="tablist" aria-label="Server workspace sections" className="grid grid-cols-3 rounded-md border border-slate-200 bg-slate-50 p-1">
+            <div role="tablist" aria-label="Server workspace sections" className="grid grid-cols-4 rounded-md border border-slate-200 bg-slate-50 p-1">
               {[
                 ["metrics", "Metrics"],
                 ["services", "Services"],
-                ["deployment", "Deployment"]
+                ["deployment", "Deployment"],
+                ["logs", "Logs"]
               ].map(([id, label]) => (
                 <button key={id} role="tab" aria-selected={activePanel === id} onClick={() => setActivePanel(id)} className={`min-h-9 rounded px-3 text-sm font-medium transition ${activePanel === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>
                   {label}
@@ -146,27 +147,27 @@ export default function AcmeTargetDetailPage() {
                   return <div key={step} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"><span className={`h-2.5 w-2.5 rounded-full ${done ? "bg-cyan-500" : "bg-slate-300"}`} />{step}</div>;
                 })}
               </div>
+              <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
             </div>
           ) : null}
-        </div>
-        <div className="mt-6 flex flex-wrap gap-2">
-          <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
-        </div>
-        <Card className="mt-6 p-5">
-          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-            <div>
-              <h2 className="font-semibold">Logs preview</h2>
-              <p className="mt-1 text-sm text-slate-600">Bounded agent logs; arbitrary shell access is blocked.</p>
-            </div>
-            <StatusBadge value="Healthy" />
-          </div>
-          <pre className="mt-4 max-h-56 overflow-auto rounded-lg bg-slate-950 p-4 text-xs leading-6 text-cyan-100">{`[10:42:11] agent heartbeat accepted for acme
+          {activePanel === "logs" ? (
+            <div className="p-5">
+              <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                <div>
+                  <h3 className="font-semibold">Logs preview</h3>
+                  <p className="mt-1 text-sm text-slate-600">Bounded agent logs; arbitrary shell access is blocked.</p>
+                </div>
+                <StatusBadge value="Healthy" />
+              </div>
+              <pre className="mt-4 max-h-72 overflow-auto rounded-lg bg-slate-950 p-4 text-xs leading-6 text-cyan-100">{`[10:42:11] agent heartbeat accepted for acme
 [10:42:12] docker compose services healthy: 6/6
 [10:42:13] gpu nvidia-l40s utilization=71% vram=34/48GB
 [10:42:14] open-webui p50 latency=812ms
 [10:42:15] command allowlist verified: GET_STATUS
 [10:42:16] audit event recorded: service status viewed`}</pre>
-        </Card>
+            </div>
+          ) : null}
+        </div>
       </Section>
     </>
   );

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import {
   AlertTriangle,
   ArrowRight,
@@ -13,6 +13,8 @@ import {
 import { ComparisonBarChart, ForecastLineChart } from "@/components/charts";
 import { ActionButton, Card, DataTable, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
+type CostTab = "summary" | "forecast" | "capacity" | "safeguards";
+
 const burnRate = [
   { name: "Week 1", actual: 38, forecast: null },
   { name: "Week 2", actual: 77, forecast: null },
@@ -21,7 +23,7 @@ const burnRate = [
   { name: "Month end", actual: null, forecast: 184 }
 ];
 
-const departmentSpend = [
+const teamSpend = [
   { name: "Engineering", current: 42, forecast: 55, budget: 72 },
   { name: "Claims", current: 34, forecast: 44, budget: 52 },
   { name: "Legal", current: 21, forecast: 27, budget: 34 },
@@ -66,6 +68,13 @@ const forecastItems = [
   { text: "Claims capacity needs GPU, not cloud fallback", status: "Warning" }
 ];
 
+const tabs: Array<{ id: CostTab; label: string }> = [
+  { id: "summary", label: "Summary" },
+  { id: "forecast", label: "Forecast & Spend" },
+  { id: "capacity", label: "GPU Capacity" },
+  { id: "safeguards", label: "Savings & Safeguards" }
+];
+
 function CompactKpi({ label, value, detail, status, icon }: {
   label: string;
   value: string;
@@ -102,11 +111,8 @@ function ForecastCard({ title, value, detail, children }: {
   return (
     <Card className="overflow-hidden">
       <div className="flex items-start justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3">
-        <div>
-          <h2 className="text-sm font-semibold text-[var(--text-primary)]">{title}</h2>
-          <p className="mt-0.5 text-xs text-[var(--text-secondary)]">{detail}</p>
-        </div>
-        <p className="text-lg font-semibold text-[var(--text-primary)]">{value}</p>
+        <div><h2 className="text-sm font-semibold">{title}</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">{detail}</p></div>
+        <p className="text-lg font-semibold">{value}</p>
       </div>
       {children}
     </Card>
@@ -118,10 +124,7 @@ function ChartLegend({ items }: { items: { label: string; color: string; dashed?
     <div className="flex flex-wrap gap-3 px-4 pt-3 text-[10px] text-[var(--text-secondary)]">
       {items.map((item) => (
         <span key={item.label} className="inline-flex items-center gap-1.5">
-          <span
-            className={`h-0.5 w-5 ${item.dashed ? "border-t-2 border-dashed bg-transparent" : ""}`}
-            style={item.dashed ? { borderColor: item.color } : { backgroundColor: item.color }}
-          />
+          <span className={`h-0.5 w-5 ${item.dashed ? "border-t-2 border-dashed bg-transparent" : ""}`} style={item.dashed ? { borderColor: item.color } : { backgroundColor: item.color }} />
           {item.label}
         </span>
       ))}
@@ -131,10 +134,21 @@ function ChartLegend({ items }: { items: { label: string; color: string; dashed?
 
 export default function CostCapacityPage() {
   const { showToast, addAudit } = useAppState();
+  const [activeTab, setActiveTab] = useState<CostTab>("summary");
+
+  useEffect(() => {
+    function openLinkedSection() {
+      if (window.location.hash === "#safeguards") setActiveTab("safeguards");
+    }
+    openLinkedSection();
+    window.addEventListener("hashchange", openLinkedSection);
+    return () => window.removeEventListener("hashchange", openLinkedSection);
+  }, []);
 
   function reviewSavings() {
     showToast("Savings actions opened");
     addAudit("Cost and capacity savings reviewed", "Cost & Capacity", "Alert");
+    setActiveTab("safeguards");
   }
 
   return (
@@ -155,176 +169,120 @@ export default function CostCapacityPage() {
           <CompactKpi label="Forecast risk" value="19 days" detail="To 80% of budget" status="Warning" icon={<Clock3 size={16} />} />
         </div>
 
-        <div className="mt-3 grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
-          <Card className="overflow-hidden border-l-4 border-l-[var(--status-warning)]">
-            <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
-              <div>
-                <h2 className="font-semibold text-[var(--text-primary)]">Budget Forecast</h2>
-                <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Actions ordered by expected financial impact.</p>
-              </div>
-              <StatusBadge value="Warning" />
-            </div>
-            <div className="grid gap-px bg-[var(--border-subtle)] sm:grid-cols-2">
-              {forecastItems.map((item) => (
-                <div key={item.text} className="flex items-start gap-3 bg-white p-3">
-                  <AlertTriangle size={15} className={item.status === "Healthy" ? "mt-0.5 shrink-0 text-[var(--status-healthy)]" : "mt-0.5 shrink-0 text-[var(--status-warning)]"} />
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">{item.text}</p>
-                    <StatusBadge value={item.status} />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
-
-          <Card className="overflow-hidden bg-[var(--surface-dark)] text-white">
-            <div className="border-b border-white/10 px-4 py-3">
-              <p className="text-xs font-semibold uppercase text-cyan-200">Savings Scenario Preview</p>
-              <h2 className="mt-1 font-semibold">Apply recommended actions</h2>
-            </div>
-            <div className="grid grid-cols-3 gap-px bg-white/10">
-              <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">Current forecast</p><p className="mt-1 text-lg font-semibold">AED 184k</p></div>
-              <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">After actions</p><p className="mt-1 text-lg font-semibold">AED 142k</p></div>
-              <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">Monthly savings</p><p className="mt-1 text-lg font-semibold text-emerald-300">AED 42k</p></div>
-            </div>
-            <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
-              <div className="flex gap-4 text-xs"><span>Quality risk: <strong>Low</strong></span><span>Governance: <strong className="text-emerald-300">Improved</strong></span></div>
-              <button type="button" onClick={reviewSavings} className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[var(--brand-primary-dark)]">Review savings actions</button>
-            </div>
-            <p className="px-4 pb-3 text-[10px] text-slate-400">Simulation only. No routing or infrastructure changes are made.</p>
-          </Card>
+        <div className="mt-3 overflow-x-auto rounded-lg border border-[var(--border-subtle)] bg-white p-1 shadow-sm lg:sticky lg:top-[57px] lg:z-10">
+          <div role="tablist" aria-label="Cost and capacity sections" className="flex min-w-max gap-1">
+            {tabs.map((tab) => (
+              <button key={tab.id} type="button" role="tab" aria-selected={activeTab === tab.id} onClick={() => setActiveTab(tab.id)} className={`min-h-9 rounded-md px-3 py-2 text-sm font-medium transition ${activeTab === tab.id ? "bg-[var(--brand-primary)] text-white shadow-sm" : "text-[var(--text-secondary)] hover:bg-[var(--surface-muted)] hover:text-[var(--text-primary)]"}`}>
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="mt-3 grid gap-3 xl:grid-cols-2">
-          <ForecastCard title="Burn rate" value="AED 184k" detail="Actual spend and month-end forecast">
-            <ChartLegend items={[{ label: "Actual", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8", dashed: true }, { label: "Budget", color: "#E11D48", dashed: true }]} />
-            <div className="h-48 px-2 py-2">
-              <ForecastLineChart data={burnRate} actualKey="actual" forecastKey="forecast" budget={230} warning={184} />
-            </div>
-            <div className="border-t border-[var(--border-subtle)] bg-[rgba(245,158,11,0.06)] px-4 py-2 text-xs font-medium text-[var(--status-warning)]">
-              Current run-rate reaches 80% budget in 19 days.
-            </div>
-          </ForecastCard>
-
-          <ForecastCard title="Spend by department" value="Marketing at risk" detail="AED thousands: current, forecast, and budget">
-            <ChartLegend items={[{ label: "Current", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8" }, { label: "Budget", color: "#CBD5E1" }]} />
-            <div className="h-48 px-2 py-2">
-              <ComparisonBarChart
-                data={departmentSpend}
-                keys={[
-                  { key: "current", name: "Current", color: "#5B3DFF" },
-                  { key: "forecast", name: "Forecast", color: "#16C7E8", opacity: 0.48 },
-                  { key: "budget", name: "Budget", color: "#CBD5E1", opacity: 0.65 }
-                ]}
-              />
-            </div>
-            <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs">
-              <span className="text-[var(--text-secondary)]">Marketing forecast: AED 31.5k</span>
-              <StatusBadge value="Cost risk" />
-            </div>
-          </ForecastCard>
-
-          <ForecastCard title="Spend by model" value="GPT-5 leads" detail="AED thousands: current and forecast">
-            <div className="grid gap-3 p-3 lg:grid-cols-[0.9fr_1.1fr]">
-              <div>
-                <ChartLegend items={[{ label: "Current", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8" }]} />
-                <div className="h-48">
-                  <ComparisonBarChart
-                    data={modelSpend}
-                    keys={[
-                      { key: "current", name: "Current", color: "#5B3DFF" },
-                      { key: "forecast", name: "Forecast", color: "#16C7E8", opacity: 0.48 }
-                    ]}
-                  />
-                </div>
+        {activeTab === "summary" ? (
+          <div className="mt-3 grid gap-3 xl:grid-cols-[1.15fr_0.85fr]">
+            <Card className="overflow-hidden border-l-4 border-l-[var(--status-warning)]">
+              <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
+                <div><h2 className="font-semibold">Budget Forecast</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Actions ordered by expected financial impact.</p></div>
+                <StatusBadge value="Warning" />
               </div>
-              <div className="divide-y divide-[var(--border-subtle)] rounded-md border border-[var(--border-subtle)]">
-                {modelSpend.map((model) => (
-                  <div key={model.name} className="grid grid-cols-[1fr_auto] gap-2 px-3 py-2 text-xs">
-                    <div>
-                      <p className="font-semibold text-[var(--text-primary)]">{model.name}</p>
-                      <p className="mt-0.5 text-[var(--text-secondary)]">{model.action}</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-semibold text-[var(--text-primary)]">{model.current}k to {model.forecast}k</p>
-                      <StatusBadge value={model.risk} />
-                    </div>
+              <div className="grid gap-px bg-[var(--border-subtle)] sm:grid-cols-2">
+                {forecastItems.map((item) => (
+                  <div key={item.text} className="flex items-start gap-3 bg-white p-3">
+                    <AlertTriangle size={15} className={item.status === "Healthy" ? "mt-0.5 shrink-0 text-[var(--status-healthy)]" : "mt-0.5 shrink-0 text-[var(--status-warning)]"} />
+                    <div className="min-w-0"><p className="text-sm font-medium">{item.text}</p><StatusBadge value={item.status} /></div>
                   </div>
                 ))}
               </div>
-            </div>
-          </ForecastCard>
+            </Card>
 
-          <ForecastCard title="GPU capacity" value="100% assigned" detail="Assigned, utilized, forecasted, and reclaimable share">
-            <ChartLegend items={[{ label: "Assigned", color: "#5B3DFF" }, { label: "Actual", color: "#16C7E8" }, { label: "Forecast", color: "#F59E0B" }, { label: "Reclaimable", color: "#10B981" }]} />
-            <div className="h-48 px-2 py-2">
-              <ComparisonBarChart
-                data={gpuCapacity}
-                keys={[
-                  { key: "assigned", name: "Assigned", color: "#5B3DFF" },
-                  { key: "utilization", name: "Actual", color: "#16C7E8" },
-                  { key: "forecast", name: "Forecast demand", color: "#F59E0B", opacity: 0.55 },
-                  { key: "reclaimable", name: "Reclaimable", color: "#10B981", opacity: 0.7 }
-                ]}
-              />
-            </div>
-            <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs">
-              <span className="text-[var(--text-secondary)]">Finance can return 20% reserved GPU.</span>
-              <StatusBadge value="Warning" />
-            </div>
-          </ForecastCard>
-        </div>
+            <Card className="overflow-hidden bg-[var(--surface-dark)] text-white">
+              <div className="border-b border-white/10 px-4 py-3"><p className="text-xs font-semibold uppercase text-cyan-200">Savings Scenario Preview</p><h2 className="mt-1 font-semibold">Apply recommended actions</h2></div>
+              <div className="grid grid-cols-3 gap-px bg-white/10">
+                <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">Current forecast</p><p className="mt-1 text-lg font-semibold">AED 184k</p></div>
+                <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">After actions</p><p className="mt-1 text-lg font-semibold">AED 142k</p></div>
+                <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">Monthly savings</p><p className="mt-1 text-lg font-semibold text-emerald-300">AED 42k</p></div>
+              </div>
+              <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                <div className="flex gap-4 text-xs"><span>Quality risk: <strong>Low</strong></span><span>Governance: <strong className="text-emerald-300">Improved</strong></span></div>
+                <button type="button" onClick={reviewSavings} className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[var(--brand-primary-dark)]">Review actions</button>
+              </div>
+              <p className="px-4 pb-3 text-[10px] text-slate-400">Simulation only. No routing or infrastructure changes are made.</p>
+            </Card>
 
-        <Card className="mt-3 p-4">
-          <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
-            <div>
-              <h2 className="font-semibold">Model Graduation Flywheel</h2>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Moves repeatable cloud spend into governed local capacity.</p>
-            </div>
-            <div className="grid flex-1 gap-2 sm:grid-cols-4 md:max-w-3xl">
-              {["Cloud exploration", "Usage clustering", "Semantic cache", "Owned local capacity"].map((item, index) => (
-                <div key={item} className="flex items-center gap-2 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold">
-                  <span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--brand-primary)] text-[10px] text-white">{index + 1}</span>{item}
-                </div>
-              ))}
-            </div>
+            <Card className="p-4 xl:col-span-2">
+              <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                <div><h2 className="font-semibold">Capacity decision</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">Claims needs more local GPU, while Finance has 20% reclaimable capacity.</p></div>
+                <div className="flex gap-2"><ActionButton variant="secondary" onClick={() => setActiveTab("capacity")}>Review GPU plan</ActionButton><ActionButton onClick={() => setActiveTab("forecast")}>Inspect forecast</ActionButton></div>
+              </div>
+            </Card>
           </div>
-        </Card>
+        ) : null}
 
-        <div className="mt-3 grid gap-3 xl:grid-cols-2">
-          <Card className="overflow-hidden">
-            <div className="border-b border-[var(--border-subtle)] px-4 py-3">
-              <h2 className="font-semibold">Savings opportunities</h2>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Simulated savings; governance remains enforced.</p>
-            </div>
-            <DataTable
-              columns={["Opportunity", "Recommendation", "Impact", "Confidence"]}
-              rows={opportunities.map((row) => [
-                row[0],
-                row[1],
-                row[2],
-                <StatusBadge key="confidence" value={row[3].includes("High") || row[3].includes("Low") ? "Healthy" : "Warning"} />
-              ])}
-            />
-          </Card>
+        {activeTab === "forecast" ? (
+          <div className="mt-3 grid gap-3 xl:grid-cols-2">
+            <ForecastCard title="Burn rate" value="AED 184k" detail="Actual spend and month-end forecast">
+              <ChartLegend items={[{ label: "Actual", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8", dashed: true }, { label: "Budget", color: "#E11D48", dashed: true }]} />
+              <div className="h-48 px-2 py-2"><ForecastLineChart data={burnRate} actualKey="actual" forecastKey="forecast" budget={230} warning={184} /></div>
+              <div className="border-t border-[var(--border-subtle)] bg-[rgba(245,158,11,0.06)] px-4 py-2 text-xs font-medium text-[var(--status-warning)]">Current run-rate reaches 80% budget in 19 days.</div>
+            </ForecastCard>
 
-          <Card className="overflow-hidden">
-            <div className="border-b border-[var(--border-subtle)] px-4 py-3">
-              <h2 className="font-semibold">Budget circuit breakers</h2>
-              <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Expected policy activation before overspend.</p>
-            </div>
-            <DataTable
-              columns={["Scope", "Trigger", "Expected activation", "Ladder", "Status"]}
-              rows={circuitBreakers.map((row) => [
-                row[0],
-                row[1],
-                row[2],
-                row[3],
-                <StatusBadge key="status" value={row[4]} />
-              ])}
-            />
-          </Card>
-        </div>
+            <ForecastCard title="Spend by team" value="Marketing at risk" detail="AED thousands: current, forecast, and budget">
+              <ChartLegend items={[{ label: "Current", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8" }, { label: "Budget", color: "#CBD5E1" }]} />
+              <div className="h-48 px-2 py-2"><ComparisonBarChart data={teamSpend} keys={[{ key: "current", name: "Current", color: "#5B3DFF" }, { key: "forecast", name: "Forecast", color: "#16C7E8", opacity: 0.48 }, { key: "budget", name: "Budget", color: "#CBD5E1", opacity: 0.65 }]} /></div>
+              <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs"><span className="text-[var(--text-secondary)]">Marketing forecast: AED 31.5k</span><StatusBadge value="Cost risk" /></div>
+            </ForecastCard>
+
+            <ForecastCard title="Spend by model" value="GPT-5 leads" detail="AED thousands: current and forecast">
+              <div className="grid gap-3 p-3 lg:grid-cols-[0.9fr_1.1fr]">
+                <div><ChartLegend items={[{ label: "Current", color: "#5B3DFF" }, { label: "Forecast", color: "#16C7E8" }]} /><div className="h-48"><ComparisonBarChart data={modelSpend} keys={[{ key: "current", name: "Current", color: "#5B3DFF" }, { key: "forecast", name: "Forecast", color: "#16C7E8", opacity: 0.48 }]} /></div></div>
+                <div className="divide-y divide-[var(--border-subtle)] rounded-md border border-[var(--border-subtle)]">
+                  {modelSpend.map((model) => <div key={model.name} className="grid grid-cols-[1fr_auto] gap-2 px-3 py-2 text-xs"><div><p className="font-semibold">{model.name}</p><p className="mt-0.5 text-[var(--text-secondary)]">{model.action}</p></div><div className="text-right"><p className="font-semibold">{model.current}k to {model.forecast}k</p><StatusBadge value={model.risk} /></div></div>)}
+                </div>
+              </div>
+            </ForecastCard>
+          </div>
+        ) : null}
+
+        {activeTab === "capacity" ? (
+          <div className="mt-3 grid gap-3 xl:grid-cols-[1.2fr_0.8fr]">
+            <ForecastCard title="GPU capacity" value="100% assigned" detail="Assigned, utilized, forecasted, and reclaimable share">
+              <ChartLegend items={[{ label: "Assigned", color: "#5B3DFF" }, { label: "Actual", color: "#16C7E8" }, { label: "Forecast", color: "#F59E0B" }, { label: "Reclaimable", color: "#10B981" }]} />
+              <div className="h-56 px-2 py-2"><ComparisonBarChart data={gpuCapacity} keys={[{ key: "assigned", name: "Assigned", color: "#5B3DFF" }, { key: "utilization", name: "Actual", color: "#16C7E8" }, { key: "forecast", name: "Forecast demand", color: "#F59E0B", opacity: 0.55 }, { key: "reclaimable", name: "Reclaimable", color: "#10B981", opacity: 0.7 }]} /></div>
+              <div className="flex items-center justify-between border-t border-[var(--border-subtle)] px-4 py-2 text-xs"><span className="text-[var(--text-secondary)]">Finance can return 20% reserved GPU.</span><StatusBadge value="Warning" /></div>
+            </ForecastCard>
+            <Card className="p-4">
+              <h2 className="font-semibold">Recommended rebalance</h2>
+              <div className="mt-4 space-y-3 text-sm">
+                <div className="rounded-md border border-[var(--border-subtle)] p-3"><p className="text-xs text-[var(--text-secondary)]">Reclaim</p><p className="mt-1 font-semibold">20% GPU from Finance</p></div>
+                <div className="rounded-md border border-[var(--border-subtle)] p-3"><p className="text-xs text-[var(--text-secondary)]">Allocate</p><p className="mt-1 font-semibold">+15% to Claims Qwen</p></div>
+                <div className="rounded-md border border-[var(--border-subtle)] p-3"><p className="text-xs text-[var(--text-secondary)]">Reserve</p><p className="mt-1 font-semibold">5% fleet headroom</p></div>
+              </div>
+              <ActionButton onClick={() => showToast("GPU rebalance simulation opened")}><SlidersHorizontal size={15} /> Simulate rebalance</ActionButton>
+            </Card>
+            <Card className="p-4 xl:col-span-2">
+              <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
+                <div><h2 className="font-semibold">Model Graduation Flywheel</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Moves repeatable cloud spend into governed local capacity.</p></div>
+                <div className="grid flex-1 gap-2 sm:grid-cols-4 md:max-w-3xl">
+                  {["Cloud exploration", "Usage clustering", "Semantic cache", "Owned local capacity"].map((item, index) => <div key={item} className="flex items-center gap-2 rounded-md bg-[var(--surface-muted)] px-3 py-2 text-xs font-semibold"><span className="grid h-5 w-5 place-items-center rounded-full bg-[var(--brand-primary)] text-[10px] text-white">{index + 1}</span>{item}</div>)}
+                </div>
+              </div>
+            </Card>
+          </div>
+        ) : null}
+
+        {activeTab === "safeguards" ? (
+          <div className="mt-3 grid gap-3 xl:grid-cols-2">
+            <Card className="overflow-hidden">
+              <div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="font-semibold">Savings opportunities</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Simulated savings; governance remains enforced.</p></div>
+              <DataTable columns={["Opportunity", "Recommendation", "Impact", "Confidence"]} rows={opportunities.map((row) => [row[0], row[1], row[2], <StatusBadge key="confidence" value={row[3].includes("High") || row[3].includes("Low") ? "Healthy" : "Warning"} />])} />
+            </Card>
+            <Card className="overflow-hidden">
+              <div className="border-b border-[var(--border-subtle)] px-4 py-3"><h2 className="font-semibold">Budget circuit breakers</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Expected policy activation before overspend.</p></div>
+              <DataTable columns={["Scope", "Trigger", "Expected activation", "Ladder", "Status"]} rows={circuitBreakers.map((row) => [row[0], row[1], row[2], row[3], <StatusBadge key="status" value={row[4]} />])} />
+            </Card>
+          </div>
+        ) : null}
       </Section>
     </>
   );

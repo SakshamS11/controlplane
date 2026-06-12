@@ -245,7 +245,7 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
   "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
   "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run Simulator" },
-  "/dashboard/cost-capacity": { href: "/dashboard/cost-capacity", label: "Review Savings" },
+  "/dashboard/cost-capacity": { href: "/dashboard/cost-capacity#safeguards", label: "Review Savings" },
   "/dashboard/settings": { href: "/dashboard/settings#thresholds", label: "Configure" }
 };
 
@@ -340,6 +340,7 @@ function TopBar() {
   const router = useRouter();
   const { showToast, addAudit } = useAppState();
   const action = pageActions[pathname] ?? { href: pathname, label: "Take Action" };
+  const primaryAction = pathname === "/dashboard";
   const commandInputRef = useRef<HTMLInputElement>(null);
   const commandBarRef = useRef<HTMLDivElement>(null);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -402,9 +403,9 @@ function TopBar() {
   }
 
   return (
-    <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2.5 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
-      <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-      <div className="min-w-0 space-y-1">
+    <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
+      <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+      <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold text-[var(--text-primary)]">Acme Corp</span>
           <span className="text-[var(--text-secondary)]">Production</span>
@@ -415,17 +416,17 @@ function TopBar() {
           </span>
           <span aria-label="Demo Mode. Simulated actions only; no infrastructure changes are made." title="Simulated actions only. No infrastructure changes are made." className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
         </div>
-        <div className="truncate text-xs text-slate-500">Fleet, models, workspaces, and governance.</div>
+        <div className="mt-1 hidden truncate text-xs text-slate-500 2xl:block">Fleet, models, workspaces, and governance.</div>
       </div>
-      <div className="flex flex-wrap items-center gap-2">
+      <div className="flex min-w-0 flex-wrap items-center gap-2 lg:flex-nowrap">
         <label className="sr-only" htmlFor="global-time-range">Time range</label>
-        <select id="global-time-range" defaultValue="Last 30 days" className="min-h-10 rounded-md border border-[var(--border-subtle)] bg-white px-3 text-sm font-medium text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]">
+        <select id="global-time-range" defaultValue="Last 30 days" className="hidden min-h-9 rounded-md border border-[var(--border-subtle)] bg-white px-3 text-sm font-medium text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] 2xl:block">
           <option>Last 24 hours</option>
           <option>Last 7 days</option>
           <option>Last 30 days</option>
           <option>This quarter</option>
         </select>
-        <div ref={commandBarRef} className="relative min-w-[230px] flex-1 xl:w-72 xl:flex-none">
+        <div ref={commandBarRef} className="relative min-w-[210px] flex-1 lg:w-56 lg:flex-none 2xl:w-72">
           <Search className="pointer-events-none absolute left-3 top-[18px] -translate-y-1/2 text-slate-400" size={14} />
           <input
             ref={commandInputRef}
@@ -492,7 +493,7 @@ function TopBar() {
               window.dispatchEvent(new HashChangeEvent("hashchange"));
             }
           }}
-          className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm transition hover:bg-[var(--brand-primary-dark)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2"
+          className={`inline-flex min-h-9 items-center justify-center rounded-md px-3.5 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 ${primaryAction ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]" : "border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"}`}
         >
           {action.label}
         </Link>
