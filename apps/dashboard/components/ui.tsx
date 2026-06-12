@@ -252,6 +252,16 @@ const pageActions: Record<string, { href: string; label: string }> = {
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    setCollapsed(window.localStorage.getItem("control-plane-sidebar-collapsed") === "true");
+  }, []);
+
+  function updateSidebar(nextCollapsed: boolean) {
+    setCollapsed(nextCollapsed);
+    window.localStorage.setItem("control-plane-sidebar-collapsed", String(nextCollapsed));
+  }
+
   return (
     <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
       <aside className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
@@ -269,7 +279,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
             {!collapsed ? (
               <button
                 type="button"
-                onClick={() => setCollapsed(true)}
+                onClick={() => updateSidebar(true)}
                 className="rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
                 aria-label="Collapse sidebar"
               >
@@ -281,7 +291,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
         {collapsed ? (
           <button
             type="button"
-            onClick={() => setCollapsed(false)}
+            onClick={() => updateSidebar(false)}
             className="mx-auto mt-3 rounded-md p-2 text-slate-400 hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
             aria-label="Expand sidebar"
           >
@@ -349,13 +359,13 @@ function TopBar() {
   const [alertMenuOpen, setAlertMenuOpen] = useState(false);
 
   const commands = useMemo<GlobalCommand[]>(() => [
-    { label: "Open Claims On-Prem Node", detail: "Server · GPU pressure", href: "/dashboard/targets", icon: Server },
-    { label: "Show degraded providers", detail: "Monitoring · Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
-    { label: "Create Legal AI Workspace", detail: "Workspace · Governed interface", href: "/dashboard/workspaces", icon: Layers },
-    { label: "Review ISO evidence gaps", detail: "Governance · Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
-    { label: "Open Qwen 32B model", detail: "Model · Local and restricted-safe", href: "/dashboard/models", icon: Sparkles },
-    { label: "Route GPT-5 critical work to Claude", detail: "Command · Apply simulated route", command: "route-gpt5", icon: Route },
-    { label: "View agent kill switch controls", detail: "Agents · Safety controls", href: "/dashboard/agents", icon: Bot }
+    { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Show degraded providers", detail: "Monitoring / Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
+    { label: "Create Legal AI Workspace", detail: "Workspace / Governed interface", href: "/dashboard/workspaces", icon: Layers },
+    { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
+    { label: "Open Qwen 32B model", detail: "Model / Local and restricted-safe", href: "/dashboard/models", icon: Sparkles },
+    { label: "Route GPT-5 critical work to Claude", detail: "Command / Apply simulated route", command: "route-gpt5", icon: Route },
+    { label: "View agent kill switch controls", detail: "Agents / Safety controls", href: "/dashboard/agents", icon: Bot }
   ], []);
 
   const visibleCommands = useMemo(() => {
@@ -410,7 +420,7 @@ function TopBar() {
 
   return (
     <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
-      <div className="flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
+      <div className="grid gap-2 xl:grid-cols-[minmax(300px,1fr)_minmax(240px,360px)_auto] xl:items-center">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2 text-sm">
           <span className="font-semibold text-[var(--text-primary)]">Acme Corp</span>
@@ -424,15 +434,7 @@ function TopBar() {
         </div>
         <div className="mt-1 hidden truncate text-xs text-slate-500 2xl:block">Fleet, models, workspaces, and governance.</div>
       </div>
-      <div className="flex min-w-0 flex-wrap items-center gap-2 xl:flex-nowrap">
-        <label className="sr-only" htmlFor="global-time-range">Time range</label>
-        <select id="global-time-range" defaultValue="Last 30 days" className="hidden min-h-9 rounded-md border border-[var(--border-subtle)] bg-white px-3 text-sm font-medium text-[var(--text-primary)] shadow-sm focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] 2xl:block">
-          <option>Last 24 hours</option>
-          <option>Last 7 days</option>
-          <option>Last 30 days</option>
-          <option>This quarter</option>
-        </select>
-        <div ref={commandBarRef} className="relative min-w-[210px] flex-1 lg:w-56 lg:flex-none 2xl:w-72">
+      <div ref={commandBarRef} className="relative min-w-0">
           <Search className="pointer-events-none absolute left-3 top-[18px] -translate-y-1/2 text-slate-400" size={14} />
           <input
             ref={commandInputRef}
@@ -459,7 +461,7 @@ function TopBar() {
             <div id="global-command-suggestions" className="absolute right-0 top-11 z-40 w-[min(420px,calc(100vw-2rem))] overflow-hidden rounded-lg border border-[var(--border-subtle)] bg-white shadow-2xl">
               <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2">
                 <span className="text-[10px] font-semibold uppercase text-[var(--text-secondary)]">Global Command Bar</span>
-                <span className="text-[10px] text-[var(--text-secondary)]">Enter to run · Esc to close</span>
+                <span className="text-[10px] text-[var(--text-secondary)]">Enter to run / Esc to close</span>
               </div>
               <div className="max-h-80 overflow-y-auto p-1.5">
                 {visibleCommands.map((command) => {
@@ -488,7 +490,8 @@ function TopBar() {
               </div>
             </div>
           ) : null}
-        </div>
+      </div>
+      <div className="flex items-center justify-end gap-2">
         <div ref={alertMenuRef} className="relative">
           <button
             type="button"
@@ -523,7 +526,7 @@ function TopBar() {
                 <AlertMenuItem
                   severity="Warning"
                   title="Claims GPU pressure"
-                  detail="GPU 92% · VRAM 22/24 GB"
+                  detail="GPU 92% / VRAM 22/24 GB"
                   value="Queue wait +18%"
                   href="/dashboard/cost-capacity"
                   onOpen={() => setAlertMenuOpen(false)}
