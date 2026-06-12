@@ -46,6 +46,38 @@ export function MultiLineChart({ data, keys }: { data: object[]; keys: { key: st
   );
 }
 
+export function TrafficCostChart({ data }: { data: { name: string; requests: number; cost: number }[] }) {
+  return (
+    <ResponsiveContainer width="100%" height="100%">
+      <LineChart data={data} margin={{ top: 8, right: 8, left: -8, bottom: 0 }}>
+        <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+        <XAxis dataKey="name" tick={{ fontSize: 10 }} stroke="#64748B" />
+        <YAxis
+          yAxisId="requests"
+          tick={{ fontSize: 10 }}
+          stroke="#64748B"
+          tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`}
+        />
+        <YAxis
+          yAxisId="cost"
+          orientation="right"
+          tick={{ fontSize: 10 }}
+          stroke="#64748B"
+          tickFormatter={(value) => `${Math.round(Number(value) / 1000)}k`}
+        />
+        <Tooltip
+          formatter={(value, name) => [
+            name === "Cost" ? `AED ${Number(value).toLocaleString()}` : Number(value).toLocaleString(),
+            name
+          ]}
+        />
+        <Line yAxisId="requests" type="monotone" dataKey="requests" name="Requests" stroke="#5B3DFF" dot={false} strokeWidth={2.5} />
+        <Line yAxisId="cost" type="monotone" dataKey="cost" name="Cost" stroke="#16C7E8" dot={false} strokeWidth={2.5} />
+      </LineChart>
+    </ResponsiveContainer>
+  );
+}
+
 export function BarMetricChart({ data, dataKey }: { data: object[]; dataKey: string }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
@@ -118,11 +150,11 @@ export function ComparisonBarChart({
   );
 }
 
-export function DonutChart({ data }: { data: { name: string; value: number }[] }) {
+export function DonutChart({ data, innerRadius = 58, outerRadius = 95 }: { data: { name: string; value: number }[]; innerRadius?: number; outerRadius?: number }) {
   return (
     <ResponsiveContainer width="100%" height="100%">
       <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={58} outerRadius={95} paddingAngle={2}>
+        <Pie data={data} dataKey="value" nameKey="name" innerRadius={innerRadius} outerRadius={outerRadius} paddingAngle={2}>
           {data.map((entry, index) => <Cell key={entry.name} fill={colors[index % colors.length]} />)}
         </Pie>
         <Tooltip />
