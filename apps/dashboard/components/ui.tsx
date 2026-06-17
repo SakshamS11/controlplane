@@ -203,7 +203,10 @@ function ToastStack() {
 }
 
 const navSections = [
-  { label: "Command Center", items: [{ href: "/dashboard", label: "Overview", icon: LayoutDashboard }] },
+  { label: "Command Center", items: [
+    { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/incidents", label: "Incidents", icon: AlertTriangle }
+  ] },
   { label: "Operate", items: [
     { href: "/dashboard/targets", label: "Servers", icon: Server },
     { href: "/dashboard/monitoring", label: "Monitoring", icon: MonitorDot },
@@ -220,6 +223,7 @@ const navSections = [
   ] },
   { label: "Govern", items: [
     { href: "/dashboard/departments", label: "Teams", icon: Building2 },
+    { href: "/dashboard/approval-inbox", label: "Approval Inbox", icon: FileCheck2 },
     { href: "/dashboard/audit-logs", label: "Audit Logs", icon: ScrollText },
     { href: "/dashboard/compliance", label: "Compliance Readiness", icon: FileCheck2 }
   ] },
@@ -232,6 +236,7 @@ const navSections = [
 
 const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
+  "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review Open" },
   "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
   "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
   "/dashboard/monitoring": { href: "/dashboard/monitoring", label: "Open Alerts" },
@@ -242,6 +247,7 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/knowledge-bases": { href: "/dashboard/knowledge-bases#kb-form", label: "Add Source" },
   "/dashboard/agents": { href: "/dashboard/agents#agent-form", label: "Create Agent" },
   "/dashboard/departments": { href: "/dashboard/departments#create-team", label: "Create Team" },
+  "/dashboard/approval-inbox": { href: "/dashboard/approval-inbox", label: "Review Pending" },
   "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
   "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
   "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run Simulator" },
@@ -360,6 +366,9 @@ function TopBar() {
 
   const commands = useMemo<GlobalCommand[]>(() => [
     { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Open Incidents", detail: "Command Center / Active response", href: "/dashboard/incidents", icon: AlertTriangle },
+    { label: "Open Approval Inbox", detail: "Govern / Pending high-impact changes", href: "/dashboard/approval-inbox", icon: FileCheck2 },
+    { label: "Review high-risk approvals", detail: "Approvals / Due soon", href: "/dashboard/approval-inbox", icon: ShieldCheck },
     { label: "Show degraded providers", detail: "Monitoring / Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
     { label: "Create Legal AI Workspace", detail: "Workspace / Governed interface", href: "/dashboard/workspaces", icon: Layers },
     { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
