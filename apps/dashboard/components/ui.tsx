@@ -13,7 +13,6 @@ import {
   Building2,
   CheckCircle2,
   ChevronRight,
-  Cloud,
   Database,
   FileCheck2,
   Gauge,
@@ -270,16 +269,20 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
-      <aside className={`fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
+      <aside className={`switchboard-sidebar fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
         <div className={`shrink-0 border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
-            <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="AI Control Plane home">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[var(--brand-primary)] text-white shadow-lg">
-              <Cloud size={19} />
+            <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Switchboard AI home">
+            <div className="switchboard-mark" aria-hidden="true">
+              <span className="switchboard-mark__line switchboard-mark__line--one" />
+              <span className="switchboard-mark__line switchboard-mark__line--two" />
+              <span className="switchboard-mark__node switchboard-mark__node--one" />
+              <span className="switchboard-mark__node switchboard-mark__node--two" />
+              <span className="switchboard-mark__node switchboard-mark__node--three" />
             </div>
             {!collapsed ? <div className="min-w-0">
-              <div className="font-semibold tracking-tight">AI Control Plane</div>
-              <div className="text-xs text-slate-400">Enterprise AI operations</div>
+              <div className="font-semibold tracking-tight">Switchboard AI</div>
+              <div className="text-xs text-slate-400">Enterprise AI routing</div>
             </div> : null}
           </Link>
             {!collapsed ? (

@@ -7,6 +7,7 @@
   --brand-primary: #5B3DFF;
   --brand-primary-dark: #2B1B78;
   --brand-accent: #16C7E8;
+  --switchboard-copper: #D6A557;
   --surface-main: #FAF9F6;
   --surface-muted: #EEF1F6;
   --surface-dark: #090D1A;
@@ -24,8 +25,11 @@
 body {
   margin: 0;
   background:
+    linear-gradient(90deg, rgba(17, 24, 39, 0.025) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(17, 24, 39, 0.025) 1px, transparent 1px),
     radial-gradient(circle at top left, rgba(91, 61, 255, 0.07), transparent 34rem),
     linear-gradient(180deg, var(--surface-main) 0%, var(--surface-muted) 100%);
+  background-size: 38px 38px, 38px 38px, auto, auto;
   color: var(--text-primary);
 }
 
@@ -53,4 +57,97 @@ select {
 ::selection {
   background: rgba(91, 61, 255, 0.18);
   color: var(--text-primary);
+}
+
+.switchboard-sidebar {
+  background:
+    radial-gradient(circle at 18% 8%, rgba(91, 61, 255, 0.22), transparent 18rem),
+    radial-gradient(circle at 100% 28%, rgba(22, 199, 232, 0.12), transparent 16rem),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    var(--surface-dark);
+  background-size: auto, auto, 34px 34px, 34px 34px, auto;
+}
+
+.switchboard-sidebar::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(135deg, transparent 0 24%, rgba(22, 199, 232, 0.12) 24.2% 24.8%, transparent 25% 100%),
+    linear-gradient(45deg, transparent 0 64%, rgba(214, 165, 87, 0.10) 64.2% 64.8%, transparent 65% 100%);
+  opacity: 0.7;
+}
+
+.switchboard-sidebar > * {
+  position: relative;
+  z-index: 1;
+}
+
+.switchboard-mark {
+  position: relative;
+  height: 2.5rem;
+  width: 2.5rem;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.24), transparent 1.1rem),
+    linear-gradient(135deg, var(--brand-primary), var(--brand-primary-dark));
+  box-shadow: 0 16px 36px rgba(91, 61, 255, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.switchboard-mark__line,
+.switchboard-mark__node {
+  position: absolute;
+  display: block;
+}
+
+.switchboard-mark__line {
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(22, 199, 232, 0.95), rgba(214, 165, 87, 0.95));
+  transform-origin: left center;
+}
+
+.switchboard-mark__line--one {
+  left: 0.58rem;
+  top: 0.9rem;
+  width: 1.55rem;
+  transform: rotate(18deg);
+}
+
+.switchboard-mark__line--two {
+  left: 0.7rem;
+  top: 1.62rem;
+  width: 1.35rem;
+  transform: rotate(-25deg);
+}
+
+.switchboard-mark__node {
+  height: 0.48rem;
+  width: 0.48rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: var(--brand-accent);
+  box-shadow: 0 0 0 4px rgba(22, 199, 232, 0.14);
+}
+
+.switchboard-mark__node--one {
+  left: 0.5rem;
+  top: 0.68rem;
+}
+
+.switchboard-mark__node--two {
+  right: 0.55rem;
+  top: 1rem;
+  background: var(--switchboard-copper);
+  box-shadow: 0 0 0 4px rgba(214, 165, 87, 0.16);
+}
+
+.switchboard-mark__node--three {
+  left: 0.8rem;
+  bottom: 0.56rem;
 }
