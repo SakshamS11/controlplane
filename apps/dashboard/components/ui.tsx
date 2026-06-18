@@ -204,6 +204,7 @@ function ToastStack() {
 const navSections = [
   { label: "Command Center", items: [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+    { href: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles },
     { href: "/dashboard/incidents", label: "Incidents", icon: AlertTriangle }
   ] },
   { label: "Operate", items: [
@@ -235,6 +236,7 @@ const navSections = [
 
 const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
+  "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Review Recommendations" },
   "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review Open" },
   "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
   "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
@@ -369,6 +371,10 @@ function TopBar() {
 
   const commands = useMemo<GlobalCommand[]>(() => [
     { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Open Recommendations", detail: "Command Center / Priority action queue", href: "/dashboard/recommendations", icon: Sparkles },
+    { label: "Review cost recommendations", detail: "Recommendations / Savings and spend", href: "/dashboard/recommendations", icon: WalletCards },
+    { label: "Review governance recommendations", detail: "Recommendations / Evidence and policy gaps", href: "/dashboard/recommendations", icon: ShieldCheck },
+    { label: "Simulate top recommendation", detail: "Recommendations / Preview expected impact", href: "/dashboard/recommendations", icon: SlidersHorizontal },
     { label: "Open Incidents", detail: "Command Center / Active response", href: "/dashboard/incidents", icon: AlertTriangle },
     { label: "Open Approval Inbox", detail: "Govern / Pending high-impact changes", href: "/dashboard/approval-inbox", icon: FileCheck2 },
     { label: "Review high-risk approvals", detail: "Approvals / Due soon", href: "/dashboard/approval-inbox", icon: ShieldCheck },
