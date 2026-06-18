@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { MouseEvent, ReactNode } from "react";
+import type { MouseEvent as ReactMouseEvent, ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -419,7 +419,7 @@ function TopBar() {
       }
     }
 
-    function handlePointerDown(event: MouseEvent) {
+    function handlePointerDown(event: globalThis.MouseEvent) {
       if (commandBarRef.current && !commandBarRef.current.contains(event.target as Node)) {
         setCommandOpen(false);
       }
@@ -450,7 +450,7 @@ function TopBar() {
     }
   }
 
-  function handlePageAction(event: MouseEvent<HTMLAnchorElement>) {
+  function handlePageAction(event: ReactMouseEvent<HTMLAnchorElement>) {
     const actionEvent = pageActionEvents[pathname];
     if (actionEvent) {
       event.preventDefault();
