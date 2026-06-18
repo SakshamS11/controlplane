@@ -39,6 +39,7 @@ import { auditLogs, initialDepartmentTokenBudgets, initialOperationalThresholds,
 
 type Toast = { id: number; message: string };
 type ModelRecord = (typeof initialModels)[number];
+type UserRole = "Viewer" | "Operator" | "Admin" | "Owner";
 type GlobalCommand = {
   label: string;
   detail: string;
@@ -62,6 +63,8 @@ type AppState = {
   updateOperationalThreshold: (key: keyof typeof initialOperationalThresholds, value: number) => void;
   modelCatalog: ModelRecord[];
   addModelToCatalog: (model: ModelRecord) => void;
+  currentRole: UserRole;
+  setCurrentRole: (role: UserRole) => void;
 };
 
 const AppStateContext = createContext<AppState | null>(null);
@@ -74,6 +77,7 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
   const [userTokenBudgets, setUserTokenBudgets] = useState(initialUserTokenBudgets);
   const [operationalThresholds, setOperationalThresholds] = useState(initialOperationalThresholds);
   const [modelCatalog, setModelCatalog] = useState<ModelRecord[]>(initialModels);
+  const [currentRole, setCurrentRole] = useState<UserRole>("Owner");
 
   function showToast(message: string) {
     const id = Date.now();
@@ -168,9 +172,11 @@ export function AppStateProvider({ children }: { children: ReactNode }) {
       operationalThresholds,
       updateOperationalThreshold,
       modelCatalog,
-      addModelToCatalog
+      addModelToCatalog,
+      currentRole,
+      setCurrentRole
     }),
-    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets, operationalThresholds, modelCatalog]
+    [toasts, auditRows, permissions, departmentTokenBudgets, userTokenBudgets, operationalThresholds, modelCatalog, currentRole]
   );
 
   return (
@@ -359,7 +365,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 function TopBar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, currentRole, setCurrentRole } = useAppState();
   const action = pageActions[pathname] ?? { href: pathname, label: "Take Action" };
   const primaryAction = pathname === "/dashboard";
   const commandInputRef = useRef<HTMLInputElement>(null);
@@ -433,7 +439,7 @@ function TopBar() {
       return;
     }
     if (command.command === "request-gpt5-route-approval") {
-      showToast("GPT-5 fallback approval request simulated");
+      showToast("GPT-5 fallback approval requested");
       addAudit("Global command requested routing approval", "GPT-5 to Claude or Qwen", "Permission");
       router.push("/dashboard/approval-inbox");
     }
@@ -451,7 +457,13 @@ function TopBar() {
             <span className="h-1.5 w-1.5 rounded-full bg-[var(--status-warning)]" />
             AI Ops Status: Warning
           </span>
-          <span aria-label="Demo Mode. Simulated actions only; no infrastructure changes are made." title="Simulated actions only. No infrastructure changes are made." className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
+          <span aria-label="Sample environment" title="Sample environment" className="rounded-full border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-semibold text-[var(--text-secondary)]">Demo Mode</span>
+          <label className="inline-flex items-center gap-1 rounded-full border border-[var(--border-subtle)] bg-white px-2 py-0.5 text-xs font-semibold text-[var(--text-secondary)]">
+            Role
+            <select value={currentRole} onChange={(event) => setCurrentRole(event.target.value as UserRole)} className="bg-transparent text-[var(--text-primary)] outline-none">
+              {["Viewer", "Operator", "Admin", "Owner"].map((role) => <option key={role}>{role}</option>)}
+            </select>
+          </label>
         </div>
         <div className="mt-1 hidden truncate text-xs text-slate-500 2xl:block">Fleet, models, workspaces, and governance.</div>
       </div>
@@ -700,9 +712,9 @@ export function DataBoundaryChip({ value }: { value: "External AI Provider" | "P
   return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;
 }
 
-export function ActionButton({ children, onClick, variant = "primary" }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" }) {
+export function ActionButton({ children, onClick, variant = "primary", disabled = false, title }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger"; disabled?: boolean; title?: string }) {
   const cls = variant === "primary" ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]" : variant === "danger" ? "bg-[var(--status-critical)] text-white hover:bg-rose-700" : "border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] hover:bg-[var(--surface-muted)]";
-  return <button onClick={onClick} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 ${cls}`}>{children}</button>;
+  return <button onClick={onClick} disabled={disabled} title={title} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${cls}`}>{children}</button>;
 }
 
 export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {
@@ -785,7 +797,7 @@ export function MockAction({ label, auditTarget, variant = "secondary" }: { labe
     <ActionButton
       variant={variant}
       onClick={() => {
-        showToast(`${label} simulated`);
+        showToast(`${label} queued`);
         addAudit(label, auditTarget);
       }}
     >

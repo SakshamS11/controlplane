@@ -109,7 +109,7 @@ export default function WorkspacesPage() {
     const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
     if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface in the demo.`)) return;
     if (next === "Published") {
-      showToast(`Approval request simulated for ${workspace.name}`);
+      showToast(`Approval requested for ${workspace.name}`);
       addAudit("Workspace publishing approval requested", workspace.name, "Permission");
       return;
     }

@@ -401,8 +401,8 @@ export default function ResourcePlannerPage() {
   }
 
   function saveSimulation() {
-    showToast(`${selectedTeam} planner policy simulated`);
-    addAudit("Resource planner simulation updated", selectedTeam, "Permission");
+    showToast(`${selectedTeam} planner policy saved for approval`);
+    addAudit("Resource planner simulation saved", selectedTeam, "Permission");
   }
 
   function applyTeamSuggestion() {
@@ -482,7 +482,7 @@ export default function ResourcePlannerPage() {
                     <SlidersHorizontal size={15} /> Policy simulation
                   </div>
                   <h2 className="mt-2 text-lg font-semibold">Current plan vs proposed plan</h2>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">No allocation or policy changes are made.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Run the model before requesting capacity or policy approval.</p>
                 </div>
                 <ActionButton variant="secondary" onClick={applyTeamSuggestion}>Load recommendation</ActionButton>
               </div>
@@ -569,7 +569,7 @@ export default function ResourcePlannerPage() {
                 {projected.recommendation}
               </div>
               <div className="mt-4">
-                <ActionButton onClick={saveSimulation}>Apply simulated plan</ActionButton>
+                <ActionButton onClick={saveSimulation}>Request approval</ActionButton>
               </div>
             </Card>
           </div>
@@ -614,7 +614,7 @@ export default function ResourcePlannerPage() {
               <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-5 py-4 xl:flex-row xl:items-center">
                 <div>
                   <h2 className="font-semibold">Access and policy assignments</h2>
-                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Changes update this mock session only.</p>
+                  <p className="mt-1 text-sm text-[var(--text-secondary)]">Assignments define what each team can use across workspaces, agents, and routes.</p>
                 </div>
                 <div role="tablist" aria-label="Access matrices" className="flex overflow-x-auto rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1">
                   {matrixTabs.map((tab) => (
@@ -759,7 +759,7 @@ export default function ResourcePlannerPage() {
               <DetailBlock label="Projected impact" value={reviewedRecommendation.impact} />
               <DetailBlock label="Evidence" value={reviewedRecommendation.evidence} />
               <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-950">
-                Simulated action only. Review capacity and policy effects before applying.
+                Review capacity and policy effects before requesting approval.
               </div>
             </div>
             <div className="flex gap-3 border-t border-[var(--border-subtle)] p-5">

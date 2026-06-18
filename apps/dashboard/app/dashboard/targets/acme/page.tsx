@@ -23,7 +23,7 @@ export default function AcmeTargetDetailPage() {
   }
 
   function requestDeploymentApproval() {
-    showToast("Deployment approval request simulated");
+    showToast("Deployment approval requested");
     addAudit("Deployment approval requested", target.name, "Permission");
   }
 

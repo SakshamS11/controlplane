@@ -133,7 +133,7 @@ const initialApprovals: Approval[] = [
     status: "Pending",
     policyReason: "Agent tool execution with external side effects requires exact-payload approval.",
     expectedImpact: "Allows one approved finance action while preserving human oversight evidence.",
-    rollback: "Keep tool execution blocked; no external action is made in this prototype.",
+    rollback: "Keep tool execution blocked until a valid owner approval is recorded.",
     related: "Finance approval gap",
     relatedHref: "/dashboard/incidents",
     exactChange: "Approve a single Finance Analysis Agent external action with current payload hash and 30-minute expiry.",
@@ -178,8 +178,8 @@ function buildImpact(approval: Approval, action: "simulate" | "approve" | "deny"
   return {
     title: `${verb}: ${approval.change}`,
     summary: action === "simulate"
-      ? "No action was applied. This preview explains what would change if approved."
-      : "This updates local state only. No real policy, stack, workspace, knowledge, or agent action was applied.",
+      ? "Impact preview is ready for decision review."
+      : "Decision recorded and linked to the audit trail.",
     rows: [
       { label: "Exact change", value: approval.exactChange },
       { label: "Expected impact", value: approval.expectedImpact },
@@ -189,7 +189,7 @@ function buildImpact(approval: Approval, action: "simulate" | "approve" | "deny"
 }
 
 export default function ApprovalInboxPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, currentRole } = useAppState();
   const [approvals, setApprovals] = useState(initialApprovals);
   const [filter, setFilter] = useState<(typeof filters)[number]>("Pending");
   const [selected, setSelected] = useState<Approval>(initialApprovals[0]);
@@ -201,6 +201,7 @@ export default function ApprovalInboxPage() {
   const highRisk = pending.filter((approval) => approval.risk === "High");
   const dueSoon = pending.filter((approval) => approval.due.includes("min") || approval.due.includes("hr"));
   const completedToday = approvals.filter((approval) => approval.status === "Approved" || approval.status === "Denied").length;
+  const canDecide = currentRole === "Owner";
 
   function updateApproval(id: string, status: ApprovalStatus) {
     setApprovals((current) => current.map((approval) => approval.id === id ? { ...approval, status } : approval));
@@ -208,13 +209,14 @@ export default function ApprovalInboxPage() {
   }
 
   function approve(approval: Approval) {
+    if (!canDecide) return;
     setConfirmation({
       title: `Approve ${approval.type}?`,
-      body: "This approval is simulated in the frontend prototype. No real system change will be applied.",
+      body: "Approve the exact requested change and record the decision.",
       run: () => {
         updateApproval(approval.id, "Approved");
         setSimulation(buildImpact(approval, "approve"));
-        showToast(`${approval.change} approved in simulation`);
+        showToast(`${approval.change} approved`);
         addAudit("Approval granted", approval.change, "Permission");
         setConfirmation(null);
       }
@@ -222,13 +224,14 @@ export default function ApprovalInboxPage() {
   }
 
   function deny(approval: Approval) {
+    if (!canDecide) return;
     setConfirmation({
       title: `Deny ${approval.type}?`,
-      body: "This denial is simulated and only updates local state in this demo session.",
+      body: "Deny this requested change and record the decision.",
       run: () => {
         updateApproval(approval.id, "Denied");
         setSimulation(buildImpact(approval, "deny"));
-        showToast(`${approval.change} denied in simulation`);
+        showToast(`${approval.change} denied`);
         addAudit("Approval denied", approval.change, "Permission");
         setConfirmation(null);
       }
@@ -261,7 +264,7 @@ export default function ApprovalInboxPage() {
           <MetricCard label="Pending approvals" value={String(pending.length)} detail="Exact changes awaiting decision" status="Warning" icon={<FileCheck2 size={18} />} />
           <MetricCard label="High-risk approvals" value={String(highRisk.length)} detail="Knowledge, workspace, or agent risk" status="Critical" icon={<ShieldAlert size={18} />} />
           <MetricCard label="Due soon" value={String(dueSoon.length)} detail="Expires in minutes or hours" status="Warning" icon={<Clock3 size={18} />} />
-          <MetricCard label="Approved / denied today" value={String(completedToday)} detail="Local mock session" status="Healthy" icon={<CheckCircle2 size={18} />} />
+          <MetricCard label="Approved / denied today" value={String(completedToday)} detail="Decision activity" status="Healthy" icon={<CheckCircle2 size={18} />} />
         </div>
 
         {simulation ? <SimulationPanel result={simulation} onClear={() => setSimulation(null)} /> : null}
@@ -338,8 +341,8 @@ export default function ApprovalInboxPage() {
               <Detail label="Rollback" value={selected.rollback} />
             </div>
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <ActionButton onClick={() => approve(selected)}>Approve</ActionButton>
-              <ActionButton variant="danger" onClick={() => deny(selected)}>Deny</ActionButton>
+              <ActionButton onClick={() => approve(selected)} disabled={!canDecide} title={!canDecide ? "Only Owner role can approve high-impact changes." : undefined}>Approve</ActionButton>
+              <ActionButton variant="danger" onClick={() => deny(selected)} disabled={!canDecide} title={!canDecide ? "Only Owner role can deny high-impact changes." : undefined}>Deny</ActionButton>
               <ActionButton variant="secondary" onClick={() => requestChanges(selected)}>Request changes</ActionButton>
               <ActionButton variant="secondary" onClick={() => simulateImpact(selected)}>Simulate impact</ActionButton>
             </div>
@@ -394,7 +397,7 @@ export default function ApprovalInboxPage() {
           <p className="text-sm leading-6 text-[var(--text-secondary)]">{confirmation.body}</p>
           <div className="mt-5 flex justify-end gap-3">
             <ActionButton variant="secondary" onClick={() => setConfirmation(null)}>Cancel</ActionButton>
-            <ActionButton variant="danger" onClick={confirmation.run}>Confirm simulated decision</ActionButton>
+            <ActionButton variant="danger" onClick={confirmation.run}>Confirm decision</ActionButton>
           </div>
         </Modal>
       ) : null}

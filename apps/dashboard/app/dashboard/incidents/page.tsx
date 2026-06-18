@@ -152,7 +152,7 @@ function buildSimulation(incident: Incident, mode: "simulate" | "apply" | "logs"
   if (mode === "logs") {
     return {
       title: `Logs opened for ${incident.title}`,
-      summary: "The prototype shows what an operator would inspect next.",
+      summary: "Operational signals are ready for responder review.",
       rows: [
         { label: "Signal", value: incident.evidence },
         { label: "Likely source", value: incident.affected },
@@ -162,12 +162,12 @@ function buildSimulation(incident: Incident, mode: "simulate" | "apply" | "logs"
   }
 
   return {
-    title: `${incident.action} ${mode === "apply" ? "applied" : "simulated"}`,
-    summary: "No real infrastructure changes were made. This preview shows the expected operational result.",
+    title: `${incident.action} ${mode === "apply" ? "applied" : "simulation complete"}`,
+    summary: "Expected operational result is ready for review.",
     rows: [
       { label: "Affected area", value: incident.affected },
       { label: "Expected impact", value: incident.impact },
-      { label: "Audit result", value: `${incident.title} response recorded in this demo session.` }
+      { label: "Audit result", value: `${incident.title} response recorded.` }
     ]
   };
 }
@@ -177,7 +177,7 @@ function incidentRequiresApproval(incident: Incident) {
 }
 
 export default function IncidentsPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, currentRole } = useAppState();
   const [incidents, setIncidents] = useState(initialIncidents);
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [selected, setSelected] = useState<Incident>(initialIncidents[0]);
@@ -196,6 +196,7 @@ export default function IncidentsPage() {
   const activeIncidents = incidents.filter((incident) => incident.status !== "Resolved");
   const criticalCount = activeIncidents.filter((incident) => incident.severity === "Critical").length;
   const mitigationsReady = activeIncidents.filter((incident) => incident.action).length;
+  const canRespond = currentRole !== "Viewer";
 
   function updateIncident(id: string, changes: Partial<Incident>) {
     setIncidents((current) => current.map((incident) => incident.id === id ? { ...incident, ...changes } : incident));
@@ -240,7 +241,7 @@ export default function IncidentsPage() {
     setSimulation({ title: "Incident acknowledged", summary: `${incident.owner} now owns initial response.`, rows: [
       { label: "Incident", value: incident.title },
       { label: "SLA", value: incident.sla },
-      { label: "Audit result", value: "Acknowledgement recorded in this demo session." }
+      { label: "Audit result", value: "Acknowledgement recorded." }
     ] });
     showToast(`${incident.title} acknowledged`);
     addAudit("Incident acknowledged", incident.title, "Alert");
@@ -260,7 +261,7 @@ export default function IncidentsPage() {
   function simulateFix(incident: Incident) {
     updateIncident(incident.id, { status: "Mitigating" });
     setSimulation(buildSimulation(incident, "simulate"));
-    showToast(`${incident.action} simulated`);
+    showToast(`${incident.action} simulation complete`);
     addAudit("Incident fix simulated", incident.title, "Alert");
   }
 
@@ -268,8 +269,8 @@ export default function IncidentsPage() {
     if (incidentRequiresApproval(incident)) {
       updateIncident(incident.id, { status: "Mitigating" });
       setSimulation({
-        title: `Approval request simulated: ${incident.title}`,
-        summary: "This mitigation needs approval before any real route, capacity, budget, or agent change. No backend change was made.",
+        title: `Approval requested: ${incident.title}`,
+        summary: "This mitigation needs approval before the route, capacity, budget, or agent change can proceed.",
         rows: [
           { label: "Approval path", value: "Approval Inbox" },
           { label: "Requested change", value: incident.action },
@@ -282,12 +283,12 @@ export default function IncidentsPage() {
     }
 
     setConfirmation({
-      title: `Apply mitigation for ${incident.title}?`,
-      body: "Simulated action only. No infrastructure, routing, or budget policy will be changed.",
+        title: `Apply mitigation for ${incident.title}?`,
+        body: "Apply the mitigation and record the response in the audit trail.",
       run: () => {
         updateIncident(incident.id, { status: "Mitigating" });
         setSimulation(buildSimulation(incident, "apply"));
-        showToast(`${incident.action} applied in simulation`);
+        showToast(`${incident.action} applied`);
         addAudit("Incident mitigation applied", incident.title, "Alert");
         setConfirmation(null);
       }
@@ -298,16 +299,16 @@ export default function IncidentsPage() {
     setConfirmation({
       title: `Resolve ${incident.title}?`,
       body: incident.severity === "Critical"
-        ? "Critical incident resolution is simulated. Confirm only after reviewing evidence in this prototype."
-        : "Resolution is simulated in this frontend prototype.",
+        ? "Confirm resolution only after reviewing evidence and mitigation status."
+        : "Resolve this incident and record the decision.",
       run: () => {
         updateIncident(incident.id, { status: "Resolved" });
         setSimulation({ title: "Incident resolved", summary: "The incident moved to the resolved view.", rows: [
           { label: "Incident", value: incident.title },
-          { label: "Resolution", value: "Marked resolved in local state." },
+          { label: "Resolution", value: "Marked resolved." },
           { label: "Audit result", value: "Resolution event added to the audit trail." }
         ] });
-        showToast(`${incident.title} resolved in simulation`);
+        showToast(`${incident.title} resolved`);
         addAudit("Incident resolved", incident.title, "Alert");
         setConfirmation(null);
       }
@@ -405,11 +406,11 @@ export default function IncidentsPage() {
               <Detail label="Rollback note" value={selected.rollback} />
             </div>
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
-              <ActionButton variant="secondary" onClick={() => acknowledge(selected)}>Acknowledge</ActionButton>
-              <ActionButton variant="secondary" onClick={() => assignOwner(selected)}>Assign owner</ActionButton>
-              <ActionButton variant="secondary" onClick={() => simulateFix(selected)}>Simulate fix</ActionButton>
-              <ActionButton onClick={() => applyMitigation(selected)}>{incidentRequiresApproval(selected) ? "Request approval" : "Apply mitigation"}</ActionButton>
-              <ActionButton variant={selected.severity === "Critical" ? "danger" : "secondary"} onClick={() => resolveIncident(selected)}>Resolve</ActionButton>
+              <ActionButton variant="secondary" onClick={() => acknowledge(selected)} disabled={!canRespond} title={!canRespond ? "Viewer role can inspect incidents but cannot respond." : undefined}>Acknowledge</ActionButton>
+              <ActionButton variant="secondary" onClick={() => assignOwner(selected)} disabled={!canRespond} title={!canRespond ? "Viewer role can inspect incidents but cannot assign ownership." : undefined}>Assign owner</ActionButton>
+              <ActionButton variant="secondary" onClick={() => simulateFix(selected)} disabled={!canRespond} title={!canRespond ? "Viewer role can inspect incidents but cannot run mitigations." : undefined}>Simulate fix</ActionButton>
+              <ActionButton onClick={() => applyMitigation(selected)} disabled={!canRespond} title={!canRespond ? "Viewer role can inspect incidents but cannot request mitigation." : undefined}>{incidentRequiresApproval(selected) ? "Request approval" : "Apply mitigation"}</ActionButton>
+              <ActionButton variant={selected.severity === "Critical" ? "danger" : "secondary"} onClick={() => resolveIncident(selected)} disabled={!canRespond} title={!canRespond ? "Viewer role can inspect incidents but cannot resolve them." : undefined}>Resolve</ActionButton>
               <ActionButton variant="secondary" onClick={() => setSimulation(buildSimulation(selected, "logs"))}>View logs</ActionButton>
             </div>
             <Link href={incidentRequiresApproval(selected) ? "/dashboard/approval-inbox" : selected.relatedHref} className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-primary)] hover:underline">
@@ -463,7 +464,7 @@ export default function IncidentsPage() {
           <p className="text-sm leading-6 text-[var(--text-secondary)]">{confirmation.body}</p>
           <div className="mt-5 flex justify-end gap-3">
             <ActionButton variant="secondary" onClick={() => setConfirmation(null)}>Cancel</ActionButton>
-            <ActionButton variant="danger" onClick={confirmation.run}>Confirm simulated action</ActionButton>
+            <ActionButton variant="danger" onClick={confirmation.run}>Confirm action</ActionButton>
           </div>
         </Modal>
       ) : null}

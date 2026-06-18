@@ -164,7 +164,7 @@ export default function CostCapacityPage() {
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
           <CompactKpi label="Projected spend" value="AED 184,000" detail="+18% month over month" status="Warning" icon={<WalletCards size={16} />} />
           <CompactKpi label="Budget remaining" value="AED 46,000" detail="Before forecast limit" status="Healthy" icon={<PiggyBank size={16} />} />
-          <CompactKpi label="Savings opportunity" value="AED 42,000" detail="Monthly simulated" status="Healthy" icon={<SlidersHorizontal size={16} />} />
+          <CompactKpi label="Savings opportunity" value="AED 42,000" detail="Monthly forecast" status="Healthy" icon={<SlidersHorizontal size={16} />} />
           <CompactKpi label="GPU assigned" value="100%" detail="24% reclaimable" status="Warning" icon={<Gauge size={16} />} />
           <CompactKpi label="Cost per task" value="AED 0.84" detail="7% lower with cache" status="Healthy" icon={<ArrowRight size={16} />} />
           <CompactKpi label="Forecast risk" value="19 days" detail="To 80% of budget" status="Warning" icon={<Clock3 size={16} />} />

@@ -86,12 +86,12 @@ export default function StacksPage() {
   const [selectedStack, setSelectedStack] = useState<StackTemplate | null>(null);
 
   function simulateDeploy(stack: StackTemplate) {
-    showToast(`${stack.name} deployment simulated`);
-    addAudit("Stack deployment simulated", stack.name, "Deployment");
+    showToast(`${stack.name} deployment simulation complete`);
+    addAudit("Stack deployment simulation complete", stack.name, "Deployment");
   }
 
   function requestDeploymentApproval(stack: StackTemplate) {
-    showToast(`Deployment approval request simulated for ${stack.name}`);
+    showToast(`Deployment approval requested for ${stack.name}`);
     addAudit("Stack deployment approval requested", stack.name, "Permission");
   }
 

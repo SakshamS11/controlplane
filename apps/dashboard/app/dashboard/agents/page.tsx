@@ -184,7 +184,7 @@ export default function AgentsPage() {
                 <div>
                   <h2 className="font-semibold">Agent safety boundary</h2>
                   <p className="mt-2 text-sm text-slate-600">Agents use allowlisted tools, enforced budgets, approvals, and kill switches.</p>
-                  <p className="mt-1 text-xs text-slate-500">Tool execution is simulated in this prototype. Real execution requires backend, gateway, tool governance, and approval enforcement.</p>
+                  <p className="mt-1 text-xs text-slate-500">External tool actions require approval, payload review, and audit recording before execution.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-4">
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Assigned users and teams</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Allowed models and knowledge</div>

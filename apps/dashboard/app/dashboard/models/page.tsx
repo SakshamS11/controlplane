@@ -100,7 +100,7 @@ export default function ModelsPage() {
   }), [filter, modelCatalog]);
 
   function requestRoutingApproval(target: string) {
-    showToast(`Approval request simulated for ${target}`);
+    showToast(`Approval requested for ${target}`);
     addAudit("Model routing approval requested", target, "Permission");
   }
 

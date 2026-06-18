@@ -291,7 +291,7 @@ function policyForRecommendation(item: Recommendation) {
 }
 
 export default function RecommendationsPage() {
-  const { showToast, addAudit } = useAppState();
+  const { showToast, addAudit, currentRole } = useAppState();
   const [recommendations, setRecommendations] = useState(seedRecommendations);
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [selectedId, setSelectedId] = useState(seedRecommendations[0].id);
@@ -305,6 +305,7 @@ export default function RecommendationsPage() {
   const awaitingApproval = openRecommendations.filter((item) => item.status === "Awaiting approval" || item.approval === "Required");
   const governanceOpen = openRecommendations.filter((item) => item.category === "Governance" || item.category === "Evidence").length;
   const capacityOpen = openRecommendations.filter((item) => item.category === "Capacity").length;
+  const canChange = currentRole !== "Viewer";
 
   function updateRecommendation(id: string, changes: Partial<Recommendation>) {
     setRecommendations((current) => current.map((item) => item.id === id ? { ...item, ...changes } : item));
@@ -327,17 +328,19 @@ export default function RecommendationsPage() {
   }
 
   function simulateRecommendation(item: Recommendation) {
+    if (!canChange) return;
     setSelectedId(item.id);
     updateRecommendation(item.id, { status: "Simulated" });
-    showResult("Simulation complete", "Simulation only. No backend change was made.", item.simulation);
+    showResult("Simulation complete", "Projected impact is ready for review before approval.", item.simulation);
     showToast(`${item.title} simulation complete`);
     addAudit("Recommendation simulated", item.title, "Alert");
   }
 
   function requestApproval(item: Recommendation) {
+    if (!canChange) return;
     setSelectedId(item.id);
     updateRecommendation(item.id, { status: "Awaiting approval", approval: "Requested" });
-    showResult("Approval request simulated", "Approval request added to this browser session. Real approval execution requires backend workflow support.", [
+    showResult("Approval requested", "Approval request is now linked to the decision queue.", [
       { label: "Approval path", value: item.relatedApproval ?? "Approval Inbox" },
       { label: "Requester", value: item.owner },
       { label: "Audit", value: "Audit entry added to this browser session" }
@@ -347,21 +350,22 @@ export default function RecommendationsPage() {
   }
 
   function applyRecommendation(item: Recommendation) {
+    if (!canChange) return;
     if (item.approval === "Required" || item.approval === "Requested") {
       requestApproval(item);
       return;
     }
     setConfirmation({
       title: `Apply ${item.title}?`,
-      body: "Simulated action only. No backend change was made and no real policy, deployment, route, cache, model, or approval execution occurred.",
+      body: "Apply this approved change and record the decision in the audit trail.",
       run: () => {
         updateRecommendation(item.id, { status: "Applied" });
-        showResult("Recommendation marked as applied", "No backend change was made. The local UI state and audit trail were updated.", [
+        showResult("Recommendation applied", "The recommendation moved to Applied and the audit trail was updated.", [
           { label: "Applied change", value: item.action },
           { label: "Expected impact", value: item.impact },
           { label: "Audit", value: "Audit entry added to this browser session" }
         ]);
-        showToast(`${item.title} applied in simulation`);
+        showToast(`${item.title} applied`);
         addAudit("Recommendation applied", item.title, "Alert");
         setConfirmation(null);
       }
@@ -369,9 +373,10 @@ export default function RecommendationsPage() {
   }
 
   function dismissRecommendation(item: Recommendation) {
+    if (!canChange) return;
     const run = () => {
       updateRecommendation(item.id, { status: "Dismissed" });
-      showResult("Recommendation dismissed", "Dismissal only changes local state in this frontend prototype.", [
+      showResult("Recommendation dismissed", "The recommendation moved to the dismissed view for follow-up review.", [
         { label: "Dismissed", value: item.title },
         { label: "Risk if ignored", value: item.impact },
         { label: "Rollback", value: "Use the Dismissed filter to find it again during this session" }
@@ -384,7 +389,7 @@ export default function RecommendationsPage() {
     if (item.severity === "Critical") {
       setConfirmation({
         title: `Dismiss critical recommendation?`,
-        body: "This is simulated, but critical recommendations should only be dismissed after reviewing evidence and impact.",
+        body: "Critical recommendations should only be dismissed after reviewing evidence and impact.",
         run
       });
       return;
@@ -398,7 +403,7 @@ export default function RecommendationsPage() {
         eyebrow="Command Center"
         title="Recommendations"
         description="Prioritized AI operations recommendations with evidence, impact, simulation, approval path, and audit trail."
-        action={<ActionButton onClick={() => simulateRecommendation(selected)}><Play size={16} /> Simulate top recommendation</ActionButton>}
+        action={<ActionButton onClick={() => simulateRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot run simulations." : undefined}><Play size={16} /> Simulate top recommendation</ActionButton>}
       />
       <Section>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
@@ -508,18 +513,18 @@ export default function RecommendationsPage() {
 
             <div className="mt-5 grid gap-2 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
               <ActionButton variant="secondary" onClick={() => reviewRecommendation(selected)}>Review</ActionButton>
-              <ActionButton variant="secondary" onClick={() => simulateRecommendation(selected)}>Simulate</ActionButton>
+              <ActionButton variant="secondary" onClick={() => simulateRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot run simulations." : undefined}>Simulate</ActionButton>
               {selected.approval === "Required" || selected.approval === "Requested" ? (
-                <ActionButton onClick={() => requestApproval(selected)}>Request approval</ActionButton>
+                <ActionButton onClick={() => requestApproval(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot request approval." : undefined}>Request approval</ActionButton>
               ) : (
-                <ActionButton onClick={() => applyRecommendation(selected)}>Apply simulated change</ActionButton>
+                <ActionButton onClick={() => applyRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot apply changes." : undefined}>Apply</ActionButton>
               )}
               <ActionButton variant="secondary" onClick={() => showResult("Evidence opened", "Evidence is shown here so the admin can understand why this exists.", [
                 { label: "Evidence", value: selected.evidence },
                 { label: "Related audit", value: selected.relatedAudit.join(", ") },
                 { label: "Owner", value: selected.owner }
               ])}>View evidence</ActionButton>
-              <ActionButton variant={selected.severity === "Critical" ? "danger" : "secondary"} onClick={() => dismissRecommendation(selected)}>Dismiss</ActionButton>
+              <ActionButton variant={selected.severity === "Critical" ? "danger" : "secondary"} onClick={() => dismissRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot dismiss them." : undefined}>Dismiss</ActionButton>
               <Link href={selected.relatedHref} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
                 Open related page <ArrowRight size={15} />
               </Link>
@@ -541,7 +546,7 @@ export default function RecommendationsPage() {
           <p className="text-sm leading-6 text-[var(--text-secondary)]">{confirmation.body}</p>
           <div className="mt-5 flex justify-end gap-3">
             <ActionButton variant="secondary" onClick={() => setConfirmation(null)}>Cancel</ActionButton>
-            <ActionButton variant="danger" onClick={confirmation.run}>Confirm simulated action</ActionButton>
+            <ActionButton variant="danger" onClick={confirmation.run}>Confirm action</ActionButton>
           </div>
         </Modal>
       ) : null}

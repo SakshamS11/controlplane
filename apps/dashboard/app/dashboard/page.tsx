@@ -198,8 +198,8 @@ export default function DashboardOverviewPage() {
   const [reminder, setReminder] = useState<Reminder | null>(null);
 
   function simulateAction(label: string, target: string, auditType = "Alert") {
-    showToast(`${label} simulated`);
-    addAudit(`${label} simulated`, target, auditType);
+    showToast(`${label} recorded`);
+    addAudit(`${label} recorded`, target, auditType);
   }
 
   function confirmAction() {
@@ -334,8 +334,8 @@ export default function DashboardOverviewPage() {
           <div className="grid gap-3 sm:grid-cols-2"><ReadOnlyField label="Team" value={reminder.team} /><ReadOnlyField label="Owner" value={reminder.owner} /></div>
           <ReadOnlyField label="Reason" value={reminder.reason} className="mt-3" />
           <label className="mt-3 block text-sm font-medium">Suggested message<textarea value={reminder.message} onChange={(event) => setReminder({ ...reminder, message: event.target.value })} className="mt-2 min-h-28 w-full rounded-md border border-[var(--border-subtle)] p-3 text-sm leading-5 focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]" /></label>
-          <p className="mt-3 text-xs text-[var(--text-secondary)]">Simulated action only. No email is sent.</p>
-          <div className="mt-5 flex justify-end gap-2"><ActionButton variant="secondary" onClick={() => setReminder(null)}>Cancel</ActionButton><ActionButton onClick={sendReminder}><Send size={14} /> Send simulated reminder</ActionButton></div>
+          <p className="mt-3 text-xs text-[var(--text-secondary)]">Reminder will be recorded with the team owner context.</p>
+          <div className="mt-5 flex justify-end gap-2"><ActionButton variant="secondary" onClick={() => setReminder(null)}>Cancel</ActionButton><ActionButton onClick={sendReminder}><Send size={14} /> Send reminder</ActionButton></div>
         </Modal>
       ) : null}
     </Section>
@@ -367,5 +367,5 @@ function ReadOnlyField({ label, value, className = "" }: { label: string; value:
 }
 
 function ConfirmationModal({ confirmation, onClose, onConfirm }: { confirmation: ConfirmationAction; onClose: () => void; onConfirm: () => void }) {
-  return <Modal title={confirmation.title} onClose={onClose}><div className="flex items-start gap-3 rounded-md bg-[rgba(245,158,11,0.08)] p-3"><AlertTriangle size={18} className="mt-0.5 shrink-0 text-[var(--status-warning)]" /><div><p className="text-sm font-medium">{confirmation.message}</p><p className="mt-1 text-xs text-[var(--text-secondary)]">{confirmation.impact}</p></div></div><p className="mt-4 text-xs text-[var(--text-secondary)]">Simulated action only. No infrastructure or provider configuration is changed.</p><div className="mt-5 flex justify-end gap-2"><ActionButton variant="secondary" onClick={onClose}>Cancel</ActionButton><ActionButton onClick={onConfirm}>Confirm simulated action</ActionButton></div></Modal>;
+  return <Modal title={confirmation.title} onClose={onClose}><div className="flex items-start gap-3 rounded-md bg-[rgba(245,158,11,0.08)] p-3"><AlertTriangle size={18} className="mt-0.5 shrink-0 text-[var(--status-warning)]" /><div><p className="text-sm font-medium">{confirmation.message}</p><p className="mt-1 text-xs text-[var(--text-secondary)]">{confirmation.impact}</p></div></div><p className="mt-4 text-xs text-[var(--text-secondary)]">This decision will be routed through the approval and audit workflow.</p><div className="mt-5 flex justify-end gap-2"><ActionButton variant="secondary" onClick={onClose}>Cancel</ActionButton><ActionButton onClick={onConfirm}>Confirm action</ActionButton></div></Modal>;
 }

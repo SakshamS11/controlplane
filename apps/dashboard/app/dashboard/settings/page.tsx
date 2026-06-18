@@ -210,10 +210,10 @@ export default function SettingsPage() {
             <label className="text-sm font-medium">Scope<select defaultValue="Organization default" className="mt-2 min-h-10 w-full rounded-md border border-[var(--border-subtle)] px-3"><option>Organization default</option><option>Production only</option><option>Selected workspaces</option></select></label>
           </div>
           <label className="mt-4 block text-sm font-medium">Change note<textarea className="mt-2 min-h-24 w-full rounded-md border border-[var(--border-subtle)] p-3" placeholder="Describe the intended policy change." /></label>
-          <p className="mt-3 text-xs text-[var(--text-secondary)]">Simulated action only. No provider, agent, or policy settings are changed.</p>
+          <p className="mt-3 text-xs text-[var(--text-secondary)]">Configuration changes are recorded with owner, scope, and audit context.</p>
           <div className="mt-5 flex justify-end gap-2">
             <ActionButton variant="secondary" onClick={() => setSelectedSetting(null)}>Cancel</ActionButton>
-            <ActionButton onClick={() => { showToast(`${selectedSetting.title} saved`); setSelectedSetting(null); }}><Save size={15} /> Save simulated change</ActionButton>
+            <ActionButton onClick={() => { showToast(`${selectedSetting.title} saved`); setSelectedSetting(null); }}><Save size={15} /> Save change</ActionButton>
           </div>
         </Modal>
       ) : null}

@@ -24,8 +24,8 @@ export default function ComplianceReadinessPage() {
   const [activeTab, setActiveTab] = useState<"systems" | "evidence" | "gaps">("systems");
 
   function exportPack() {
-    showToast("Evidence pack export simulated");
-    addAudit("Evidence pack export simulated", "Compliance readiness", "Permission");
+    showToast("Evidence pack export queued");
+    addAudit("Evidence pack export queued", "Compliance readiness", "Permission");
   }
 
   return (

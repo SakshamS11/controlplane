@@ -6,6 +6,15 @@ import { Card, DataTable, MetricCard, PageHeader, Section, StatusBadge, useAppSt
 
 const filters = ["All", "Deployment", "Permission", "Model", "Routing", "Knowledge", "Workspace", "Agent", "Alert", "Compliance evidence"];
 
+function relatedRecordForAudit(action: string, target: string) {
+  if (target.includes("Claims") || action.includes("Qwen capacity")) return "Claims GPU pressure";
+  if (target.includes("GPT-5") || action.includes("routing")) return "OpenAI degraded fallback";
+  if (target.includes("Legal")) return "Legal local-only enforcement";
+  if (target.includes("Finance")) return "Finance agent approval gap";
+  if (action.includes("Evidence")) return "ISO/IEC 42001 readiness support";
+  return target;
+}
+
 export default function AuditLogsPage() {
   const { auditRows } = useAppState();
   const [filter, setFilter] = useState("All");
@@ -19,7 +28,7 @@ export default function AuditLogsPage() {
           <MetricCard label="Events captured" value={String(auditRows.length)} detail="Admin, agent, model, and alert events" status="Healthy" icon={<ScrollText size={18} />} />
           <MetricCard label="Open severity" value="2" detail="Budget and agent alerts" status="Warning" icon={<TriangleAlert size={18} />} />
           <MetricCard label="Evidence labels" value="7" detail="ISO readiness support only" status="Healthy" icon={<ShieldCheck size={18} />} />
-          <MetricCard label="Coverage" value="100%" detail="Mock admin changes captured" status="Healthy" icon={<Sparkles size={18} />} />
+          <MetricCard label="Coverage" value="100%" detail="Admin changes captured" status="Healthy" icon={<Sparkles size={18} />} />
         </div>
         <Card className="overflow-hidden">
           <div className="flex border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] p-1.5">
@@ -36,8 +45,8 @@ export default function AuditLogsPage() {
               </div>
               <div id="audit-table">
                 <DataTable
-                  columns={["Timestamp", "Actor", "Type", "Action", "Target", "Severity", "Status"]}
-                  rows={rows.map((log) => [log.timestamp, log.actor, log.type, log.action, log.target, <StatusBadge key="sev" value={log.severity} />, <StatusBadge key="status" value={log.status} />])}
+                  columns={["Timestamp", "Actor", "Type", "Action", "Target", "Related record", "Severity", "Status"]}
+                  rows={rows.map((log) => [log.timestamp, log.actor, log.type, log.action, log.target, relatedRecordForAudit(log.action, log.target), <StatusBadge key="sev" value={log.severity} />, <StatusBadge key="status" value={log.status} />])}
                 />
               </div>
             </>

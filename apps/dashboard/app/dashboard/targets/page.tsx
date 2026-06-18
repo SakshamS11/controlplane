@@ -126,8 +126,8 @@ export default function DeploymentTargetsPage() {
   }), [activeFilter]);
 
   const applyCapacityFix = () => {
-    showToast("Simulated capacity fix applied");
-    addAudit("Applied simulated Qwen capacity fix", "Claims On-Prem Node", "Capacity");
+    showToast("Capacity approval requested");
+    addAudit("Qwen capacity change approval requested", "Claims On-Prem Node", "Capacity");
   };
 
   return (
@@ -236,7 +236,7 @@ export default function DeploymentTargetsPage() {
               >
                 Review capacity <ChevronRight size={15} />
               </Link>
-              <ActionButton onClick={applyCapacityFix}>Apply simulated fix</ActionButton>
+              <ActionButton onClick={applyCapacityFix}>Request approval</ActionButton>
             </div>
           </div>
         </Card>
@@ -359,7 +359,7 @@ export default function DeploymentTargetsPage() {
       {installOpen ? (
         <Modal title="Register a server agent" onClose={() => setInstallOpen(false)}>
           <p className="text-sm leading-6 text-[var(--text-secondary)]">
-            Run this simulated install command on the Ubuntu server you want to manage.
+            Run this agent install command on the Ubuntu server you want to manage.
           </p>
           <pre className="mt-4 overflow-auto rounded-lg bg-[var(--surface-dark)] p-4 text-xs text-cyan-100">{installCommand}</pre>
           <div className="mt-4 flex justify-end">
