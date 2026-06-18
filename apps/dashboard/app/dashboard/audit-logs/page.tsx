@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Filter, ScrollText, ShieldCheck, Sparkles, TriangleAlert } from "lucide-react";
 import { Card, DataTable, MetricCard, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
@@ -16,10 +16,20 @@ function relatedRecordForAudit(action: string, target: string) {
 }
 
 export default function AuditLogsPage() {
-  const { auditRows } = useAppState();
+  const { auditRows, addAudit, showToast } = useAppState();
   const [filter, setFilter] = useState("All");
   const [activeTab, setActiveTab] = useState<"events" | "coverage">("events");
   const rows = auditRows.filter((row) => filter === "All" || row.type === filter);
+
+  useEffect(() => {
+    function exportAudit() {
+      showToast("Audit export queued");
+      addAudit("Audit export queued", "Enterprise audit logs", "Compliance evidence");
+    }
+
+    window.addEventListener("switchboard:export-audit", exportAudit);
+    return () => window.removeEventListener("switchboard:export-audit", exportAudit);
+  }, [addAudit, showToast]);
   return (
     <>
       <PageHeader eyebrow="Audit trail" title="Enterprise audit logs" description="Review infrastructure, model, access, alert, and agent events." />
@@ -40,7 +50,7 @@ export default function AuditLogsPage() {
               <div id="audit-filters" className="border-b border-[var(--border-subtle)] px-4 py-3">
                 <div className="flex items-center gap-2 overflow-x-auto">
                   <Filter size={14} className="shrink-0 text-[var(--brand-primary)]" />
-                  {filters.map((item) => <button key={item} onClick={() => setFilter(item)} className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--border-subtle)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"}`}>{item}</button>)}
+                  {filters.map((item) => <button key={item} type="button" onClick={() => setFilter(item)} className={`shrink-0 rounded-md px-2.5 py-1.5 text-xs font-medium ${filter === item ? "bg-[var(--brand-primary)] text-white" : "border border-[var(--border-subtle)] bg-white text-[var(--text-secondary)] hover:bg-[var(--surface-muted)]"}`}>{item}</button>)}
                 </div>
               </div>
               <div id="audit-table">

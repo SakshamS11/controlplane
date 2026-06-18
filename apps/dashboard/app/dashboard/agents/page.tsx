@@ -114,7 +114,7 @@ export default function AgentsPage() {
   }, []);
 
   function saveAgent() {
-    const row = { name, owner: department, department, models: selectedModels.join(", "), knowledge, tools, approval, external, usage, budget: "Mock budget", mcp: "Allowlisted MCP", killSwitch: "Armed", status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
+    const row = { name, owner: department, department, models: selectedModels.join(", "), knowledge, tools, approval, external, usage, budget: "750K tokens/mo", mcp: "Allowlisted MCP", killSwitch: "Armed", status: external === "Blocked" ? "Healthy" : external === "Restricted" ? "Governance risk" : "Healthy" };
     setAgents((current) => [row, ...current.filter((item) => item.name !== name)]);
     showToast(`${name} agent saved`);
     addAudit("Custom agent saved", name, "Permission");

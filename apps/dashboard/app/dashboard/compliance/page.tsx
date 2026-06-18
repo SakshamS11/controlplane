@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Download, FileCheck2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ActionButton, Card, DataTable, MetricCard, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
@@ -27,6 +27,11 @@ export default function ComplianceReadinessPage() {
     showToast("Evidence pack export queued");
     addAudit("Evidence pack export queued", "Compliance readiness", "Permission");
   }
+
+  useEffect(() => {
+    window.addEventListener("switchboard:export-evidence", exportPack);
+    return () => window.removeEventListener("switchboard:export-evidence", exportPack);
+  });
 
   return (
     <>
@@ -54,7 +59,7 @@ export default function ComplianceReadinessPage() {
           <MetricCard label="AI systems registered" value="14" detail="Across teams and workspaces" status="Healthy" icon={<FileCheck2 size={18} />} />
           <MetricCard label="Risk assessments" value="9/14" detail="5 still require review" status="Warning" icon={<TriangleAlert size={18} />} />
           <MetricCard label="Human oversight" value="11/14" detail="Configured controls" status="Healthy" icon={<ShieldCheck size={18} />} />
-          <MetricCard label="Evidence collected" value="286" detail="Mock evidence items" status="Healthy" icon={<FileCheck2 size={18} />} />
+          <MetricCard label="Evidence collected" value="286" detail="Evidence records" status="Healthy" icon={<FileCheck2 size={18} />} />
         </div>
 
         <Card className="overflow-hidden">

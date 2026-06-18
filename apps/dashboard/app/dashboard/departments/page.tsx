@@ -273,7 +273,7 @@ export default function DepartmentsPage() {
   }
 
   function createTeam() {
-    showToast("Team created (simulation)");
+    showToast("Team created");
     addAudit("Team created", "New team", "Permission");
     setCreateOpen(false);
     window.history.replaceState(null, "", window.location.pathname);

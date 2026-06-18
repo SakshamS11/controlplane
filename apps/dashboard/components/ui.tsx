@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import {
   Activity,
   AlertTriangle,
@@ -262,6 +262,11 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/settings": { href: "/dashboard/settings#thresholds", label: "Configure" }
 };
 
+const pageActionEvents: Record<string, string> = {
+  "/dashboard/audit-logs": "switchboard:export-audit",
+  "/dashboard/compliance": "switchboard:export-evidence"
+};
+
 export function DashboardShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
@@ -445,6 +450,21 @@ function TopBar() {
     }
   }
 
+  function handlePageAction(event: MouseEvent<HTMLAnchorElement>) {
+    const actionEvent = pageActionEvents[pathname];
+    if (actionEvent) {
+      event.preventDefault();
+      window.dispatchEvent(new CustomEvent(actionEvent));
+      return;
+    }
+
+    const [actionPath, actionHash] = action.href.split("#");
+    if (actionHash && actionPath === pathname && window.location.hash === `#${actionHash}`) {
+      event.preventDefault();
+      window.dispatchEvent(new HashChangeEvent("hashchange"));
+    }
+  }
+
   return (
     <header className="sticky top-0 z-20 isolate border-b border-[var(--border-subtle)] bg-white/95 px-4 py-2 shadow-[0_4px_16px_rgba(17,24,39,0.05)] backdrop-blur sm:px-6">
       <div className="grid gap-2 xl:grid-cols-[minmax(300px,1fr)_minmax(240px,360px)_auto] xl:items-center">
@@ -581,13 +601,7 @@ function TopBar() {
         </div>
         <Link
           href={action.href}
-          onClick={(event) => {
-            const [actionPath, actionHash] = action.href.split("#");
-            if (actionHash && actionPath === pathname && window.location.hash === `#${actionHash}`) {
-              event.preventDefault();
-              window.dispatchEvent(new HashChangeEvent("hashchange"));
-            }
-          }}
+          onClick={handlePageAction}
           className={`inline-flex min-h-9 items-center justify-center rounded-md px-3.5 py-2 text-sm font-semibold shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 ${primaryAction ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]" : "border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] hover:bg-[var(--surface-muted)]"}`}
         >
           {action.label}
@@ -713,8 +727,22 @@ export function DataBoundaryChip({ value }: { value: "External AI Provider" | "P
 }
 
 export function ActionButton({ children, onClick, variant = "primary", disabled = false, title }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger"; disabled?: boolean; title?: string }) {
+  const { showToast, addAudit } = useAppState();
   const cls = variant === "primary" ? "bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]" : variant === "danger" ? "bg-[var(--status-critical)] text-white hover:bg-rose-700" : "border border-[var(--border-subtle)] bg-white text-[var(--text-primary)] hover:bg-[var(--surface-muted)]";
-  return <button onClick={onClick} disabled={disabled} title={title} className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${cls}`}>{children}</button>;
+  return (
+    <button
+      type="button"
+      onClick={onClick ?? (() => {
+        showToast("Action queued");
+        addAudit("Action queued", "Dashboard action", "Alert");
+      })}
+      disabled={disabled}
+      title={title}
+      className={`inline-flex min-h-10 items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium shadow-sm transition focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${cls}`}
+    >
+      {children}
+    </button>
+  );
 }
 
 export function DataTable({ columns, rows }: { columns: string[]; rows: ReactNode[][] }) {

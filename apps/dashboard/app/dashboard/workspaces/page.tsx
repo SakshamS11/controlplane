@@ -107,8 +107,9 @@ export default function WorkspacesPage() {
 
   function togglePublish(workspace: Workspace) {
     const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
-    if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface in the demo.`)) return;
+    if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface.`)) return;
     if (next === "Published") {
+      setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: "Pending approval", status: "Pending approval" } : item));
       showToast(`Approval requested for ${workspace.name}`);
       addAudit("Workspace publishing approval requested", workspace.name, "Permission");
       return;
@@ -156,12 +157,12 @@ export default function WorkspacesPage() {
                   workspace.allowedModels.join(", "),
                   <div key="launch" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => setSelectedWorkspace(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
-                    <button onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
+                    <button type="button" onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
                   </div>,
                   <div key="manage" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Edit</ActionButton>
                     {workspace.publishStatus !== "Published" ? <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open approval</Link> : null}
-                    <button onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
+                    <button type="button" onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
                   </div>
                 ])}
               />

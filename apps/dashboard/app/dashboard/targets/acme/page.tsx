@@ -109,7 +109,7 @@ export default function AcmeTargetDetailPage() {
                 ["deployment", "Deployment"],
                 ["logs", "Logs"]
               ].map(([id, label]) => (
-                <button key={id} role="tab" aria-selected={activePanel === id} onClick={() => setActivePanel(id)} className={`min-h-9 rounded px-3 text-sm font-medium transition ${activePanel === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>
+                <button key={id} type="button" role="tab" aria-selected={activePanel === id} onClick={() => setActivePanel(id)} className={`min-h-9 rounded px-3 text-sm font-medium transition ${activePanel === id ? "bg-slate-950 text-white shadow-sm" : "text-slate-600 hover:text-slate-950"}`}>
                   {label}
                 </button>
               ))}
@@ -154,8 +154,8 @@ export default function AcmeTargetDetailPage() {
                 })}
               </div>
               <div className="mt-4 flex flex-wrap gap-2">
-                <button onClick={simulateDeploy} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Replay deployment simulation</button>
-                <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
+                <button type="button" onClick={simulateDeploy} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Replay deployment simulation</button>
+                <button type="button" onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
               </div>
             </div>
           ) : null}
