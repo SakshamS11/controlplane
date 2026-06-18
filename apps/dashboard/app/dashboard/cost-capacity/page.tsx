@@ -34,7 +34,7 @@ const teamSpend = [
 ];
 
 const modelSpend = [
-  { name: "GPT-5", current: 45, forecast: 62, risk: "Cost risk", action: "Apply Marketing ladder" },
+  { name: "GPT-5", current: 45, forecast: 62, risk: "Cost risk", action: "Request Marketing ladder approval" },
   { name: "Qwen 32B", current: 28, forecast: 35, risk: "Healthy", action: "Increase local graduation" },
   { name: "Claude", current: 36, forecast: 48, risk: "Warning", action: "Reserve for approved fallback" },
   { name: "Llama 3.1", current: 20, forecast: 24, risk: "Healthy", action: "Keep normal routing" },
@@ -208,7 +208,7 @@ export default function CostCapacityPage() {
                 <div className="flex gap-4 text-xs"><span>Quality risk: <strong>Low</strong></span><span>Governance: <strong className="text-emerald-300">Improved</strong></span></div>
                 <Link href="/dashboard/recommendations" className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[var(--brand-primary-dark)]">Open in Recommendations</Link>
               </div>
-              <p className="px-4 pb-3 text-[10px] text-slate-400">Simulation only. No routing or infrastructure changes are made.</p>
+              <p className="px-4 pb-3 text-[10px] text-slate-400">Recommendations route through approval and audit before policy changes.</p>
             </Card>
 
             <Card className="p-4 xl:col-span-2">
@@ -275,7 +275,7 @@ export default function CostCapacityPage() {
         {activeTab === "safeguards" ? (
           <div className="mt-3 grid gap-3 xl:grid-cols-2">
             <Card className="overflow-hidden">
-              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3"><div><h2 className="font-semibold">Savings opportunities</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Simulated savings; governance remains enforced.</p></div><Link href="/dashboard/recommendations" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link></div>
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3"><div><h2 className="font-semibold">Savings opportunities</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Forecasted savings with governance checks preserved.</p></div><Link href="/dashboard/recommendations" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link></div>
               <DataTable columns={["Opportunity", "Recommendation", "Impact", "Confidence"]} rows={opportunities.map((row) => [row[0], row[1], row[2], <StatusBadge key="confidence" value={row[3].includes("High") || row[3].includes("Low") ? "Healthy" : "Warning"} />])} />
             </Card>
             <Card className="overflow-hidden">

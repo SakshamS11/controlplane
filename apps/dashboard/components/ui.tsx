@@ -396,7 +396,7 @@ function TopBar() {
     { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
     { label: "Open Qwen 32B model", detail: "Model / Local and restricted-safe", href: "/dashboard/models", icon: Sparkles },
     { label: "Request GPT-5 fallback approval", detail: "Approval Inbox / Claude or Qwen fallback", command: "request-gpt5-route-approval", icon: Route },
-    { label: "View agent kill switch controls", detail: "Agents / Safety controls", href: "/dashboard/agents", icon: Bot }
+    { label: "Review high-risk agents", detail: "Agents / Owners, approvals, and safety controls", href: "/dashboard/agents", icon: Bot }
   ], []);
 
   const visibleCommands = useMemo(() => {
@@ -563,7 +563,7 @@ function TopBar() {
               <div className="flex items-center justify-between border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] px-4 py-3">
                 <div>
                   <p className="text-xs font-semibold text-[var(--text-primary)]">Active alerts</p>
-                  <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Live demo values across fleet and providers.</p>
+                  <p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Signals linked to the right response workflow.</p>
                 </div>
                 <StatusBadge value="Warning" />
               </div>
@@ -573,7 +573,7 @@ function TopBar() {
                   title="Legal Sandbox agent offline"
                   detail="No heartbeat for 42 minutes"
                   value="Workspace unavailable"
-                  href="/dashboard/targets"
+                  href="/dashboard/incidents"
                   onOpen={() => setAlertMenuOpen(false)}
                 />
                 <AlertMenuItem
@@ -581,7 +581,7 @@ function TopBar() {
                   title="Claims GPU pressure"
                   detail="GPU 92% / VRAM 22/24 GB"
                   value="Queue wait +18%"
-                  href="/dashboard/cost-capacity"
+                  href="/dashboard/recommendations"
                   onOpen={() => setAlertMenuOpen(false)}
                 />
                 <AlertMenuItem
@@ -589,7 +589,7 @@ function TopBar() {
                   title="OpenAI GPT-5 latency"
                   detail="p95 latency 1,480 ms"
                   value="Fallback ready"
-                  href="/dashboard/routing-policies"
+                  href="/dashboard/incidents"
                   onOpen={() => setAlertMenuOpen(false)}
                 />
               </div>

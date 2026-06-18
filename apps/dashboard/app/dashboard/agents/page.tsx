@@ -141,7 +141,7 @@ export default function AgentsPage() {
       <PageHeader
         eyebrow="Agents"
         title="Governed AI workers"
-        description="Control each agent's owner, access, tools, budget, approvals, and kill switch."
+        description="Control each agent's owner, access, tools, budget, approvals, and emergency stop policy."
         action={<ActionButton onClick={() => setEditorOpen(true)}><Plus size={15} /> Create Agent</ActionButton>}
       />
       <Section>
@@ -160,7 +160,7 @@ export default function AgentsPage() {
           {activeTab === "agents" ? (
             <div id="agent-list">
               <DataTable
-                columns={["Agent", "Owner / Team", "Models", "Data Boundary", "Human approval", "Kill switch", "Risk", "Action"]}
+                columns={["Agent", "Owner / Team", "Models", "Data Boundary", "Human approval", "Emergency stop", "Risk", "Action"]}
                 rows={agents.map((agent) => [
                   <span key="name" className="font-semibold">{agent.name}</span>,
                   <span key="owner">{agent.owner}<span className="block text-xs text-slate-500">{agent.department}</span></span>,
@@ -183,7 +183,7 @@ export default function AgentsPage() {
                 <LockKeyhole className="mt-1 text-[var(--brand-primary)]" size={20} />
                 <div>
                   <h2 className="font-semibold">Agent safety boundary</h2>
-                  <p className="mt-2 text-sm text-slate-600">Agents use allowlisted tools, enforced budgets, approvals, and kill switches.</p>
+                  <p className="mt-2 text-sm text-slate-600">Agents use allowlisted tools, enforced budgets, approval paths, and emergency stop controls.</p>
                   <p className="mt-1 text-xs text-slate-500">External tool actions require approval, payload review, and audit recording before execution.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-4">
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Assigned users and teams</div>
@@ -191,7 +191,7 @@ export default function AgentsPage() {
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Human approval rules</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Usage limits and audit logs</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">MCP/tool governance</div>
-                    <div className="rounded-md border border-slate-200 p-3 text-sm">Agent Command Center kill switch</div>
+                    <div className="rounded-md border border-slate-200 p-3 text-sm">Emergency stop policy</div>
                   </div>
                 </div>
               </div>

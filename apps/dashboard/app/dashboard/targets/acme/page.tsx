@@ -1,17 +1,20 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Activity, ArrowRight, Boxes, CheckCircle2, Cpu, FileText, HardDrive, RotateCcw, Server, UploadCloud, Zap } from "lucide-react";
 import { useState } from "react";
 import { AreaMetricChart, MultiLineChart } from "@/components/charts";
-import { ActionButton, Card, ChartCard, DataTable, MetricCard, MockAction, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, ChartCard, DataTable, MetricCard, MockAction, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { cpuRamSeries, services, targets, timeline } from "@/lib/mock-data";
 
 export default function AcmeTargetDetailPage() {
   const target = targets[0];
+  const router = useRouter();
   const { showToast, addAudit } = useAppState();
   const [progress, setProgress] = useState(10);
   const [activePanel, setActivePanel] = useState("metrics");
+  const [rollbackOpen, setRollbackOpen] = useState(false);
 
   function simulateDeploy() {
     setProgress(2);
@@ -25,6 +28,13 @@ export default function AcmeTargetDetailPage() {
   function requestDeploymentApproval() {
     showToast("Deployment approval requested");
     addAudit("Deployment approval requested", target.name, "Permission");
+  }
+
+  function confirmRollback() {
+    showToast("Rollback approval request created");
+    addAudit("Rollback approval requested", target.name, "Permission");
+    setRollbackOpen(false);
+    router.push("/dashboard/approval-inbox");
   }
 
   return (
@@ -80,11 +90,7 @@ export default function AcmeTargetDetailPage() {
               <MockAction label="Restart Service" auditTarget={target.name} />
               <MockAction label="Upgrade Stack" auditTarget={target.name} />
               <MockAction label="View Logs" auditTarget={target.name} />
-              <ActionButton variant="danger" onClick={() => {
-                if (!window.confirm("Simulate rollback? No infrastructure changes will be made; an audit event will be recorded.")) return;
-                showToast("Rollback command queued");
-                addAudit("Rollback command queued", target.name);
-              }}>Rollback</ActionButton>
+              <ActionButton variant="danger" onClick={() => setRollbackOpen(true)}>Request rollback approval</ActionButton>
             </div>
           </Card>
         </div>
@@ -178,6 +184,18 @@ export default function AcmeTargetDetailPage() {
           ) : null}
         </div>
       </Section>
+      {rollbackOpen ? (
+        <Modal title="Request rollback approval" onClose={() => setRollbackOpen(false)}>
+          <div className="rounded-md border border-[rgba(245,158,11,0.28)] bg-[rgba(245,158,11,0.08)] p-4">
+            <p className="text-sm font-medium text-[var(--text-primary)]">Rollback is a production-impacting stack action.</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">This sends the exact rollback request to Approval Inbox before any deployment command is executed.</p>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <ActionButton variant="secondary" onClick={() => setRollbackOpen(false)}>Cancel</ActionButton>
+            <ActionButton onClick={confirmRollback}>Open Approval Inbox</ActionButton>
+          </div>
+        </Modal>
+      ) : null}
     </>
   );
 }

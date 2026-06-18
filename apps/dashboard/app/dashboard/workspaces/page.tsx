@@ -14,6 +14,7 @@ const agentOptions = ["Claims Summary Agent", "Contract Review Agent", "Support 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
   const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
+  const [disableWorkspace, setDisableWorkspace] = useState<Workspace | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"workspaces" | "boundary">("workspaces");
   const [name, setName] = useState("Legal AI Assistant");
@@ -107,7 +108,10 @@ export default function WorkspacesPage() {
 
   function togglePublish(workspace: Workspace) {
     const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
-    if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface.`)) return;
+    if (next === "Disabled") {
+      setDisableWorkspace(workspace);
+      return;
+    }
     if (next === "Published") {
       setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: "Pending approval", status: "Pending approval" } : item));
       showToast(`Approval requested for ${workspace.name}`);
@@ -117,6 +121,14 @@ export default function WorkspacesPage() {
     setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: next, status: next === "Disabled" ? "Offline" : item.status } : item));
     showToast(`${workspace.name} ${next.toLowerCase()}`);
     addAudit("Workspace publish state changed", workspace.name, "Permission");
+  }
+
+  function confirmDisableWorkspace() {
+    if (!disableWorkspace) return;
+    setWorkspaces((current) => current.map((item) => item.name === disableWorkspace.name ? { ...item, publishStatus: "Disabled", status: "Offline" } : item));
+    showToast(`${disableWorkspace.name} disabled`);
+    addAudit("Workspace disabled", disableWorkspace.name, "Permission");
+    setDisableWorkspace(null);
   }
 
   return (
@@ -241,6 +253,18 @@ export default function WorkspacesPage() {
             addAudit("Workspace policy opened", selectedWorkspace.name, "Permission");
           }}
         />
+      ) : null}
+      {disableWorkspace ? (
+        <Modal title={`Disable ${disableWorkspace.name}?`} onClose={() => setDisableWorkspace(null)}>
+          <div className="rounded-md border border-[rgba(225,29,72,0.22)] bg-[rgba(225,29,72,0.06)] p-4">
+            <p className="text-sm font-medium text-[var(--text-primary)]">Users will lose access to this governed AI interface.</p>
+            <p className="mt-1 text-xs text-[var(--text-secondary)]">The workspace remains in the catalog and can be republished through the approval workflow.</p>
+          </div>
+          <div className="mt-5 flex justify-end gap-2">
+            <ActionButton variant="secondary" onClick={() => setDisableWorkspace(null)}>Cancel</ActionButton>
+            <ActionButton variant="danger" onClick={confirmDisableWorkspace}>Disable workspace</ActionButton>
+          </div>
+        </Modal>
       ) : null}
     </>
   );
