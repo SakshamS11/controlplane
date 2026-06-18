@@ -164,6 +164,33 @@ const detailTabs: Array<{ id: DetailTab; label: string }> = [
   { id: "audit", label: "Recent Audit" }
 ];
 
+const queuePreviews = [
+  {
+    title: "Recommendations",
+    value: "8 open",
+    detail: "Capacity, cost, routing, governance, cache, and evidence actions.",
+    href: "/dashboard/recommendations",
+    action: "Open action queue",
+    status: "Warning"
+  },
+  {
+    title: "Incidents",
+    value: "5 active",
+    detail: "Legal Sandbox offline is the highest-priority response item.",
+    href: "/dashboard/incidents",
+    action: "Review response",
+    status: "Critical"
+  },
+  {
+    title: "Approval Inbox",
+    value: "6 pending",
+    detail: "Production route, workspace, budget, and agent decisions await review.",
+    href: "/dashboard/approval-inbox",
+    action: "Review pending",
+    status: "Warning"
+  }
+];
+
 export default function DashboardOverviewPage() {
   const { showToast, addAudit } = useAppState();
   const [detailTab, setDetailTab] = useState<DetailTab>("infrastructure");
@@ -197,10 +224,11 @@ export default function DashboardOverviewPage() {
     const common = "inline-flex min-h-7 items-center justify-center rounded-md px-2 text-[10px] font-semibold shadow-sm transition hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-1";
 
     if (label === "Open Server") return <Link href="/dashboard/targets" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
-    if (label === "Review Capacity" || label === "Reclaim Capacity") return <Link href="/dashboard/cost-capacity" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
+    if (label === "Review Capacity" || label === "Reclaim Capacity") return <Link href="/dashboard/recommendations" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     if (label === "View Providers" || label === "Review Model Access") return <Link href="/dashboard/models" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     if (label === "Review Evidence") return <Link href="/dashboard/compliance" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
-    if (label === "View Logs" || label === "Simulate Fix" || label === "Simulate Savings" || label === "Enforce Local-Only") return <button type="button" onClick={() => simulateAction(label, target)} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</button>;
+    if (label === "Simulate Fix" || label === "Simulate Savings" || label === "Enforce Local-Only") return <Link href="/dashboard/recommendations" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
+    if (label === "View Logs") return <button type="button" onClick={() => simulateAction(label, target)} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</button>;
     if (label === "Notify Team Owner") return <button type="button" onClick={() => openReminder(teams.find((team) => team.team === target) ?? teams[0])} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}><Send size={11} /> {label}</button>;
     if (label === "Restart Agent") return <button type="button" onClick={() => setConfirmation({ title: "Restart Legal Sandbox agent", message: "Queue an allowlisted restart command for Legal Sandbox?", impact: "Legal workspace availability should return after the agent reconnects.", target: "Legal Sandbox", auditType: "Agent" })} className={`${common} bg-[var(--status-critical)] text-white hover:bg-rose-700`}>{label}</button>;
     if (label === "Apply Routing Policy") return <button type="button" onClick={() => setConfirmation({ title: "Apply approved fallback routing", message: "Route critical GPT-5 work to Claude or Qwen Local?", impact: "Expected latency and provider concentration risk will decrease.", target: "GPT-5", auditType: "Routing" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
@@ -223,13 +251,34 @@ export default function DashboardOverviewPage() {
         {healthCards.map((item) => <HealthCard key={item.label} {...item} />)}
       </div>
 
+      <div className="mt-3 grid gap-3 lg:grid-cols-3">
+        {queuePreviews.map((item) => (
+          <Card key={item.title} className="p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h2 className="text-sm font-semibold">{item.title}</h2>
+                <p className="mt-1 text-2xl font-semibold">{item.value}</p>
+              </div>
+              <StatusBadge value={item.status} />
+            </div>
+            <p className="mt-2 min-h-10 text-xs leading-5 text-[var(--text-secondary)]">{item.detail}</p>
+            <Link href={item.href} className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-[var(--brand-primary)] hover:underline">
+              {item.action} <ArrowRight size={12} />
+            </Link>
+          </Card>
+        ))}
+      </div>
+
       <Card className="mt-3 overflow-hidden">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
-          <div><h2 className="text-sm font-semibold">Immediate Attention</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Prioritized by operational impact.</p></div>
-          <Link href="/dashboard/monitoring" className="text-[10px] font-semibold text-[var(--brand-primary)]">View all alerts</Link>
+          <div><h2 className="text-sm font-semibold">Immediate Attention Preview</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Top signals only. Response lives in Incidents; recommendations live in Recommendations.</p></div>
+          <div className="flex gap-3">
+            <Link href="/dashboard/recommendations" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open Recommendations</Link>
+            <Link href="/dashboard/incidents" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open Incidents</Link>
+          </div>
         </div>
         <div className="divide-y divide-[var(--border-subtle)]">
-          {alerts.map((alert) => (
+          {alerts.slice(0, 3).map((alert) => (
             <div key={alert.title} className={`grid gap-2 border-l-2 px-3.5 py-2.5 transition hover:bg-[var(--surface-muted)] xl:grid-cols-[190px_minmax(0,1fr)_210px_auto] xl:items-center ${alert.severity === "Critical" ? "border-l-[var(--status-critical)]" : alert.severity === "Medium" ? "border-l-[var(--brand-primary)]" : "border-l-[var(--status-warning)]"}`}>
               <div className="min-w-0"><div className="flex items-center gap-1.5"><StatusBadge value={alert.severity} /><span className="truncate text-[9px] font-semibold uppercase text-[var(--text-secondary)]">{alert.area}</span></div><h3 className="mt-1 truncate text-xs font-semibold">{alert.title}</h3></div>
               <div className="min-w-0"><p className="truncate text-[11px] text-[var(--text-primary)]">{alert.problem}</p><p className="mt-0.5 truncate text-[10px] text-[var(--status-critical)]"><span className="font-semibold">If ignored:</span> {alert.impact}</p></div>
@@ -302,7 +351,7 @@ function TeamsTable({ onNotify }: { onNotify: (team: (typeof teams)[number]) => 
 }
 
 function CostSnapshot() {
-  return <Card className="p-4"><div className="flex items-start justify-between gap-2"><div><h2 className="text-sm font-semibold">Cost Snapshot</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Current forecast and saving opportunity.</p></div><CircleDollarSign size={16} className="text-[var(--brand-primary)]" /></div><div className="mt-3 grid grid-cols-2 gap-2"><MiniStat label="Projected cost" value="AED 184k" /><MiniStat label="Budget remaining" value="AED 46k" /><MiniStat label="Savings" value="AED 42k" healthy /><MiniStat label="Teams over budget" value="2" warning /></div><p className="mt-3 text-[10px] text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Highest driver:</span> GPT-5 drafting</p><Link href="/dashboard/cost-capacity" className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--brand-primary)]">Review Marketing ladder <ArrowRight size={11} /></Link></Card>;
+  return <Card className="p-4"><div className="flex items-start justify-between gap-2"><div><h2 className="text-sm font-semibold">Cost Snapshot</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Current forecast and saving opportunity.</p></div><CircleDollarSign size={16} className="text-[var(--brand-primary)]" /></div><div className="mt-3 grid grid-cols-2 gap-2"><MiniStat label="Projected cost" value="AED 184k" /><MiniStat label="Budget remaining" value="AED 46k" /><MiniStat label="Savings" value="AED 42k" healthy /><MiniStat label="Teams over budget" value="2" warning /></div><p className="mt-3 text-[10px] text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Highest driver:</span> GPT-5 drafting</p><Link href="/dashboard/recommendations" className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--brand-primary)]">Open cost recommendations <ArrowRight size={11} /></Link></Card>;
 }
 
 function MiniStat({ label, value, healthy, warning }: { label: string; value: string; healthy?: boolean; warning?: boolean }) {

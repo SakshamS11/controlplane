@@ -179,6 +179,12 @@ export default function MonitoringPage() {
           >
             Open affected servers <ArrowRight size={15} />
           </Link>
+          <Link
+            href="/dashboard/incidents"
+            className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]"
+          >
+            Open incidents <ArrowRight size={15} />
+          </Link>
           <ActionButton variant="secondary" onClick={acknowledgeScope}>Acknowledge scope</ActionButton>
         </div>
       </div>
@@ -219,9 +225,11 @@ export default function MonitoringPage() {
         <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 md:flex-row md:items-center">
           <div>
             <h2 className="font-semibold text-[var(--text-primary)]">What needs attention right now</h2>
-            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Incidents are ordered by operational urgency.</p>
+            <p className="mt-0.5 text-xs text-[var(--text-secondary)]">Monitoring shows the signal; Incidents owns response and mitigation.</p>
           </div>
           <div className="flex flex-wrap gap-2">
+            <Link href="/dashboard/incidents" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open incidents</Link>
+            <span className="text-[var(--border-subtle)]">|</span>
             <Link href="/dashboard/routing-policies" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Review model routing</Link>
             <span className="text-[var(--border-subtle)]">|</span>
             <Link href="/dashboard/settings" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Tune thresholds</Link>
@@ -235,7 +243,9 @@ export default function MonitoringPage() {
               <div className="text-xs font-semibold text-[var(--text-secondary)]">{alert.area}</div>
               <div className="text-sm font-medium text-[var(--text-primary)]">{alert.title}</div>
               <div className="text-xs text-[var(--text-secondary)]">{alertActions[alert.area]}</div>
-              <ActionButton variant="secondary" onClick={() => simulateAction(`Open ${alert.area} alert`, alert.title)}>Open</ActionButton>
+              <Link href="/dashboard/incidents" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                Open incident
+              </Link>
             </div>
           ))}
           {visibleAlerts.length === 0 ? (

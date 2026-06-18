@@ -235,12 +235,12 @@ const navSections = [
 ];
 
 const pageActions: Record<string, { href: string; label: string }> = {
-  "/dashboard": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
-  "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Review Recommendations" },
-  "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review Open" },
+  "/dashboard": { href: "/dashboard/recommendations", label: "Review recommendations" },
+  "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Simulate top recommendation" },
+  "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review open incidents" },
   "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
   "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
-  "/dashboard/monitoring": { href: "/dashboard/monitoring", label: "Open Alerts" },
+  "/dashboard/monitoring": { href: "/dashboard/incidents", label: "Open incidents" },
   "/dashboard/stacks": { href: "/dashboard/stacks", label: "Deploy Stack" },
   "/dashboard/models": { href: "/dashboard/models#integrate-model", label: "Add Model" },
   "/dashboard/routing-policies": { href: "/dashboard/routing-policies#routing-form", label: "Create Policy" },
@@ -248,11 +248,11 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/knowledge-bases": { href: "/dashboard/knowledge-bases#kb-form", label: "Add Source" },
   "/dashboard/agents": { href: "/dashboard/agents#agent-form", label: "Create Agent" },
   "/dashboard/departments": { href: "/dashboard/departments#create-team", label: "Create Team" },
-  "/dashboard/approval-inbox": { href: "/dashboard/approval-inbox", label: "Review Pending" },
+  "/dashboard/approval-inbox": { href: "/dashboard/approval-inbox", label: "Review pending" },
   "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
   "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
-  "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run Simulator" },
-  "/dashboard/cost-capacity": { href: "/dashboard/cost-capacity#safeguards", label: "Review Savings" },
+  "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run simulator" },
+  "/dashboard/cost-capacity": { href: "/dashboard/recommendations", label: "Review savings" },
   "/dashboard/settings": { href: "/dashboard/settings#thresholds", label: "Configure" }
 };
 
@@ -370,14 +370,16 @@ function TopBar() {
   const [alertMenuOpen, setAlertMenuOpen] = useState(false);
 
   const commands = useMemo<GlobalCommand[]>(() => [
-    { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Open Overview", detail: "Command Center / AI estate health", href: "/dashboard", icon: LayoutDashboard },
     { label: "Open Recommendations", detail: "Command Center / Priority action queue", href: "/dashboard/recommendations", icon: Sparkles },
-    { label: "Review cost recommendations", detail: "Recommendations / Savings and spend", href: "/dashboard/recommendations", icon: WalletCards },
-    { label: "Review governance recommendations", detail: "Recommendations / Evidence and policy gaps", href: "/dashboard/recommendations", icon: ShieldCheck },
-    { label: "Simulate top recommendation", detail: "Recommendations / Preview expected impact", href: "/dashboard/recommendations", icon: SlidersHorizontal },
     { label: "Open Incidents", detail: "Command Center / Active response", href: "/dashboard/incidents", icon: AlertTriangle },
     { label: "Open Approval Inbox", detail: "Govern / Pending high-impact changes", href: "/dashboard/approval-inbox", icon: FileCheck2 },
-    { label: "Review high-risk approvals", detail: "Approvals / Due soon", href: "/dashboard/approval-inbox", icon: ShieldCheck },
+    { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
+    { label: "Review cost recommendations", detail: "Recommendations / Savings and spend", href: "/dashboard/recommendations", icon: WalletCards },
+    { label: "Review governance recommendations", detail: "Recommendations / Evidence and policy gaps", href: "/dashboard/recommendations", icon: ShieldCheck },
+    { label: "Review open incidents", detail: "Incidents / Response queue", href: "/dashboard/incidents", icon: AlertTriangle },
+    { label: "Review pending approvals", detail: "Approval Inbox / Decisions due", href: "/dashboard/approval-inbox", icon: FileCheck2 },
+    { label: "Simulate top recommendation", detail: "Recommendations / Preview expected impact", href: "/dashboard/recommendations", icon: SlidersHorizontal },
     { label: "Show degraded providers", detail: "Monitoring / Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
     { label: "Create Legal AI Workspace", detail: "Workspace / Governed interface", href: "/dashboard/workspaces", icon: Layers },
     { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },

@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import {
@@ -165,6 +166,9 @@ export default function RoutingPoliciesPage() {
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                Open recommendation
+              </Link>
               <ActionButton onClick={() => applyIncidentRoute("Critical GPT-5 traffic routed to Claude")}><ArrowRightLeft size={14} /> Route to Claude</ActionButton>
               <ActionButton variant="secondary" onClick={() => applyIncidentRoute("Sensitive GPT-5 traffic routed to Qwen 32B")}><ShieldCheck size={14} /> Route to Qwen</ActionButton>
             </div>
@@ -248,7 +252,7 @@ export default function RoutingPoliciesPage() {
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{suggestion.workload}</p>
                 <p className="mt-1 text-xs font-semibold text-[var(--brand-primary-dark)]">{suggestion.route}</p>
                 <p className="mt-1 min-h-8 text-xs leading-4 text-[var(--text-secondary)]">{suggestion.rule}</p>
-                <button type="button" onClick={() => applyIncidentRoute(`${suggestion.workload} recommendation applied`)} className="mt-2 text-xs font-semibold text-[var(--brand-primary)]">Apply suggestion</button>
+                <Link href="/dashboard/recommendations" className="mt-2 inline-flex text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
               </div>
             ))}
           </div>

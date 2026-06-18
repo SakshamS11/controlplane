@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Download, FileCheck2, ShieldCheck, TriangleAlert } from "lucide-react";
 import { ActionButton, Card, DataTable, MetricCard, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
@@ -42,7 +43,10 @@ export default function ComplianceReadinessPage() {
               <h2 className="font-semibold">ISO/IEC 42001 readiness support</h2>
               <p className="mt-1 text-sm text-[var(--text-secondary)]">Evidence readiness supports preparation; it does not mean certification.</p>
             </div>
-            <StatusBadge value="Warning" />
+            <div className="flex flex-wrap items-center gap-3">
+              <StatusBadge value="Warning" />
+              <Link href="/dashboard/recommendations" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Open governance recommendations</Link>
+            </div>
           </div>
         </Card>
         <div className="mb-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -78,7 +82,10 @@ export default function ComplianceReadinessPage() {
           {activeTab === "gaps" ? (
             <div className="grid gap-3 p-4 md:grid-cols-2 xl:grid-cols-3">
               {["Finance retention policy pending", "5 risk assessments incomplete", "Provider drift response needs owner", "Evidence export needs review approver", "Agent tool registry incomplete"].map((gap) => (
-                <div key={gap} className="rounded-md border border-amber-100 bg-amber-50 px-3 py-3 text-sm text-amber-900">{gap}</div>
+                <div key={gap} className="rounded-md border border-amber-100 bg-amber-50 px-3 py-3 text-sm text-amber-900">
+                  <div>{gap}</div>
+                  <Link href="/dashboard/recommendations" className="mt-2 inline-flex text-xs font-semibold text-amber-950 underline">Open in Recommendations</Link>
+                </div>
               ))}
             </div>
           ) : null}

@@ -767,6 +767,9 @@ export default function ResourcePlannerPage() {
                 setReviewedRecommendation(null);
                 openSimulator(reviewedRecommendation.team);
               }}>Simulate plan</ActionButton>
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                Open in Recommendations
+              </Link>
               <ActionButton variant="secondary" onClick={() => setReviewedRecommendation(null)}>Close</ActionButton>
             </div>
           </aside>
@@ -808,12 +811,15 @@ function SummaryView({ onReview, onSimulate }: { onReview: () => void; onSimulat
               Claims needs more local capacity, but GPU is already 100% assigned. Reclaim Finance capacity before adding load.
             </p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <ActionButton onClick={onSimulate}>Run Simulator</ActionButton>
-            <button type="button" onClick={onReview} className="min-h-10 rounded-md border border-white/20 px-3.5 text-sm font-medium text-white hover:bg-white/10">
-              Review evidence
-            </button>
-          </div>
+            <div className="flex flex-wrap gap-2">
+              <ActionButton onClick={onSimulate}>Run Simulator</ActionButton>
+              <button type="button" onClick={onReview} className="min-h-10 rounded-md border border-white/20 px-3.5 text-sm font-medium text-white hover:bg-white/10">
+                Review evidence
+              </button>
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center rounded-md border border-white/20 px-3.5 text-sm font-medium text-white hover:bg-white/10">
+                Open in Recommendations
+              </Link>
+            </div>
         </div>
         <div className="grid gap-px bg-[var(--border-subtle)] sm:grid-cols-3">
           <SummaryStat label="Local GPU assigned" value="100%" status="At capacity" />
@@ -851,6 +857,9 @@ function SummaryView({ onReview, onSimulate }: { onReview: () => void; onSimulat
             <h2 className="font-semibold">Planning signals</h2>
           </div>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Usage, cost, latency, GPU pressure, sensitivity, and evidence readiness shape each recommendation.</p>
+          <Link href="/dashboard/recommendations" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[var(--brand-primary)] hover:underline">
+            Open full action workflow <ArrowRight size={14} />
+          </Link>
         </Card>
       </div>
     </div>
@@ -865,7 +874,10 @@ function RecommendationView({ onReview, onSimulate }: { onReview: (item: Recomme
           <h2 className="font-semibold">Recommendation queue</h2>
           <p className="mt-1 text-sm text-[var(--text-secondary)]">Open details only when evidence is needed.</p>
         </div>
-        <StatusBadge value="AED 9,400 potential savings" />
+        <div className="flex flex-wrap items-center gap-3">
+          <StatusBadge value="AED 9,400 potential savings" />
+          <Link href="/dashboard/recommendations" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
+        </div>
       </div>
       <DataTable
         columns={["Status", "Team", "Issue", "Recommended action", "Projected impact", "Actions"]}
