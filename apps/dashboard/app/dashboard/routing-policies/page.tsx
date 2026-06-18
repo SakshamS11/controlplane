@@ -14,7 +14,7 @@ import {
   Sparkles,
   WalletCards
 } from "lucide-react";
-import { ActionButton, Card, Modal, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, Modal, Section, StatusBadge, useAppState } from "@/components/ui";
 
 type Policy = {
   name: string;
@@ -125,11 +125,6 @@ export default function RoutingPoliciesPage() {
     window.history.replaceState(null, "", window.location.pathname);
   }
 
-  function applyIncidentRoute(target: string) {
-    showToast(target);
-    addAudit("Provider incident routing applied", target, "Model");
-  }
-
   function reviewModule(name: string) {
     const policy = policies.find((item) => item.name === name);
     if (policy) openEdit(policy);
@@ -162,15 +157,19 @@ export default function RoutingPoliciesPage() {
                   <StatusBadge value="Degraded" />
                   <span className="text-xs text-[var(--text-secondary)]">48 seconds ago</span>
                 </div>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">Elevated latency on GPT-5 requests. Approved Claude and Qwen routes are ready.</p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">Elevated latency on GPT-5 requests. Route changes are reviewed through Recommendations and Approval Inbox.</p>
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
-              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
-                Open recommendation
+              <Link href="/dashboard/incidents" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                View incident
               </Link>
-              <ActionButton onClick={() => applyIncidentRoute("Critical GPT-5 traffic routed to Claude")}><ArrowRightLeft size={14} /> Route to Claude</ActionButton>
-              <ActionButton variant="secondary" onClick={() => applyIncidentRoute("Sensitive GPT-5 traffic routed to Qwen 32B")}><ShieldCheck size={14} /> Route to Qwen</ActionButton>
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                Review recommendation
+              </Link>
+              <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">
+                Request approval
+              </Link>
             </div>
           </div>
         </Card>
@@ -186,6 +185,7 @@ export default function RoutingPoliciesPage() {
                 </div>
                 <h2 className="mt-3 text-sm font-semibold text-[var(--text-primary)]">{module.name}</h2>
                 <p className="mt-1 min-h-10 text-xs leading-5 text-[var(--text-secondary)]">{module.control}</p>
+                <div className="mt-3"><DataBoundaryChip value={module.name === "Sovereignty Router" || module.name === "Prompt Firewall" ? "Private GPU Runtime" : module.name === "Provider Degradation" ? "External AI Provider" : "Customer Cloud"} /></div>
                 <div className="mt-3 flex items-center justify-between gap-2">
                   <span className="text-xs text-[var(--text-secondary)]">{module.affected}</span>
                   <button type="button" onClick={() => reviewModule(module.name)} className="text-xs font-semibold text-[var(--brand-primary)]">Review rules</button>
@@ -212,7 +212,7 @@ export default function RoutingPoliciesPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1180px] text-left text-sm">
               <thead className="border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] text-xs uppercase text-[var(--text-secondary)]">
-                <tr>{["Policy", "Scope", "Sensitivity", "Primary Route", "Fallback", "Blocked", "Status", "Action"].map((column) => <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>)}</tr>
+                <tr>{["Policy", "Scope", "Boundary", "Sensitivity", "Primary Route", "Fallback", "Blocked", "Status", "Action"].map((column) => <th key={column} className="whitespace-nowrap px-4 py-3 font-semibold">{column}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">
                 {visiblePolicies.map((policy) => (
@@ -225,6 +225,7 @@ export default function RoutingPoliciesPage() {
                       </details>
                     </td>
                     <td className="max-w-[190px] px-4 py-3.5 text-[var(--text-secondary)]">{policy.scope}</td>
+                    <td className="whitespace-nowrap px-4 py-3.5"><DataBoundaryChip value={policy.primary.includes("Qwen") || policy.fallback.includes("No external") || policy.primary.includes("Local") ? "Private GPU Runtime" : "External AI Provider"} /></td>
                     <td className="whitespace-nowrap px-4 py-3.5"><span className="text-xs font-semibold text-[var(--brand-primary-dark)]">{policy.sensitivity}</span></td>
                     <td className="whitespace-nowrap px-4 py-3.5 font-medium text-[var(--text-primary)]">{policy.primary}</td>
                     <td className="max-w-[210px] px-4 py-3.5 text-xs leading-5 text-[var(--text-secondary)]">{policy.fallback}</td>

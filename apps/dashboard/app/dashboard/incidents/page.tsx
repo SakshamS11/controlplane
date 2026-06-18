@@ -24,6 +24,8 @@ type Incident = {
   approvals: string[];
   audit: string[];
   relatedHref: string;
+  relatedRecommendation: string;
+  relatedResource: string;
   rollback: string;
 };
 
@@ -52,6 +54,8 @@ const initialIncidents: Incident[] = [
     approvals: ["None required for restart"],
     audit: ["Agent missed heartbeat", "Monitoring alert opened"],
     relatedHref: "/dashboard/targets",
+    relatedRecommendation: "Reconnect Legal Sandbox agent",
+    relatedResource: "Legal Sandbox",
     rollback: "If restart fails, keep Legal workspace on approved local-only fallback and inspect logs."
   },
   {
@@ -70,6 +74,8 @@ const initialIncidents: Incident[] = [
     approvals: ["Capacity reallocation approval recommended"],
     audit: ["GPU threshold alert", "Planner recommendation generated"],
     relatedHref: "/dashboard/resource-planner#simulator",
+    relatedRecommendation: "Claims GPU reallocation",
+    relatedResource: "Claims On-Prem Node",
     rollback: "Return reclaimed capacity to Finance if Claims latency does not improve."
   },
   {
@@ -88,6 +94,8 @@ const initialIncidents: Incident[] = [
     approvals: ["Routing policy change may require approval for restricted work"],
     audit: ["Provider degradation detected", "Fallback recommendation opened"],
     relatedHref: "/dashboard/routing-policies",
+    relatedRecommendation: "OpenAI degraded fallback",
+    relatedResource: "OpenAI / GPT-5",
     rollback: "Restore GPT-5 primary route after provider health returns to normal."
   },
   {
@@ -106,6 +114,8 @@ const initialIncidents: Incident[] = [
     approvals: ["Budget circuit breaker approval pending"],
     audit: ["Cost forecast alert", "Marketing ladder recommendation generated"],
     relatedHref: "/dashboard/cost-capacity#safeguards",
+    relatedRecommendation: "Marketing cost ladder",
+    relatedResource: "Marketing drafting workspace",
     rollback: "Re-enable premium model route for executive content if quality risk increases."
   },
   {
@@ -124,6 +134,8 @@ const initialIncidents: Incident[] = [
     approvals: ["Finance agent external action"],
     audit: ["Approval gap detected", "Evidence readiness updated"],
     relatedHref: "/dashboard/approval-inbox",
+    relatedRecommendation: "Finance agent approval gap",
+    relatedResource: "Finance Analysis Agent",
     rollback: "Keep external action blocked until approval rule is enabled."
   }
 ];
@@ -158,6 +170,10 @@ function buildSimulation(incident: Incident, mode: "simulate" | "apply" | "logs"
       { label: "Audit result", value: `${incident.title} response recorded in this demo session.` }
     ]
   };
+}
+
+function incidentRequiresApproval(incident: Incident) {
+  return incident.approvals.some((approval) => !approval.toLowerCase().includes("none required"));
 }
 
 export default function IncidentsPage() {
@@ -203,6 +219,8 @@ export default function IncidentsPage() {
       approvals: ["Approval required if mitigation changes policy"],
       audit: ["Incident created"],
       relatedHref: "/dashboard/monitoring",
+      relatedRecommendation: "Manual triage recommendation",
+      relatedResource: draft.affected,
       rollback: "Close the incident if investigation confirms no operational risk."
     };
     setIncidents((current) => [newIncident, ...current]);
@@ -247,6 +265,22 @@ export default function IncidentsPage() {
   }
 
   function applyMitigation(incident: Incident) {
+    if (incidentRequiresApproval(incident)) {
+      updateIncident(incident.id, { status: "Mitigating" });
+      setSimulation({
+        title: `Approval request simulated: ${incident.title}`,
+        summary: "This mitigation needs approval before any real route, capacity, budget, or agent change. No backend change was made.",
+        rows: [
+          { label: "Approval path", value: "Approval Inbox" },
+          { label: "Requested change", value: incident.action },
+          { label: "Related recommendation", value: incident.relatedRecommendation }
+        ]
+      });
+      showToast(`${incident.title} approval requested`);
+      addAudit("Incident approval requested", incident.title, "Permission");
+      return;
+    }
+
     setConfirmation({
       title: `Apply mitigation for ${incident.title}?`,
       body: "Simulated action only. No infrastructure, routing, or budget policy will be changed.",
@@ -374,20 +408,22 @@ export default function IncidentsPage() {
               <ActionButton variant="secondary" onClick={() => acknowledge(selected)}>Acknowledge</ActionButton>
               <ActionButton variant="secondary" onClick={() => assignOwner(selected)}>Assign owner</ActionButton>
               <ActionButton variant="secondary" onClick={() => simulateFix(selected)}>Simulate fix</ActionButton>
-              <ActionButton onClick={() => applyMitigation(selected)}>Apply mitigation</ActionButton>
+              <ActionButton onClick={() => applyMitigation(selected)}>{incidentRequiresApproval(selected) ? "Request approval" : "Apply mitigation"}</ActionButton>
               <ActionButton variant={selected.severity === "Critical" ? "danger" : "secondary"} onClick={() => resolveIncident(selected)}>Resolve</ActionButton>
               <ActionButton variant="secondary" onClick={() => setSimulation(buildSimulation(selected, "logs"))}>View logs</ActionButton>
             </div>
-            <Link href={selected.relatedHref} className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-primary)] hover:underline">
+            <Link href={incidentRequiresApproval(selected) ? "/dashboard/approval-inbox" : selected.relatedHref} className="mt-4 inline-flex text-sm font-semibold text-[var(--brand-primary)] hover:underline">
               Open related page
             </Link>
           </Card>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <div className="mt-4 grid gap-4 lg:grid-cols-5">
           <DetailList label="Timeline" items={selected.timeline} />
+          <DetailList label="Related recommendation" items={[selected.relatedRecommendation]} />
           <DetailList label="Related approvals" items={selected.approvals} />
           <DetailList label="Related audit events" items={selected.audit} />
+          <RelatedResourceCard title="Related resource" value={selected.relatedResource} href={selected.relatedHref} />
         </div>
       </Section>
 
@@ -479,6 +515,18 @@ function DetailList({ label, items }: { label: string; items: string[] }) {
           </div>
         ))}
       </div>
+    </Card>
+  );
+}
+
+function RelatedResourceCard({ title, value, href }: { title: string; value: string; href: string }) {
+  return (
+    <Card className="p-4">
+      <div className="text-xs font-semibold uppercase text-[var(--text-secondary)]">{title}</div>
+      <p className="mt-3 text-sm font-semibold text-[var(--text-primary)]">{value}</p>
+      <Link href={href} className="mt-3 inline-flex text-xs font-semibold text-[var(--brand-primary)] hover:underline">
+        Open resource
+      </Link>
     </Card>
   );
 }

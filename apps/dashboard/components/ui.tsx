@@ -44,7 +44,7 @@ type GlobalCommand = {
   detail: string;
   icon: typeof Server;
   href?: string;
-  command?: "route-gpt5";
+  command?: "request-gpt5-route-approval";
 };
 type AppState = {
   toasts: Toast[];
@@ -239,9 +239,9 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Simulate top recommendation" },
   "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review open incidents" },
   "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
-  "/dashboard/targets/acme": { href: "/dashboard/targets/acme", label: "Deploy Stack" },
+  "/dashboard/targets/acme": { href: "/dashboard/approval-inbox", label: "Request deployment" },
   "/dashboard/monitoring": { href: "/dashboard/incidents", label: "Open incidents" },
-  "/dashboard/stacks": { href: "/dashboard/stacks", label: "Deploy Stack" },
+  "/dashboard/stacks": { href: "/dashboard/approval-inbox", label: "Request approval" },
   "/dashboard/models": { href: "/dashboard/models#integrate-model", label: "Add Model" },
   "/dashboard/routing-policies": { href: "/dashboard/routing-policies#routing-form", label: "Create Policy" },
   "/dashboard/workspaces": { href: "/dashboard/workspaces#workspace-form", label: "Create Workspace" },
@@ -384,7 +384,7 @@ function TopBar() {
     { label: "Create Legal AI Workspace", detail: "Workspace / Governed interface", href: "/dashboard/workspaces", icon: Layers },
     { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
     { label: "Open Qwen 32B model", detail: "Model / Local and restricted-safe", href: "/dashboard/models", icon: Sparkles },
-    { label: "Route GPT-5 critical work to Claude", detail: "Command / Apply simulated route", command: "route-gpt5", icon: Route },
+    { label: "Request GPT-5 fallback approval", detail: "Approval Inbox / Claude or Qwen fallback", command: "request-gpt5-route-approval", icon: Route },
     { label: "View agent kill switch controls", detail: "Agents / Safety controls", href: "/dashboard/agents", icon: Bot }
   ], []);
 
@@ -432,9 +432,10 @@ function TopBar() {
       router.push(command.href);
       return;
     }
-    if (command.command === "route-gpt5") {
-      showToast("Critical GPT-5 work routed to Claude");
-      addAudit("Global command applied routing policy", "GPT-5 to Claude", "Model");
+    if (command.command === "request-gpt5-route-approval") {
+      showToast("GPT-5 fallback approval request simulated");
+      addAudit("Global command requested routing approval", "GPT-5 to Claude or Qwen", "Permission");
+      router.push("/dashboard/approval-inbox");
     }
   }
 
@@ -683,6 +684,20 @@ export function StatusBadge({ value }: { value: string }) {
 export function RiskBadge({ level }: { level: "Low" | "Medium" | "High" | "Critical" | "Governance risk" | "Cost risk" }) {
   const value = level === "Low" ? "Healthy" : level;
   return <StatusBadge value={value} />;
+}
+
+export function DataBoundaryChip({ value }: { value: "External AI Provider" | "Private GPU Runtime" | "Customer Cloud" | "On-Prem / Sovereign" | "Air-gapped" }) {
+  const cls = value === "External AI Provider"
+    ? "bg-[rgba(245,158,11,0.10)] text-[var(--status-warning)] ring-[rgba(245,158,11,0.24)]"
+    : value === "Private GPU Runtime"
+      ? "bg-[rgba(22,199,232,0.10)] text-cyan-700 ring-[rgba(22,199,232,0.24)]"
+      : value === "Customer Cloud"
+        ? "bg-[rgba(91,61,255,0.09)] text-[var(--brand-primary-dark)] ring-[rgba(91,61,255,0.20)]"
+        : value === "Air-gapped"
+          ? "bg-slate-900 text-white ring-slate-700"
+          : "bg-[rgba(16,185,129,0.10)] text-[var(--status-healthy)] ring-[rgba(16,185,129,0.24)]";
+
+  return <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${cls}`}>{value}</span>;
 }
 
 export function ActionButton({ children, onClick, variant = "primary" }: { children: ReactNode; onClick?: () => void; variant?: "primary" | "secondary" | "danger" }) {

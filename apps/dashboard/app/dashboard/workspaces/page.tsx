@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Copy, ExternalLink, Layers, LockKeyhole, MailPlus, Plus, Power, Save, ShieldCheck } from "lucide-react";
-import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 import { departments as departmentOptions, workspaces as initialWorkspaces } from "@/lib/mock-data";
 
 type Workspace = (typeof initialWorkspaces)[number];
@@ -107,6 +108,11 @@ export default function WorkspacesPage() {
   function togglePublish(workspace: Workspace) {
     const next = workspace.publishStatus === "Published" ? "Disabled" : "Published";
     if (next === "Disabled" && !window.confirm(`Disable ${workspace.name}? Users will lose access to this governed AI interface in the demo.`)) return;
+    if (next === "Published") {
+      showToast(`Approval request simulated for ${workspace.name}`);
+      addAudit("Workspace publishing approval requested", workspace.name, "Permission");
+      return;
+    }
     setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: next, status: next === "Disabled" ? "Offline" : item.status } : item));
     showToast(`${workspace.name} ${next.toLowerCase()}`);
     addAudit("Workspace publish state changed", workspace.name, "Permission");
@@ -140,11 +146,12 @@ export default function WorkspacesPage() {
           {activeTab === "workspaces" ? (
             <div id="workspace-list">
               <DataTable
-                columns={["Workspace", "Team", "Interface", "Status", "Allowed models", "Launch", "Manage"]}
+                columns={["Workspace", "Team", "Interface", "Data Boundary", "Status", "Allowed models", "Launch", "Manage"]}
                 rows={workspaces.map((workspace) => [
                   <span key="name" className="font-semibold">{workspace.name}</span>,
                   workspace.department,
                   workspace.interface,
+                  <DataBoundaryChip key="boundary" value={workspace.externalRule.includes("Blocked") ? "On-Prem / Sovereign" : workspace.externalRule.includes("Restricted") ? "Private GPU Runtime" : "External AI Provider"} />,
                   <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
                   workspace.allowedModels.join(", "),
                   <div key="launch" className="flex flex-wrap gap-2">
@@ -153,6 +160,7 @@ export default function WorkspacesPage() {
                   </div>,
                   <div key="manage" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Edit</ActionButton>
+                    {workspace.publishStatus !== "Published" ? <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open approval</Link> : null}
                     <button onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
                   </div>
                 ])}
@@ -257,6 +265,9 @@ function WorkspaceLaunchModal({ workspace, onClose, onCopy, onInvite, onPolicy }
         <InfoRow label="Knowledge bases" value={workspace.knowledgeBases.join(", ")} />
         <InfoRow label="Agents" value={workspace.agents.join(", ")} />
         <InfoRow label="External rule" value={workspace.externalRule} />
+      </div>
+      <div className="mt-4">
+        <DataBoundaryChip value={workspace.externalRule.includes("Blocked") ? "On-Prem / Sovereign" : workspace.externalRule.includes("Restricted") ? "Private GPU Runtime" : "External AI Provider"} />
       </div>
       <div className="mt-5 flex flex-wrap gap-2">
         <a href={workspace.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><ExternalLink size={14} /> Open workspace</a>

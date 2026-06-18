@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Bot, Boxes, CheckCircle2, LockKeyhole, Plus, ShieldCheck } from "lucide-react";
-import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const agentSeed = [
   {
@@ -82,6 +83,12 @@ const agentSeed = [
   }
 ];
 
+function boundaryForAgent(agent: { external: string; models: string }) {
+  if (agent.external === "Blocked") return "On-Prem / Sovereign" as const;
+  if (agent.models.includes("Qwen") || agent.models.includes("Llama") || agent.models.includes("DeepSeek")) return "Private GPU Runtime" as const;
+  return "External AI Provider" as const;
+}
+
 export default function AgentsPage() {
   const [agents, setAgents] = useState(agentSeed);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -153,15 +160,20 @@ export default function AgentsPage() {
           {activeTab === "agents" ? (
             <div id="agent-list">
               <DataTable
-                columns={["Agent", "Owner / Team", "Models", "Human approval", "Kill switch", "Risk", "Action"]}
+                columns={["Agent", "Owner / Team", "Models", "Data Boundary", "Human approval", "Kill switch", "Risk", "Action"]}
                 rows={agents.map((agent) => [
                   <span key="name" className="font-semibold">{agent.name}</span>,
                   <span key="owner">{agent.owner}<span className="block text-xs text-slate-500">{agent.department}</span></span>,
                   agent.models,
+                  <DataBoundaryChip key="boundary" value={boundaryForAgent(agent)} />,
                   agent.approval,
                   <StatusBadge key="kill" value={agent.killSwitch} />,
                   <StatusBadge key="status" value={agent.status} />,
-                  <ActionButton key="action" variant="secondary" onClick={() => editAgent(agent)}>Edit</ActionButton>
+                  <div key="action" className="flex flex-wrap gap-2">
+                    <ActionButton variant="secondary" onClick={() => editAgent(agent)}>Edit</ActionButton>
+                    {agent.status === "Governance risk" || agent.external.includes("Approval") ? <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open approval</Link> : null}
+                    {agent.status === "Governance risk" ? <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open recommendation</Link> : null}
+                  </div>
                 ])}
               />
             </div>
@@ -172,6 +184,7 @@ export default function AgentsPage() {
                 <div>
                   <h2 className="font-semibold">Agent safety boundary</h2>
                   <p className="mt-2 text-sm text-slate-600">Agents use allowlisted tools, enforced budgets, approvals, and kill switches.</p>
+                  <p className="mt-1 text-xs text-slate-500">Tool execution is simulated in this prototype. Real execution requires backend, gateway, tool governance, and approval enforcement.</p>
                   <div className="mt-4 grid gap-3 md:grid-cols-4">
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Assigned users and teams</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm">Allowed models and knowledge</div>

@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ArrowRight, CheckCircle2, Clock3, FileCheck2, GitPullRequestArrow, ShieldAlert } from "lucide-react";
-import { ActionButton, Card, MetricCard, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, MetricCard, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 type ApprovalStatus = "Pending" | "Approved" | "Denied" | "Changes requested" | "Expired";
 type Approval = {
@@ -22,6 +22,10 @@ type Approval = {
   related: string;
   relatedHref: string;
   exactChange: string;
+  relatedRecommendation: string;
+  relatedIncident: string;
+  relatedAudit: string;
+  boundary: "External AI Provider" | "Private GPU Runtime" | "Customer Cloud" | "On-Prem / Sovereign" | "Air-gapped";
 };
 
 type SimulationResult = {
@@ -48,7 +52,11 @@ const initialApprovals: Approval[] = [
     rollback: "Restore GPT-5 primary route when provider health returns to normal.",
     related: "OpenAI GPT-5 latency degraded",
     relatedHref: "/dashboard/incidents",
-    exactChange: "Set Claims critical task route to Claude first, Qwen fallback, and pause GPT-5 until provider health recovers."
+    exactChange: "Set Claims critical task route to Claude first, Qwen fallback, and pause GPT-5 until provider health recovers.",
+    relatedRecommendation: "OpenAI degraded fallback",
+    relatedIncident: "OpenAI GPT-5 latency degraded",
+    relatedAudit: "Provider degradation detected",
+    boundary: "External AI Provider"
   },
   {
     id: "ap-legal-workspace",
@@ -65,7 +73,11 @@ const initialApprovals: Approval[] = [
     rollback: "Disable workspace publishing and keep access to pilot group only.",
     related: "Legal Contracts knowledge base",
     relatedHref: "/dashboard/workspaces",
-    exactChange: "Publish Legal AI Assistant with Claude, Qwen 32B, Legal Contracts, Contract Review Agent, and audit logging enabled."
+    exactChange: "Publish Legal AI Assistant with Claude, Qwen 32B, Legal Contracts, Contract Review Agent, and audit logging enabled.",
+    relatedRecommendation: "Legal local-only enforcement",
+    relatedIncident: "Legal sovereignty risk",
+    relatedAudit: "Legal workspace publish approval requested",
+    boundary: "On-Prem / Sovereign"
   },
   {
     id: "ap-finance-kb",
@@ -82,7 +94,11 @@ const initialApprovals: Approval[] = [
     rollback: "Remove the authorization grant and re-index affected access fingerprint.",
     related: "Finance Policies",
     relatedHref: "/dashboard/knowledge-bases",
-    exactChange: "Grant Finance team access to Finance Policies and HR Policies inside Finance AI Desk only."
+    exactChange: "Grant Finance team access to Finance Policies and HR Policies inside Finance AI Desk only.",
+    relatedRecommendation: "Evidence readiness gap",
+    relatedIncident: "Finance approval gap",
+    relatedAudit: "Knowledge access expansion requested",
+    boundary: "Customer Cloud"
   },
   {
     id: "ap-marketing-breaker",
@@ -99,7 +115,11 @@ const initialApprovals: Approval[] = [
     rollback: "Raise approval threshold or return GPT-5 access for executive content.",
     related: "Marketing overspend risk",
     relatedHref: "/dashboard/cost-capacity#safeguards",
-    exactChange: "Enable ladder: semantic cache, then Gemini, then approval for GPT-5, then hard stop at budget limit."
+    exactChange: "Enable ladder: semantic cache, then Gemini, then approval for GPT-5, then hard stop at budget limit.",
+    relatedRecommendation: "Marketing cost ladder",
+    relatedIncident: "Marketing overspend risk",
+    relatedAudit: "Budget circuit breaker approval requested",
+    boundary: "External AI Provider"
   },
   {
     id: "ap-finance-agent",
@@ -116,7 +136,11 @@ const initialApprovals: Approval[] = [
     rollback: "Keep tool execution blocked; no external action is made in this prototype.",
     related: "Finance approval gap",
     relatedHref: "/dashboard/incidents",
-    exactChange: "Approve a single Finance Analysis Agent external action with current payload hash and 30-minute expiry."
+    exactChange: "Approve a single Finance Analysis Agent external action with current payload hash and 30-minute expiry.",
+    relatedRecommendation: "Finance agent approval gap",
+    relatedIncident: "Finance approval gap",
+    relatedAudit: "Agent tool approval requested",
+    boundary: "External AI Provider"
   },
   {
     id: "ap-claims-rag",
@@ -133,7 +157,11 @@ const initialApprovals: Approval[] = [
     rollback: "Rollback to Claims AI Stack snapshot if service health check fails.",
     related: "Claims GPU pressure",
     relatedHref: "/dashboard/stacks",
-    exactChange: "Deploy Private RAG Stack template to Claims On-Prem Node with rollback checkpoint and audit hooks."
+    exactChange: "Deploy Private RAG Stack template to Claims On-Prem Node with rollback checkpoint and audit hooks.",
+    relatedRecommendation: "Claims GPU reallocation",
+    relatedIncident: "Claims GPU pressure",
+    relatedAudit: "Stack deployment approval requested",
+    boundary: "Private GPU Runtime"
   }
 ];
 
@@ -298,6 +326,10 @@ export default function ApprovalInboxPage() {
               </div>
               <StatusBadge value={selected.risk} />
             </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <DataBoundaryChip value={selected.boundary} />
+              <StatusBadge value={selected.status} />
+            </div>
             <div className="mt-4 space-y-4">
               <Detail label="Requested change" value={selected.change} />
               <Detail label="Exact proposed change" value={selected.exactChange} />
@@ -326,6 +358,12 @@ export default function ApprovalInboxPage() {
               })} className="text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)]">
                 View evidence
               </button>
+            </div>
+            <div className="mt-5 grid gap-2">
+              <RelatedRecord label="Related recommendation" value={selected.relatedRecommendation} href="/dashboard/recommendations" />
+              <RelatedRecord label="Related incident" value={selected.relatedIncident} href="/dashboard/incidents" />
+              <RelatedRecord label="Exact payload/change" value={selected.exactChange} />
+              <RelatedRecord label="Related audit event" value={selected.relatedAudit} href="/dashboard/audit-logs" />
             </div>
           </Card>
         </div>
@@ -394,4 +432,15 @@ function Detail({ label, value }: { label: string; value: string }) {
       <p className="mt-1 text-sm leading-6 text-[var(--text-primary)]">{value}</p>
     </div>
   );
+}
+
+function RelatedRecord({ label, value, href }: { label: string; value: string; href?: string }) {
+  const content = (
+    <div className="rounded-md border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2">
+      <div className="text-[11px] font-semibold uppercase text-[var(--text-secondary)]">{label}</div>
+      <div className="mt-1 text-sm font-medium text-[var(--text-primary)]">{value}</div>
+    </div>
+  );
+
+  return href ? <Link href={href} className="block hover:opacity-90">{content}</Link> : content;
 }

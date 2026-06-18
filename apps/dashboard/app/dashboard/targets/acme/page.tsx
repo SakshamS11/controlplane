@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Activity, ArrowRight, Boxes, CheckCircle2, Cpu, FileText, HardDrive, RotateCcw, Server, UploadCloud, Zap } from "lucide-react";
 import { useState } from "react";
 import { AreaMetricChart, MultiLineChart } from "@/components/charts";
@@ -15,10 +16,15 @@ export default function AcmeTargetDetailPage() {
   function simulateDeploy() {
     setProgress(2);
     showToast("Deployment simulation started");
-    addAudit("Deploy Stack", target.name);
+    addAudit("Deployment simulation replayed", target.name);
     const steps = [18, 32, 46, 58, 70, 82, 92, 100];
     steps.forEach((value, index) => window.setTimeout(() => setProgress(value), 320 * (index + 1)));
     window.setTimeout(() => showToast("Private AI Basic deployment complete"), 3000);
+  }
+
+  function requestDeploymentApproval() {
+    showToast("Deployment approval request simulated");
+    addAudit("Deployment approval requested", target.name, "Permission");
   }
 
   return (
@@ -27,7 +33,7 @@ export default function AcmeTargetDetailPage() {
         eyebrow="Server detail"
         title="Acme Azure GPU Server"
         description="Inspect server health, GPU telemetry, services, and deployment history."
-        action={<div className="flex flex-wrap gap-2"><ActionButton onClick={simulateDeploy}><UploadCloud size={16} /> Deploy Stack</ActionButton><MockAction label="View Logs" auditTarget={target.name} /></div>}
+        action={<div className="flex flex-wrap gap-2"><Link href="/dashboard/approval-inbox" onClick={requestDeploymentApproval} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><UploadCloud size={16} /> Request deployment</Link><MockAction label="View Logs" auditTarget={target.name} /></div>}
       />
       <Section>
         <div className="mb-6 grid gap-6 xl:grid-cols-[1.2fr_420px]">
@@ -70,7 +76,7 @@ export default function AcmeTargetDetailPage() {
             <p className="text-xs font-semibold uppercase text-cyan-700">Operator actions</p>
             <h2 className="mt-2 text-lg font-semibold">Common tasks</h2>
             <div className="mt-5 grid gap-2">
-              <ActionButton onClick={simulateDeploy}><UploadCloud size={15} /> Deploy Stack</ActionButton>
+              <Link href="/dashboard/approval-inbox" onClick={requestDeploymentApproval} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-medium text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><UploadCloud size={15} /> Request deployment</Link>
               <MockAction label="Restart Service" auditTarget={target.name} />
               <MockAction label="Upgrade Stack" auditTarget={target.name} />
               <MockAction label="View Logs" auditTarget={target.name} />
@@ -147,7 +153,10 @@ export default function AcmeTargetDetailPage() {
                   return <div key={step} className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm"><span className={`h-2.5 w-2.5 rounded-full ${done ? "bg-cyan-500" : "bg-slate-300"}`} />{step}</div>;
                 })}
               </div>
-              <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="mt-4 inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <button onClick={simulateDeploy} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Replay deployment simulation</button>
+                <button onClick={() => { showToast("Deployment report opened"); addAudit("Deployment report viewed", target.name); }} className="inline-flex min-h-10 items-center gap-2 rounded-md border border-slate-200 bg-white px-3.5 py-2 text-sm font-medium text-slate-800 shadow-sm hover:bg-slate-50">Open deployment report <ArrowRight size={15} /></button>
+              </div>
             </div>
           ) : null}
           {activePanel === "logs" ? (

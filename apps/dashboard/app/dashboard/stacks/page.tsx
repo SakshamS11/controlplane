@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import {
   CheckCircle2,
@@ -87,6 +88,11 @@ export default function StacksPage() {
   function simulateDeploy(stack: StackTemplate) {
     showToast(`${stack.name} deployment simulated`);
     addAudit("Stack deployment simulated", stack.name, "Deployment");
+  }
+
+  function requestDeploymentApproval(stack: StackTemplate) {
+    showToast(`Deployment approval request simulated for ${stack.name}`);
+    addAudit("Stack deployment approval requested", stack.name, "Permission");
   }
 
   return (
@@ -201,6 +207,9 @@ export default function StacksPage() {
                     <ActionButton onClick={() => simulateDeploy(stack)}>
                       <Rocket size={15} /> Simulate deploy
                     </ActionButton>
+                    <Link href="/dashboard/approval-inbox" onClick={() => requestDeploymentApproval(stack)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                      Request approval
+                    </Link>
                     <ActionButton variant="secondary" onClick={() => setSelectedStack(stack)}>
                       <Code2 size={15} /> View template
                     </ActionButton>
@@ -230,7 +239,10 @@ export default function StacksPage() {
               {`services:\n${selectedStack.includes.map((service) => `  ${service.toLowerCase().replaceAll(" ", "-")}:\n    enabled: true`).join("\n")}`}
             </pre>
           </div>
-          <div className="mt-4 flex justify-end">
+          <div className="mt-4 flex flex-wrap justify-end gap-2">
+            <Link href="/dashboard/approval-inbox" onClick={() => requestDeploymentApproval(selectedStack)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+              Request deployment approval
+            </Link>
             <ActionButton onClick={() => simulateDeploy(selectedStack)}>
               <Rocket size={15} /> Simulate deploy
             </ActionButton>

@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   Sparkles
 } from "lucide-react";
-import { ActionButton, Card, Modal, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, Modal, Section, StatusBadge, useAppState } from "@/components/ui";
 import { providerHealth } from "@/lib/mock-data";
 
 const filters = ["All", "Local", "External", "Provider issue", "Running"] as const;
@@ -60,6 +60,12 @@ function getProviderHealth(model: ModelRow) {
   return providerHealth.find((provider) => provider.provider === model.provider);
 }
 
+function boundaryForModel(model: ModelRow) {
+  if (model.hosting === "Local" && model.target.includes("On-Prem")) return "On-Prem / Sovereign" as const;
+  if (model.hosting === "Local") return "Private GPU Runtime" as const;
+  return "External AI Provider" as const;
+}
+
 export default function ModelsPage() {
   const [filter, setFilter] = useState<(typeof filters)[number]>("All");
   const [addOpen, setAddOpen] = useState(false);
@@ -93,9 +99,9 @@ export default function ModelsPage() {
     return filter === "All" || model.hosting === filter || model.status === filter;
   }), [filter, modelCatalog]);
 
-  function applyRouting(target: string) {
-    showToast(`Routing policy applied for ${target}`);
-    addAudit("Routing policy applied", target, "Model");
+  function requestRoutingApproval(target: string) {
+    showToast(`Approval request simulated for ${target}`);
+    addAudit("Model routing approval requested", target, "Permission");
   }
 
   function addModel() {
@@ -153,7 +159,7 @@ export default function ModelsPage() {
             </div>
             <div className="flex gap-2">
               <ActionButton variant="secondary" onClick={() => showToast("Provider status refreshed")}><RefreshCw size={14} /> Refresh</ActionButton>
-              <ActionButton onClick={() => applyRouting("OpenAI GPT-5 degradation")}>Apply routing policy</ActionButton>
+              <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Request approval</Link>
             </div>
           </div>
           <div className="grid gap-px bg-[var(--border-subtle)] md:grid-cols-2 xl:grid-cols-4">
@@ -161,8 +167,8 @@ export default function ModelsPage() {
               <div key={provider.provider} className="bg-white p-4">
                 <div className="flex items-center justify-between gap-2"><p className="font-semibold">{provider.provider}</p><StatusBadge value={provider.status} /></div>
                 <p className="mt-2 text-xs leading-5 text-[var(--text-secondary)]">{provider.impact}</p>
-                <button type="button" onClick={() => provider.provider === "OpenAI" ? applyRouting(provider.provider) : showToast(`${provider.provider} provider details opened`)} className="mt-2 text-xs font-semibold text-[var(--brand-primary)]">
-                  {provider.provider === "OpenAI" ? provider.action : provider.status === "Self-hosted" ? "Open server telemetry" : "Review provider"} <ChevronRight className="inline" size={13} />
+                <button type="button" onClick={() => provider.provider === "OpenAI" ? requestRoutingApproval(provider.provider) : showToast(`${provider.provider} provider details opened`)} className="mt-2 text-xs font-semibold text-[var(--brand-primary)]">
+                  {provider.provider === "OpenAI" ? "Request approval" : provider.status === "Self-hosted" ? "Open server telemetry" : "Review provider"} <ChevronRight className="inline" size={13} />
                 </button>
               </div>
             ))}
@@ -179,7 +185,7 @@ export default function ModelsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1040px] text-left text-sm">
               <thead className="border-b border-[var(--border-subtle)] bg-[var(--surface-muted)] text-xs uppercase text-[var(--text-secondary)]">
-                <tr>{["Model", "Hosting", "Runtime", "Provider Health", "Target", "Sensitivity Fit", "Status", "Action"].map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
+                <tr>{["Model", "Hosting", "Data Boundary", "Provider Health", "Target", "Sensitivity Fit", "Status", "Action"].map((column) => <th key={column} className="px-4 py-3 font-semibold">{column}</th>)}</tr>
               </thead>
               <tbody className="divide-y divide-[var(--border-subtle)]">
                 {visible.map((model) => {
@@ -189,7 +195,7 @@ export default function ModelsPage() {
                     <tr key={model.name} className="align-top hover:bg-[var(--surface-muted)]">
                       <td className="px-4 py-3.5"><p className="font-semibold text-[var(--text-primary)]">{model.name}</p><p className="mt-0.5 text-xs text-[var(--text-secondary)]">{model.provider}</p></td>
                       <td className="px-4 py-3.5">{model.hosting}</td>
-                      <td className="px-4 py-3.5">{model.provider}</td>
+                      <td className="px-4 py-3.5"><DataBoundaryChip value={boundaryForModel(model)} /></td>
                       <td className="px-4 py-3.5"><StatusBadge value={health?.status ?? "Unknown"} /></td>
                       <td className="max-w-[170px] px-4 py-3.5 text-[var(--text-secondary)]">{model.target}</td>
                       <td className="px-4 py-3.5"><span className="text-xs font-semibold text-[var(--brand-primary-dark)]">{governance.sensitivity}</span></td>
@@ -227,7 +233,10 @@ export default function ModelsPage() {
             </div>
             <p className="mt-2 text-sm text-[var(--text-secondary)]">Repeated Support workloads can move from cloud spend to governed local capacity over time.</p>
             <div className="mt-3 rounded-md bg-[var(--surface-muted)] p-3"><p className="text-xs text-[var(--text-secondary)]">Projected annual savings</p><p className="mt-1 text-xl font-semibold text-[var(--text-primary)]">AED 420,000</p></div>
-            <ActionButton onClick={() => { showToast("Graduation simulation opened"); addAudit("Model graduation simulated", "Support traffic", "Model"); }}><PiggyBank size={15} /> Simulate graduation</ActionButton>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Open in Recommendations</Link>
+              <Link href="/dashboard/cost-capacity" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">Review savings</Link>
+            </div>
           </Card>
 
           <Card className="overflow-hidden">
@@ -241,7 +250,7 @@ export default function ModelsPage() {
                   <p className="text-sm font-semibold">{recommendation.workload}</p>
                   <p className="text-xs font-semibold text-[var(--brand-primary-dark)]">{recommendation.route}</p>
                   <p className="text-xs text-[var(--text-secondary)]">{recommendation.rule}</p>
-                  <button type="button" onClick={() => applyRouting(recommendation.workload)} className="text-xs font-semibold text-[var(--brand-primary)]">Apply</button>
+                  <Link href="/dashboard/recommendations" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
                 </div>
               ))}
             </div>

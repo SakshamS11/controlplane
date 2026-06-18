@@ -198,7 +198,7 @@ export default function CostCapacityPage() {
             </Card>
 
             <Card className="overflow-hidden bg-[var(--surface-dark)] text-white">
-              <div className="border-b border-white/10 px-4 py-3"><p className="text-xs font-semibold uppercase text-cyan-200">Savings Scenario Preview</p><h2 className="mt-1 font-semibold">Apply recommended actions</h2></div>
+              <div className="border-b border-white/10 px-4 py-3"><p className="text-xs font-semibold uppercase text-cyan-200">Savings Scenario Preview</p><h2 className="mt-1 font-semibold">Review recommended actions</h2></div>
               <div className="grid grid-cols-3 gap-px bg-white/10">
                 <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">Current forecast</p><p className="mt-1 text-lg font-semibold">AED 184k</p></div>
                 <div className="bg-[var(--surface-dark)] p-3"><p className="text-[10px] text-slate-400">After actions</p><p className="mt-1 text-lg font-semibold">AED 142k</p></div>

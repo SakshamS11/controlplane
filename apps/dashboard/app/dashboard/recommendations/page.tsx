@@ -14,7 +14,7 @@ import {
   WalletCards,
   XCircle
 } from "lucide-react";
-import { ActionButton, Card, MetricCard, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, MetricCard, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 type RecommendationStatus = "Open" | "Reviewed" | "Simulated" | "Awaiting approval" | "Applied" | "Dismissed";
 type ApprovalState = "Not required" | "Required" | "Requested" | "Approved" | "Blocked";
@@ -274,6 +274,22 @@ function statusForKpi(count: number) {
   return count > 0 ? "Warning" : "Healthy";
 }
 
+function boundaryForRecommendation(item: Recommendation) {
+  if (item.id === "rec-legal-local" || item.id === "rec-claims-gpu") return "On-Prem / Sovereign" as const;
+  if (item.id === "rec-openai-fallback" || item.id === "rec-marketing-cost") return "External AI Provider" as const;
+  if (item.id === "rec-support-cache" || item.id === "rec-evidence-readiness") return "Customer Cloud" as const;
+  return "Private GPU Runtime" as const;
+}
+
+function policyForRecommendation(item: Recommendation) {
+  if (item.category === "Capacity") return "Resource Planner capacity policy";
+  if (item.category === "Cost" || item.category === "Cache") return "Budget Circuit Breaker";
+  if (item.category === "Provider") return "Provider Degradation fallback";
+  if (item.category === "Governance" || item.category === "Evidence") return "ISO/IEC 42001 readiness support";
+  if (item.category === "Model Graduation") return "Model Graduation Flywheel";
+  return "Sovereignty Router";
+}
+
 export default function RecommendationsPage() {
   const { showToast, addAudit } = useAppState();
   const [recommendations, setRecommendations] = useState(seedRecommendations);
@@ -472,6 +488,7 @@ export default function RecommendationsPage() {
             </div>
             <div className="mt-4 flex flex-wrap gap-2">
               <span className="rounded-full bg-[var(--surface-muted)] px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">{selected.category}</span>
+              <DataBoundaryChip value={boundaryForRecommendation(selected)} />
               <StatusBadge value={selected.status} />
               <StatusBadge value={selected.approval} />
             </div>
@@ -510,10 +527,12 @@ export default function RecommendationsPage() {
           </Card>
         </div>
 
-        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+        <div className="mt-4 grid gap-4 lg:grid-cols-5">
           <RelatedCard title="Related incident" value={selected.relatedIncident ?? "No active incident linked"} />
           <RelatedCard title="Related approval" value={selected.relatedApproval ?? selected.approval} />
           <RelatedCard title="Related audit events" value={selected.relatedAudit.join(", ")} />
+          <RelatedCard title="Related resource" value={selected.relatedHref.replace("/dashboard/", "") || "Overview"} />
+          <RelatedCard title="Related policy" value={policyForRecommendation(selected)} />
         </div>
       </Section>
 

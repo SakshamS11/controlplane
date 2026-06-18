@@ -75,7 +75,7 @@ const alerts = [
     impact: "Critical workflows may see higher latency.",
     owner: "AI Platform Owner",
     status: "Fallback ready",
-    actions: ["Apply Routing Policy", "View Providers"]
+    actions: ["Request Routing Approval", "View Providers"]
   },
   {
     title: "Marketing Overspend Risk",
@@ -85,7 +85,7 @@ const alerts = [
     impact: "Budget may exceed its limit by AED 18,000.",
     owner: "Marketing Ops",
     status: "In review",
-    actions: ["Simulate Savings", "Apply Cost Ladder", "Notify Team Owner"]
+    actions: ["Simulate Savings", "Request Cost Approval", "Notify Team Owner"]
   },
   {
     title: "Finance Agent Approval Gap",
@@ -109,8 +109,8 @@ const infrastructure = [
 const actionRows = [
   ["Restart Legal Sandbox agent", "Restores Legal workspace availability", "Restart Agent"],
   ["Reclaim Finance GPU capacity", "Reduces Claims queue pressure without new infrastructure", "Review Capacity"],
-  ["Apply GPT-5 fallback routing", "Improves latency during provider degradation", "Apply Routing Policy"],
-  ["Enable Marketing cost ladder", "Saves projected AED 18,000/month", "Apply Cost Ladder"],
+  ["Request GPT-5 fallback approval", "Improves latency during provider degradation", "Request Routing Approval"],
+  ["Review Marketing cost ladder", "Saves projected AED 18,000/month", "Request Cost Approval"],
   ["Enable Finance human approval", "Improves governance evidence readiness", "Enable Approval"]
 ];
 
@@ -120,7 +120,7 @@ const teams = [
     owner: "Marketing Ops",
     issue: "Projected 27% above AI budget",
     cause: "GPT-5 used for low-risk drafting",
-    primary: "Apply Cost Ladder",
+    primary: "Request Cost Approval",
     message: "Marketing AI usage is projected to exceed the monthly budget by 27%. Please review high-cost GPT-5 drafting usage or approve the recommended cost ladder."
   },
   {
@@ -204,7 +204,7 @@ export default function DashboardOverviewPage() {
 
   function confirmAction() {
     if (!confirmation) return;
-    showToast(`${confirmation.title} applied`);
+    showToast(`${confirmation.title} confirmed in simulation`);
     addAudit(confirmation.title, confirmation.target, confirmation.auditType);
     setConfirmation(null);
   }
@@ -231,8 +231,8 @@ export default function DashboardOverviewPage() {
     if (label === "View Logs") return <button type="button" onClick={() => simulateAction(label, target)} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</button>;
     if (label === "Notify Team Owner") return <button type="button" onClick={() => openReminder(teams.find((team) => team.team === target) ?? teams[0])} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}><Send size={11} /> {label}</button>;
     if (label === "Restart Agent") return <button type="button" onClick={() => setConfirmation({ title: "Restart Legal Sandbox agent", message: "Queue an allowlisted restart command for Legal Sandbox?", impact: "Legal workspace availability should return after the agent reconnects.", target: "Legal Sandbox", auditType: "Agent" })} className={`${common} bg-[var(--status-critical)] text-white hover:bg-rose-700`}>{label}</button>;
-    if (label === "Apply Routing Policy") return <button type="button" onClick={() => setConfirmation({ title: "Apply approved fallback routing", message: "Route critical GPT-5 work to Claude or Qwen Local?", impact: "Expected latency and provider concentration risk will decrease.", target: "GPT-5", auditType: "Routing" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
-    if (label === "Apply Cost Ladder") return <button type="button" onClick={() => setConfirmation({ title: "Apply Marketing cost ladder", message: "Route drafting and summarization to the approved lower-cost model first?", impact: "Projected savings are AED 18,000 per month.", target: "Marketing", auditType: "Routing" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
+    if (label === "Request Routing Approval") return <button type="button" onClick={() => setConfirmation({ title: "Request fallback routing approval", message: "Send GPT-5 fallback routing to Approval Inbox?", impact: "Approval reviewers see the exact route change before any real policy execution.", target: "GPT-5", auditType: "Permission" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
+    if (label === "Request Cost Approval") return <button type="button" onClick={() => setConfirmation({ title: "Request Marketing cost ladder approval", message: "Send the Marketing cost ladder to Approval Inbox?", impact: "Approval reviewers see the proposed ladder before any real routing or budget enforcement.", target: "Marketing", auditType: "Permission" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
     return <button type="button" onClick={() => setConfirmation({ title: "Enable Finance human approval", message: "Require approval before Finance Analysis Agent performs external actions?", impact: "Evidence readiness improves and unapproved external actions are blocked.", target: "Finance Analysis Agent", auditType: "Permission" })} className={`${common} bg-[var(--brand-primary)] text-white hover:bg-[var(--brand-primary-dark)]`}>{label}</button>;
   }
 

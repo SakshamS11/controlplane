@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Database, FileCheck2, LockKeyhole, Plus, RefreshCw, ShieldCheck } from "lucide-react";
-import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { ActionButton, Card, DataBoundaryChip, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
 
 const knowledgeSeed = [
   { name: "Legal Contracts", documents: "1,240", source: "SharePoint folder", sensitivity: "Confidential", sync: "Synced", vector: "Indexed", workspace: "Legal AI Assistant", departments: "Legal", access: "Legal only", lastSync: "12 minutes ago" },
@@ -57,6 +57,12 @@ const defaultSourceConnection = {
   action: "Connect source",
   note: "Connect the source, test access, then sync and index documents."
 };
+
+function boundaryForSource(source: string) {
+  if (source.includes("S3") || source.includes("SharePoint") || source.includes("Google Drive")) return "Customer Cloud" as const;
+  if (source.includes("Uploaded") || source.includes("Internal") || source.includes("SOP") || source.includes("Contracts")) return "On-Prem / Sovereign" as const;
+  return "Customer Cloud" as const;
+}
 
 export default function KnowledgeBasesPage() {
   const [rows, setRows] = useState(knowledgeSeed);
@@ -159,11 +165,12 @@ export default function KnowledgeBasesPage() {
           {activeTab === "sources" ? (
             <div id="kb-list">
               <DataTable
-                columns={["Knowledge base", "Docs", "Source", "Sensitivity", "Sync", "Workspace", "Access", "Action"]}
+                columns={["Knowledge base", "Docs", "Source", "Data Boundary", "Sensitivity", "Sync", "Workspace", "Access", "Action"]}
                 rows={rows.map((item) => [
                   <span key="name" className="font-semibold">{item.name}</span>,
                   item.documents,
                   item.source,
+                  <DataBoundaryChip key="boundary" value={boundaryForSource(item.source)} />,
                   <StatusBadge key="sensitivity" value={item.sensitivity === "Restricted" || item.sensitivity === "Confidential" ? "Governance risk" : "Healthy"} />,
                   <StatusBadge key="sync" value={item.sync} />,
                   item.workspace,
@@ -184,6 +191,7 @@ export default function KnowledgeBasesPage() {
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">During RAG:</span> unauthorized chunks are excluded</div>
                     <div className="rounded-md border border-slate-200 p-3 text-sm"><span className="font-semibold">After response:</span> source usage is audited</div>
                   </div>
+                  <p className="mt-4 text-xs text-slate-500">Private GPU workspaces do not send prompts or documents to third-party LLM providers unless an approved external route is configured.</p>
                 </div>
               </div>
             </div>
