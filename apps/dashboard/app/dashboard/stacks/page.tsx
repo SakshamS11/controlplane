@@ -19,6 +19,13 @@ import { stacks } from "@/lib/mock-data";
 const stackTemplates = [
   ...stacks,
   {
+    name: "Governed Chat Workspace",
+    includes: ["Open WebUI", "Nginx", "Certbot (SSL)"],
+    useCase: "Employee-facing AI chat interface. One instance per workspace, deployed and configured automatically when you publish a workspace.",
+    infra: "1 vCPU, 1 GB RAM per workspace instance",
+    note: "This stack is deployed automatically on workspace publish. You do not need to deploy it manually."
+  },
+  {
     name: "Secure Local-Only Stack",
     includes: ["vLLM", "LiteLLM", "Open WebUI", "Qdrant", "Audit exporter", "Prompt Firewall"],
     useCase: "Confidential workspaces with no external model fallback",
@@ -54,6 +61,13 @@ const stackDecisions = {
     complexity: "Medium",
     privateStack: false,
     evidenceHooks: false
+  },
+  "Governed Chat Workspace": {
+    bestFor: "All teams needing a company AI chat interface",
+    sensitivity: "Configurable per workspace",
+    complexity: "Automated - no manual configuration required",
+    privateStack: false,
+    evidenceHooks: true
   },
   "Secure Local-Only Stack": {
     bestFor: "Sovereign and highly sensitive workloads",
@@ -114,7 +128,7 @@ export default function StacksPage() {
 
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
           {[
-            { label: "Templates", value: "5", detail: "Deployment-ready catalog", icon: <Layers3 size={17} /> },
+            { label: "Templates", value: "6", detail: "Deployment-ready catalog", icon: <Layers3 size={17} /> },
             { label: "Private stacks", value: "3", detail: "Sovereignty-first options", icon: <LockKeyhole size={17} /> },
             { label: "Target fit", value: "GPU server", detail: "Agent-managed Compose", icon: <Server size={17} /> },
             { label: "Governance", value: "Audit ready", detail: "Evidence hooks available", icon: <ShieldCheck size={17} /> }
@@ -190,6 +204,12 @@ export default function StacksPage() {
                   </div>
 
                   <div className="mt-3 min-h-9">
+                    {"note" in stack && stack.note ? (
+                      <div className="mb-2 flex items-start gap-2 rounded-md bg-[rgba(91,61,255,0.07)] px-2.5 py-2 text-xs text-[var(--brand-primary-dark)]">
+                        <FileCheck2 size={14} className="mt-0.5 shrink-0" />
+                        <span>{stack.note}</span>
+                      </div>
+                    ) : null}
                     {decision.evidenceHooks ? (
                       <div className="flex items-start gap-2 rounded-md bg-[rgba(16,185,129,0.08)] px-2.5 py-2 text-xs text-[var(--status-healthy)]">
                         <FileCheck2 size={14} className="mt-0.5 shrink-0" />
@@ -239,6 +259,9 @@ export default function StacksPage() {
               {`services:\n${selectedStack.includes.map((service) => `  ${service.toLowerCase().replaceAll(" ", "-")}:\n    enabled: true`).join("\n")}`}
             </pre>
           </div>
+          {"note" in selectedStack && selectedStack.note ? (
+            <div className="mt-4 rounded-md border border-[rgba(91,61,255,0.18)] bg-[rgba(91,61,255,0.06)] p-3 text-sm text-[var(--brand-primary-dark)]">{selectedStack.note}</div>
+          ) : null}
           <div className="mt-4 flex flex-wrap justify-end gap-2">
             <Link href="/dashboard/approval-inbox" onClick={() => requestDeploymentApproval(selectedStack)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
               Request deployment approval

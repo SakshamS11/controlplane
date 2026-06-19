@@ -150,11 +150,11 @@ const teams = [
 ];
 
 const workspaceActivity = [
-  { name: "Claims AI", requests: 38120 },
-  { name: "Eng Copilot", requests: 41200 },
-  { name: "Legal AI", requests: 16300 },
-  { name: "Support", requests: 28700 },
-  { name: "Marketing", requests: 22100 }
+  { name: "chat.claims-ai.acme.ai", requests: 38120 },
+  { name: "chat.engineering-copilot.acme.ai", requests: 41200 },
+  { name: "chat.legal-ai.acme.ai", requests: 16300 },
+  { name: "chat.support-desk.acme.ai", requests: 28700 },
+  { name: "chat.marketing-studio.acme.ai", requests: 22100 }
 ];
 
 const detailTabs: Array<{ id: DetailTab; label: string }> = [
@@ -312,6 +312,7 @@ export default function DashboardOverviewPage() {
           <Card className="p-4">
             <div className="flex items-start justify-between gap-3"><div><h2 className="text-sm font-semibold">Workspace Activity</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Monthly requests by governed workspace.</p></div><Link href="/dashboard/workspaces" className="text-[var(--brand-primary)]"><ArrowRight size={14} /></Link></div>
             <div className="mt-2 h-44"><BarMetricChart data={workspaceActivity} dataKey="requests" /></div>
+            <p className="mt-3 text-[10px] leading-4 text-[var(--text-secondary)]">Each bar represents requests through a governed Open WebUI instance. Employees access these at their workspace subdomain.</p>
           </Card>
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
             <CostSnapshot />

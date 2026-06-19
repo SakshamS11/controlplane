@@ -2,24 +2,69 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Copy, ExternalLink, Layers, LockKeyhole, MailPlus, Plus, Power, Save, ShieldCheck } from "lucide-react";
-import { ActionButton, Card, DataBoundaryChip, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
-import { departments as departmentOptions, workspaces as initialWorkspaces } from "@/lib/mock-data";
+import { Copy, ExternalLink, Layers, LockKeyhole, Plus, Power, Save, Server, ShieldCheck } from "lucide-react";
+import { ActionButton, Card, DataTable, Modal, PageHeader, Section, StatusBadge, useAppState } from "@/components/ui";
+import { departments as departmentOptions, targets, workspaces as initialWorkspaces } from "@/lib/mock-data";
 
 type Workspace = (typeof initialWorkspaces)[number];
 
 const knowledgeOptions = ["Legal Contracts", "Claims SOPs", "Finance Policies", "Product FAQ", "Engineering Docs", "HR Policies", "Policy Documents", "Codebase Docs"];
 const agentOptions = ["Claims Summary Agent", "Contract Review Agent", "Support Triage Agent", "Code Review Agent", "Finance Analysis Agent"];
+const companyDomain = "acme.ai";
+
+function slugFromWorkspaceName(value: string) {
+  return value
+    .toLowerCase()
+    .replace(/&/g, " and ")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .replace(/-assistant$/, "")
+    .slice(0, 48) || "workspace";
+}
+
+function subdomainFromWorkspace(workspace: Workspace) {
+  try {
+    const host = new URL(workspace.launchUrl).hostname;
+    if (host.startsWith("chat.")) return host.split(".")[1] ?? slugFromWorkspaceName(workspace.name);
+  } catch {
+    // Fall back to workspace name when old mock URLs are present.
+  }
+  return slugFromWorkspaceName(workspace.name);
+}
+
+function workspaceUrl(subdomain: string) {
+  return `https://chat.${subdomain}.${companyDomain}`;
+}
+
+function displayUrl(subdomain: string) {
+  return `chat.${subdomain}.${companyDomain}`;
+}
+
+function workspaceDisplayStatus(workspace: Workspace) {
+  if (workspace.publishStatus === "Disabled" || workspace.status === "Offline") return "Disabled";
+  if (workspace.publishStatus === "Draft") return "Draft";
+  if (workspace.publishStatus === "Deployment Pending" || workspace.publishStatus === "Pending approval" || workspace.status === "Deploying") return "Deploying";
+  if (workspace.publishStatus === "Published") return "Live";
+  return workspace.publishStatus;
+}
+
+function deploymentStatusFor(status: string) {
+  if (status === "Live") return "Live";
+  if (status === "Disabled" || status === "Draft") return "Pending";
+  if (status === "Deploying") return "In Progress";
+  return "Pending";
+}
 
 export default function WorkspacesPage() {
   const [workspaces, setWorkspaces] = useState<Workspace[]>(initialWorkspaces);
-  const [selectedWorkspace, setSelectedWorkspace] = useState<Workspace | null>(null);
   const [disableWorkspace, setDisableWorkspace] = useState<Workspace | null>(null);
   const [editorOpen, setEditorOpen] = useState(false);
   const [activeTab, setActiveTab] = useState<"workspaces" | "boundary">("workspaces");
+  const [managementTab, setManagementTab] = useState<"Configuration" | "Deployment" | "Usage">("Configuration");
   const [name, setName] = useState("Legal AI Assistant");
   const [interfaceType, setInterfaceType] = useState("Open WebUI");
-  const [launchUrl, setLaunchUrl] = useState("https://legal-ai.controlplane.example.com");
+  const [subdomain, setSubdomain] = useState("legal-ai");
+  const [targetServer, setTargetServer] = useState("Acme Azure GPU Server");
   const [publishStatus, setPublishStatus] = useState("Published");
   const [selectedModels, setSelectedModels] = useState(["Claude", "Qwen 32B"]);
   const [knowledge, setKnowledge] = useState(["Legal Contracts"]);
@@ -28,8 +73,15 @@ export default function WorkspacesPage() {
   const [routingPolicy, setRoutingPolicy] = useState("Legal confidential review");
   const [tokenBudget, setTokenBudget] = useState("2M tokens / month");
   const [externalRule, setExternalRule] = useState("Restricted for confidential matters");
+  const [targetServers, setTargetServers] = useState<Record<string, string>>({
+    "Legal AI Assistant": "Acme Azure GPU Server",
+    "Claims AI Assistant": "Claims On-Prem Node",
+    "Engineering Copilot": "AWS Private AI Node",
+    "Finance AI Desk": "Acme Azure GPU Server"
+  });
   const { showToast, addAudit, modelCatalog } = useAppState();
   const activeModelOptions = modelCatalog.filter((model) => model.status === "Running" || model.status === "Connected").map((model) => model.name);
+  const onlineTargets = targets.filter((target) => target.agent === "Online");
 
   useEffect(() => {
     function syncCreateAction() {
@@ -44,21 +96,17 @@ export default function WorkspacesPage() {
     setter(list.includes(value) ? list.filter((item) => item !== value) : [...list, value]);
   }
 
-  function copyWorkspaceUrl(workspace: Workspace) {
-    navigator.clipboard?.writeText(workspace.launchUrl);
-    showToast(`${workspace.name} URL copied`);
-    addAudit("Workspace URL copied", workspace.name, "Permission");
-  }
-
-  function inviteWorkspace(workspace: Workspace) {
-    showToast(`Invite flow opened for ${workspace.name}`);
-    addAudit("Workspace invite opened", workspace.name, "Permission");
+  function copyCurrentWorkspaceUrl() {
+    navigator.clipboard?.writeText(workspaceUrl(subdomain));
+    showToast(`${displayUrl(subdomain)} copied`);
+    addAudit("Workspace employee link copied", name, "Permission");
   }
 
   function loadWorkspace(workspace: Workspace) {
     setName(workspace.name);
     setInterfaceType(workspace.interface);
-    setLaunchUrl(workspace.launchUrl);
+    setSubdomain(subdomainFromWorkspace(workspace));
+    setTargetServer(targetServers[workspace.name] ?? onlineTargets[0]?.name ?? "No online server");
     setPublishStatus(workspace.publishStatus);
     setSelectedModels(workspace.allowedModels);
     setKnowledge(workspace.knowledgeBases);
@@ -67,18 +115,20 @@ export default function WorkspacesPage() {
     setRoutingPolicy(workspace.routingPolicy);
     setTokenBudget(workspace.tokenBudget);
     setExternalRule(workspace.externalRule);
+    setManagementTab("Configuration");
     setEditorOpen(true);
     showToast(`${workspace.name} loaded for editing`);
     addAudit("AI workspace opened", workspace.name, "Permission");
   }
 
   function saveWorkspace() {
+    const savedPublishStatus = interfaceType === "Open WebUI" ? "Deployment Pending" : publishStatus;
     const row: Workspace = {
       name,
       department: departments[0] ?? "Unassigned",
       interface: interfaceType,
-      launchUrl,
-      publishStatus,
+      launchUrl: workspaceUrl(subdomain),
+      publishStatus: savedPublishStatus,
       assignedUsers: departments.join(", "),
       allowedModels: selectedModels.filter((model) => activeModelOptions.includes(model)),
       knowledgeBases: knowledge,
@@ -87,10 +137,11 @@ export default function WorkspacesPage() {
       tokenBudget,
       externalRule,
       audit: "Enabled",
-      status: externalRule.includes("Restricted") ? "Governance risk" : "Healthy"
+      status: interfaceType === "Open WebUI" ? "Deploying" : externalRule.includes("Restricted") ? "Governance risk" : "Healthy"
     };
     setWorkspaces((current) => [row, ...current.filter((item) => item.name !== name)]);
-    showToast(`${name} workspace saved`);
+    setTargetServers((current) => ({ ...current, [name]: targetServer }));
+    showToast(interfaceType === "Open WebUI" ? `${name} Open WebUI deployment pending` : `${name} workspace saved`);
     addAudit("AI workspace saved", name, "Permission");
     setEditorOpen(false);
     window.history.replaceState(null, "", window.location.pathname);
@@ -98,12 +149,21 @@ export default function WorkspacesPage() {
 
   function openCreateWorkspace() {
     setName("New AI Workspace");
+    setSubdomain(slugFromWorkspaceName("New AI Workspace"));
+    setTargetServer(onlineTargets[0]?.name ?? "No online server");
+    setInterfaceType("Open WebUI");
     setPublishStatus("Draft");
     setSelectedModels(activeModelOptions.slice(0, 1));
     setKnowledge([]);
     setDepartments([]);
     setAgents([]);
+    setManagementTab("Configuration");
     setEditorOpen(true);
+  }
+
+  function updateWorkspaceName(value: string) {
+    setName(value);
+    setSubdomain(slugFromWorkspaceName(value));
   }
 
   function togglePublish(workspace: Workspace) {
@@ -125,6 +185,12 @@ export default function WorkspacesPage() {
     showToast(`${disableWorkspace.name} disabled`);
     addAudit("Workspace disabled", disableWorkspace.name, "Permission");
     setDisableWorkspace(null);
+  }
+
+  function redeployWorkspace() {
+    setPublishStatus("Deployment Pending");
+    showToast(`${name} redeploy requested`);
+    addAudit("Workspace redeploy requested", name, "Deployment");
   }
 
   return (
@@ -155,24 +221,29 @@ export default function WorkspacesPage() {
           {activeTab === "workspaces" ? (
             <div id="workspace-list">
               <DataTable
-                columns={["Workspace", "Team", "Interface", "Data Boundary", "Status", "Allowed models", "Launch", "Manage"]}
-                rows={workspaces.map((workspace) => [
+                columns={["Workspace name", "Team", "Interface", "Subdomain URL", "Status", "Models", "Action"]}
+                rows={workspaces.map((workspace) => {
+                  const workspaceSubdomain = subdomainFromWorkspace(workspace);
+                  const url = workspaceUrl(workspaceSubdomain);
+                  const status = workspaceDisplayStatus(workspace);
+                  const isLive = status === "Live";
+                  return [
                   <span key="name" className="font-semibold">{workspace.name}</span>,
                   workspace.department,
                   workspace.interface,
-                  <DataBoundaryChip key="boundary" value={workspace.externalRule.includes("Blocked") ? "On-Prem / Sovereign" : workspace.externalRule.includes("Restricted") ? "Private GPU Runtime" : "External AI Provider"} />,
-                  <div key="status" className="space-y-1"><StatusBadge value={workspace.publishStatus} /><div><StatusBadge value={workspace.status} /></div></div>,
-                  workspace.allowedModels.join(", "),
-                  <div key="launch" className="flex flex-wrap gap-2">
-                    <ActionButton variant="secondary" onClick={() => setSelectedWorkspace(workspace)}><ExternalLink size={14} /> Launch</ActionButton>
-                    <button type="button" onClick={() => copyWorkspaceUrl(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Copy ${workspace.name} URL`}><Copy size={14} /></button>
-                  </div>,
+                  isLive ? (
+                    <a key="url" href={url} target="_blank" rel="noreferrer" className="font-semibold text-[var(--brand-primary)] hover:underline">{displayUrl(workspaceSubdomain)}</a>
+                  ) : (
+                    <button key="url" type="button" onClick={() => showToast(`${workspace.name} chat URL is available after deployment`)} className="text-left font-medium text-slate-400">{displayUrl(workspaceSubdomain)}</button>
+                  ),
+                  <StatusBadge key="status" value={status} />,
+                  `${workspace.allowedModels.length} models`,
                   <div key="manage" className="flex flex-wrap gap-2">
-                    <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Edit</ActionButton>
+                    <ActionButton variant="secondary" onClick={() => loadWorkspace(workspace)}>Manage</ActionButton>
                     {workspace.publishStatus !== "Published" ? <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open approval</Link> : null}
                     <button type="button" onClick={() => togglePublish(workspace)} className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50" aria-label={`Toggle ${workspace.name}`}><Power size={14} /></button>
                   </div>
-                ])}
+                ];})}
               />
             </div>
           ) : (
@@ -194,26 +265,41 @@ export default function WorkspacesPage() {
         </Card>
       </Section>
       {editorOpen ? (
-        <Modal title="Create or edit AI workspace" onClose={() => setEditorOpen(false)}>
-          <div id="workspace-form" className="max-h-[70vh] space-y-4 overflow-y-auto pr-1">
+        <Modal title="Workspace Management" onClose={() => setEditorOpen(false)}>
+          <div className="mb-4 flex overflow-x-auto rounded-md bg-[var(--surface-muted)] p-1">
+            {(["Configuration", "Deployment", "Usage"] as const).map((tab) => (
+              <button key={tab} type="button" onClick={() => setManagementTab(tab)} className={`rounded px-3 py-2 text-xs font-medium ${managementTab === tab ? "bg-[var(--brand-primary)] text-white" : "text-[var(--text-secondary)] hover:bg-white"}`}>{tab}</button>
+            ))}
+          </div>
+          {managementTab === "Configuration" ? <div id="workspace-form" className="max-h-[64vh] space-y-4 overflow-y-auto pr-1">
             <label className="text-sm font-medium text-slate-600">Workspace name
-              <input value={name} onChange={(event) => setName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+              <input value={name} onChange={(event) => updateWorkspaceName(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
             </label>
             <div className="grid gap-3 md:grid-cols-2">
-              <label className="text-sm font-medium text-slate-600">Interface
+              <label className="text-sm font-medium text-slate-600">Chat Interface Type
                 <select value={interfaceType} onChange={(event) => setInterfaceType(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Open WebUI</option><option>Open WebUI / custom chat</option><option>Custom chat</option><option>API only</option>
+                  <option>Open WebUI</option><option>Open WebUI / custom chat</option><option>Custom Chat</option><option>API Only</option>
                 </select>
+                {interfaceType === "Open WebUI" ? <p className="mt-2 text-xs text-[var(--text-secondary)]">Deploys a governed Open WebUI instance at your workspace subdomain.</p> : null}
               </label>
               <label className="text-sm font-medium text-slate-600">Publish status
                 <select value={publishStatus} onChange={(event) => setPublishStatus(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
-                  <option>Published</option><option>Draft</option><option>Disabled</option>
+                  <option>Published</option><option>Deployment Pending</option><option>Draft</option><option>Disabled</option>
                 </select>
               </label>
             </div>
-            <label className="text-sm font-medium text-slate-600">Launch URL
-              <input value={launchUrl} onChange={(event) => setLaunchUrl(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
-            </label>
+            <div className="grid gap-3 md:grid-cols-2">
+              <label className="text-sm font-medium text-slate-600">Subdomain
+                <input value={subdomain} onChange={(event) => setSubdomain(slugFromWorkspaceName(event.target.value))} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 px-3 text-sm" />
+                <p className="mt-2 text-xs text-[var(--text-secondary)]">Preview: {displayUrl(subdomain)}</p>
+              </label>
+              <label className="text-sm font-medium text-slate-600">Target Server
+                <select value={targetServer} onChange={(event) => setTargetServer(event.target.value)} className="mt-2 min-h-10 w-full rounded-md border border-slate-200 bg-white px-3 text-sm">
+                  {onlineTargets.map((target) => <option key={target.id}>{target.name}</option>)}
+                </select>
+                <p className="mt-2 text-xs text-[var(--text-secondary)]">Only connected online agent servers are shown.</p>
+              </label>
+            </div>
             <Checklist title="Allowed models" options={activeModelOptions} values={selectedModels} onToggle={(item) => toggleValue(item, selectedModels, setSelectedModels)} />
             <Checklist title="Knowledge bases" options={knowledgeOptions} values={knowledge} onToggle={(item) => toggleValue(item, knowledge, setKnowledge)} />
             <Checklist title="Teams" options={departmentOptions} values={departments} onToggle={(item) => toggleValue(item, departments, setDepartments)} />
@@ -231,24 +317,38 @@ export default function WorkspacesPage() {
                 <option>Restricted for confidential matters</option><option>Blocked</option><option>Allowed</option><option>Approval required</option>
               </select>
             </label>
-          </div>
+          </div> : null}
+          {managementTab === "Deployment" ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <InfoRow label="Deployment status" value={deploymentStatusFor(workspaceDisplayStatus({ name, department: departments[0] ?? "Unassigned", interface: interfaceType, launchUrl: workspaceUrl(subdomain), publishStatus, assignedUsers: departments.join(", "), allowedModels: selectedModels, knowledgeBases: knowledge, agents, routingPolicy, tokenBudget, externalRule, audit: "Enabled", status: publishStatus === "Published" ? "Healthy" : "Deploying" }))} />
+                <InfoRow label="Target server" value={targetServer} />
+                <InfoRow label="Subdomain URL" value={displayUrl(subdomain)} />
+                <InfoRow label="Last deployed" value={publishStatus === "Published" ? "Jun 20, 2026 09:42 GST" : "Not deployed yet"} />
+              </div>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                <span className="font-semibold">Open WebUI deployment:</span> Switchboard AI deploys and configures the employee chat instance. Admins configure policy, models, knowledge, and routing here.
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <ActionButton variant="secondary" onClick={copyCurrentWorkspaceUrl}><Copy size={14} /> Copy employee link</ActionButton>
+                <a href={workspaceUrl(subdomain)} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><ExternalLink size={14} /> Open chat interface</a>
+                <ActionButton variant="secondary" onClick={redeployWorkspace}><Server size={14} /> Redeploy</ActionButton>
+              </div>
+            </div>
+          ) : null}
+          {managementTab === "Usage" ? (
+            <div className="grid gap-3 md:grid-cols-3">
+              <InfoRow label="Active users" value={departments[0] === "Legal" ? "18 users" : departments[0] === "Claims" ? "72 users" : "24 users"} />
+              <InfoRow label="Requests this month" value={departments[0] === "Claims" ? "38,120" : departments[0] === "Legal" ? "16,300" : "12,400"} />
+              <InfoRow label="Tokens used vs budget" value={`1.4M / ${tokenBudget}`} />
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm md:col-span-3">Usage data will come from the backend once Open WebUI telemetry is connected.</div>
+            </div>
+          ) : null}
           <div className="mt-5 flex justify-end gap-2">
             <ActionButton variant="secondary" onClick={() => setEditorOpen(false)}>Cancel</ActionButton>
             <ActionButton onClick={saveWorkspace}><Save size={14} /> Save workspace</ActionButton>
           </div>
         </Modal>
-      ) : null}
-      {selectedWorkspace ? (
-        <WorkspaceLaunchModal
-          workspace={selectedWorkspace}
-          onClose={() => setSelectedWorkspace(null)}
-          onCopy={() => copyWorkspaceUrl(selectedWorkspace)}
-          onInvite={() => inviteWorkspace(selectedWorkspace)}
-          onPolicy={() => {
-            showToast(`${selectedWorkspace.name} policy opened`);
-            addAudit("Workspace policy opened", selectedWorkspace.name, "Permission");
-          }}
-        />
       ) : null}
       {disableWorkspace ? (
         <Modal title={`Disable ${disableWorkspace.name}?`} onClose={() => setDisableWorkspace(null)}>
@@ -263,40 +363,6 @@ export default function WorkspacesPage() {
         </Modal>
       ) : null}
     </>
-  );
-}
-
-function WorkspaceLaunchModal({ workspace, onClose, onCopy, onInvite, onPolicy }: { workspace: Workspace; onClose: () => void; onCopy: () => void; onInvite: () => void; onPolicy: () => void }) {
-  return (
-    <Modal title={`Launch ${workspace.name}`} onClose={onClose}>
-      <div className="grid gap-4 md:grid-cols-[1fr_180px]">
-        <div>
-          <div className="text-xs font-semibold uppercase text-[var(--brand-primary)]">{workspace.interface}</div>
-          <div className="mt-2 break-all rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900">{workspace.launchUrl}</div>
-        </div>
-        <div className="rounded-md border border-slate-200 p-3">
-          <div className="text-xs text-slate-500">Status</div>
-          <div className="mt-2 flex flex-wrap gap-2"><StatusBadge value={workspace.publishStatus} /><StatusBadge value={workspace.status} /></div>
-        </div>
-      </div>
-      <div className="mt-5 grid gap-3 md:grid-cols-2">
-        <InfoRow label="Users" value={workspace.assignedUsers} />
-        <InfoRow label="Departments" value={workspace.department} />
-        <InfoRow label="Allowed models" value={workspace.allowedModels.join(", ")} />
-        <InfoRow label="Knowledge bases" value={workspace.knowledgeBases.join(", ")} />
-        <InfoRow label="Agents" value={workspace.agents.join(", ")} />
-        <InfoRow label="External rule" value={workspace.externalRule} />
-      </div>
-      <div className="mt-4">
-        <DataBoundaryChip value={workspace.externalRule.includes("Blocked") ? "On-Prem / Sovereign" : workspace.externalRule.includes("Restricted") ? "Private GPU Runtime" : "External AI Provider"} />
-      </div>
-      <div className="mt-5 flex flex-wrap gap-2">
-        <a href={workspace.launchUrl} target="_blank" rel="noreferrer" className="inline-flex min-h-10 items-center justify-center gap-2 rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]"><ExternalLink size={14} /> Open workspace</a>
-        <ActionButton variant="secondary" onClick={onCopy}><Copy size={14} /> Copy URL</ActionButton>
-        <ActionButton variant="secondary" onClick={onInvite}><MailPlus size={14} /> Invite users</ActionButton>
-        <ActionButton variant="secondary" onClick={onPolicy}><ShieldCheck size={14} /> Manage governance policy</ActionButton>
-      </div>
-    </Modal>
   );
 }
 
