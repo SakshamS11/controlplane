@@ -282,7 +282,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[var(--surface-main)] text-[var(--text-primary)]">
-      <aside className={`switchboard-sidebar fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white shadow-2xl shadow-black/30 transition-all duration-200 lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
+      <aside className={`switchboard-sidebar fixed inset-y-0 left-0 z-30 hidden overflow-hidden border-r border-white/10 bg-[var(--surface-dark)] text-white lg:flex lg:flex-col ${collapsed ? "w-[4.5rem]" : "w-[16.25rem]"}`}>
         <div className={`shrink-0 border-b border-white/10 py-5 ${collapsed ? "px-4" : "px-6"}`}>
           <div className="flex items-center justify-between gap-3">
             <Link href="/" className="flex min-w-0 items-center gap-3" aria-label="Switchboard AI home">
@@ -347,7 +347,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           ))}
         </nav>
         {!collapsed ? <div className="shrink-0 border-t border-white/10 p-3">
-          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2.5 shadow-xl shadow-black/20">
+          <div className="flex items-center justify-between rounded-lg border border-white/10 bg-white/5 px-3 py-2.5">
             <div className="flex min-w-0 items-center gap-2">
               <ShieldCheck size={15} className="shrink-0 text-emerald-300" />
               <div className="min-w-0">
@@ -359,7 +359,7 @@ export function DashboardShell({ children }: { children: ReactNode }) {
           </div>
         </div> : null}
       </aside>
-      <div className={`min-w-0 transition-all duration-200 ${collapsed ? "lg:pl-[4.5rem]" : "lg:pl-[16.25rem]"}`}>
+      <div className={`min-w-0 ${collapsed ? "lg:pl-[4.5rem]" : "lg:pl-[16.25rem]"}`}>
         <TopBar />
         {children}
       </div>

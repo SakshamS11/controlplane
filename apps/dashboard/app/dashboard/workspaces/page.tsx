@@ -116,11 +116,7 @@ export default function WorkspacesPage() {
       setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: "Pending approval", status: "Pending approval" } : item));
       showToast(`Approval requested for ${workspace.name}`);
       addAudit("Workspace publishing approval requested", workspace.name, "Permission");
-      return;
     }
-    setWorkspaces((current) => current.map((item) => item.name === workspace.name ? { ...item, publishStatus: next, status: next === "Disabled" ? "Offline" : item.status } : item));
-    showToast(`${workspace.name} ${next.toLowerCase()}`);
-    addAudit("Workspace publish state changed", workspace.name, "Permission");
   }
 
   function confirmDisableWorkspace() {
