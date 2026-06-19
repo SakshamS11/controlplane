@@ -210,7 +210,6 @@ function ToastStack() {
 const navSections = [
   { label: "Command Center", items: [
     { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
-    { href: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles },
     { href: "/dashboard/incidents", label: "Incidents", icon: AlertTriangle }
   ] },
   { label: "Operate", items: [
@@ -235,14 +234,15 @@ const navSections = [
   ] },
   { label: "Optimize", items: [
     { href: "/dashboard/resource-planner", label: "Resource Planner", icon: SlidersHorizontal },
-    { href: "/dashboard/cost-capacity", label: "Cost & Capacity", icon: WalletCards }
+    { href: "/dashboard/cost-capacity", label: "Cost & Capacity", icon: WalletCards },
+    { href: "/dashboard/recommendations", label: "Recommendations", icon: Sparkles }
   ] },
   { label: "Settings", items: [{ href: "/dashboard/settings", label: "Settings", icon: Settings }] }
 ];
 
 const pageActions: Record<string, { href: string; label: string }> = {
-  "/dashboard": { href: "/dashboard/recommendations", label: "Review recommendations" },
-  "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Simulate top recommendation" },
+  "/dashboard": { href: "/dashboard/incidents", label: "Review incidents" },
+  "/dashboard/recommendations": { href: "/dashboard/recommendations", label: "Review backlog" },
   "/dashboard/incidents": { href: "/dashboard/incidents", label: "Review open incidents" },
   "/dashboard/targets": { href: "/dashboard/targets#register-agent", label: "Add Server" },
   "/dashboard/targets/acme": { href: "/dashboard/approval-inbox", label: "Request deployment" },
@@ -258,7 +258,7 @@ const pageActions: Record<string, { href: string; label: string }> = {
   "/dashboard/audit-logs": { href: "/dashboard/audit-logs", label: "Export Audit" },
   "/dashboard/compliance": { href: "/dashboard/compliance", label: "Export Evidence" },
   "/dashboard/resource-planner": { href: "/dashboard/resource-planner#simulator", label: "Run simulator" },
-  "/dashboard/cost-capacity": { href: "/dashboard/recommendations", label: "Review savings" },
+  "/dashboard/cost-capacity": { href: "/dashboard/cost-capacity#safeguards", label: "Review safeguards" },
   "/dashboard/settings": { href: "/dashboard/settings#thresholds", label: "Configure" }
 };
 
@@ -382,15 +382,15 @@ function TopBar() {
 
   const commands = useMemo<GlobalCommand[]>(() => [
     { label: "Open Overview", detail: "Command Center / AI estate health", href: "/dashboard", icon: LayoutDashboard },
-    { label: "Open Recommendations", detail: "Command Center / Priority action queue", href: "/dashboard/recommendations", icon: Sparkles },
     { label: "Open Incidents", detail: "Command Center / Active response", href: "/dashboard/incidents", icon: AlertTriangle },
     { label: "Open Approval Inbox", detail: "Govern / Pending high-impact changes", href: "/dashboard/approval-inbox", icon: FileCheck2 },
+    { label: "Open Optimization Backlog", detail: "Optimize / Recommendations", href: "/dashboard/recommendations", icon: Sparkles },
     { label: "Open Claims On-Prem Node", detail: "Server / GPU pressure", href: "/dashboard/targets", icon: Server },
-    { label: "Review cost recommendations", detail: "Recommendations / Savings and spend", href: "/dashboard/recommendations", icon: WalletCards },
-    { label: "Review governance recommendations", detail: "Recommendations / Evidence and policy gaps", href: "/dashboard/recommendations", icon: ShieldCheck },
+    { label: "Review savings backlog", detail: "Optimize / Cost and capacity", href: "/dashboard/cost-capacity", icon: WalletCards },
+    { label: "Review governance backlog", detail: "Optimize / Evidence planning", href: "/dashboard/recommendations", icon: ShieldCheck },
     { label: "Review open incidents", detail: "Incidents / Response queue", href: "/dashboard/incidents", icon: AlertTriangle },
     { label: "Review pending approvals", detail: "Approval Inbox / Decisions due", href: "/dashboard/approval-inbox", icon: FileCheck2 },
-    { label: "Simulate top recommendation", detail: "Recommendations / Preview expected impact", href: "/dashboard/recommendations", icon: SlidersHorizontal },
+    { label: "Open planning simulator", detail: "Resource Planner / Preview expected impact", href: "/dashboard/resource-planner#simulator", icon: SlidersHorizontal },
     { label: "Show degraded providers", detail: "Monitoring / Provider health", href: "/dashboard/monitoring", icon: AlertTriangle },
     { label: "Create Legal AI Workspace", detail: "Workspace / Governed interface", href: "/dashboard/workspaces", icon: Layers },
     { label: "Review ISO evidence gaps", detail: "Governance / Readiness support", href: "/dashboard/compliance", icon: FileCheck2 },
@@ -581,7 +581,7 @@ function TopBar() {
                   title="Claims GPU pressure"
                   detail="GPU 92% / VRAM 22/24 GB"
                   value="Queue wait +18%"
-                  href="/dashboard/recommendations"
+                  href="/dashboard/resource-planner"
                   onOpen={() => setAlertMenuOpen(false)}
                 />
                 <AlertMenuItem

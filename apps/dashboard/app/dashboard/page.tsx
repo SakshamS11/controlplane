@@ -166,14 +166,6 @@ const detailTabs: Array<{ id: DetailTab; label: string }> = [
 
 const queuePreviews = [
   {
-    title: "Recommendations",
-    value: "8 open",
-    detail: "Capacity, cost, routing, governance, cache, and evidence actions.",
-    href: "/dashboard/recommendations",
-    action: "Open action queue",
-    status: "Warning"
-  },
-  {
     title: "Incidents",
     value: "5 active",
     detail: "Legal Sandbox offline is the highest-priority response item.",
@@ -188,6 +180,14 @@ const queuePreviews = [
     href: "/dashboard/approval-inbox",
     action: "Review pending",
     status: "Warning"
+  },
+  {
+    title: "Optimization Backlog",
+    value: "8 items",
+    detail: "Planning ideas for cost, capacity, routing, cache, and evidence.",
+    href: "/dashboard/recommendations",
+    action: "Review when ready",
+    status: "In progress"
   }
 ];
 
@@ -224,10 +224,11 @@ export default function DashboardOverviewPage() {
     const common = "inline-flex min-h-7 items-center justify-center rounded-md px-2 text-[10px] font-semibold shadow-sm transition hover:-translate-y-px focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-1";
 
     if (label === "Open Server") return <Link href="/dashboard/targets" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
-    if (label === "Review Capacity" || label === "Reclaim Capacity") return <Link href="/dashboard/recommendations" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
+    if (label === "Review Capacity" || label === "Reclaim Capacity" || label === "Simulate Fix") return <Link href="/dashboard/resource-planner" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     if (label === "View Providers" || label === "Review Model Access") return <Link href="/dashboard/models" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     if (label === "Review Evidence") return <Link href="/dashboard/compliance" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
-    if (label === "Simulate Fix" || label === "Simulate Savings" || label === "Enforce Local-Only") return <Link href="/dashboard/recommendations" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
+    if (label === "Simulate Savings") return <Link href="/dashboard/cost-capacity" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
+    if (label === "Enforce Local-Only") return <Link href="/dashboard/routing-policies" className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</Link>;
     if (label === "View Logs") return <button type="button" onClick={() => simulateAction(label, target)} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}>{label}</button>;
     if (label === "Notify Team Owner") return <button type="button" onClick={() => openReminder(teams.find((team) => team.team === target) ?? teams[0])} className={`${common} border border-[var(--border-subtle)] bg-white hover:bg-[var(--surface-muted)]`}><Send size={11} /> {label}</button>;
     if (label === "Restart Agent") return <button type="button" onClick={() => setConfirmation({ title: "Restart Legal Sandbox agent", message: "Queue an allowlisted restart command for Legal Sandbox?", impact: "Legal workspace availability should return after the agent reconnects.", target: "Legal Sandbox", auditType: "Agent" })} className={`${common} bg-[var(--status-critical)] text-white hover:bg-rose-700`}>{label}</button>;
@@ -271,10 +272,10 @@ export default function DashboardOverviewPage() {
 
       <Card className="mt-3 overflow-hidden">
         <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
-          <div><h2 className="text-sm font-semibold">Immediate Attention Preview</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Top signals only. Response lives in Incidents; recommendations live in Recommendations.</p></div>
+          <div><h2 className="text-sm font-semibold">Immediate Attention Preview</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Top signals only. Response lives in Incidents; approvals handle risky changes.</p></div>
           <div className="flex gap-3">
-            <Link href="/dashboard/recommendations" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open Recommendations</Link>
             <Link href="/dashboard/incidents" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open Incidents</Link>
+            <Link href="/dashboard/approval-inbox" className="text-[10px] font-semibold text-[var(--brand-primary)]">Open Approvals</Link>
           </div>
         </div>
         <div className="divide-y divide-[var(--border-subtle)]">
@@ -352,7 +353,7 @@ function TeamsTable({ onNotify }: { onNotify: (team: (typeof teams)[number]) => 
 }
 
 function CostSnapshot() {
-  return <Card className="p-4"><div className="flex items-start justify-between gap-2"><div><h2 className="text-sm font-semibold">Cost Snapshot</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Current forecast and saving opportunity.</p></div><CircleDollarSign size={16} className="text-[var(--brand-primary)]" /></div><div className="mt-3 grid grid-cols-2 gap-2"><MiniStat label="Projected cost" value="AED 184k" /><MiniStat label="Budget remaining" value="AED 46k" /><MiniStat label="Savings" value="AED 42k" healthy /><MiniStat label="Teams over budget" value="2" warning /></div><p className="mt-3 text-[10px] text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Highest driver:</span> GPT-5 drafting</p><Link href="/dashboard/recommendations" className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--brand-primary)]">Open cost recommendations <ArrowRight size={11} /></Link></Card>;
+  return <Card className="p-4"><div className="flex items-start justify-between gap-2"><div><h2 className="text-sm font-semibold">Cost Snapshot</h2><p className="mt-0.5 text-[10px] text-[var(--text-secondary)]">Current forecast and saving opportunity.</p></div><CircleDollarSign size={16} className="text-[var(--brand-primary)]" /></div><div className="mt-3 grid grid-cols-2 gap-2"><MiniStat label="Projected cost" value="AED 184k" /><MiniStat label="Budget remaining" value="AED 46k" /><MiniStat label="Savings" value="AED 42k" healthy /><MiniStat label="Teams over budget" value="2" warning /></div><p className="mt-3 text-[10px] text-[var(--text-secondary)]"><span className="font-semibold text-[var(--text-primary)]">Highest driver:</span> GPT-5 drafting</p><Link href="/dashboard/cost-capacity" className="mt-2 inline-flex items-center gap-1 text-[10px] font-semibold text-[var(--brand-primary)]">Review cost detail <ArrowRight size={11} /></Link></Card>;
 }
 
 function MiniStat({ label, value, healthy, warning }: { label: string; value: string; healthy?: boolean; warning?: boolean }) {

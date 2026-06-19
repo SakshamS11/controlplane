@@ -234,14 +234,14 @@ export default function ModelsPage() {
             <p className="mt-2 text-sm text-[var(--text-secondary)]">Repeated Support workloads can move from cloud spend to governed local capacity over time.</p>
             <div className="mt-3 rounded-md bg-[var(--surface-muted)] p-3"><p className="text-xs text-[var(--text-secondary)]">Projected annual savings</p><p className="mt-1 text-xl font-semibold text-[var(--text-primary)]">AED 420,000</p></div>
             <div className="mt-3 flex flex-wrap gap-2">
-              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Open in Recommendations</Link>
-              <Link href="/dashboard/cost-capacity" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">Review savings</Link>
+              <Link href="/dashboard/cost-capacity" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Review savings</Link>
+              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">Planning backlog</Link>
             </div>
           </Card>
 
           <Card className="overflow-hidden">
             <div className="flex items-center justify-between border-b border-[var(--border-subtle)] px-4 py-3">
-              <div><h2 className="font-semibold">Routing Recommendations</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Best approved route by workload and sensitivity.</p></div>
+              <div><h2 className="font-semibold">Routing Guidance</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Best approved route by workload and sensitivity.</p></div>
               <Link href="/dashboard/routing-policies" className="text-xs font-semibold text-[var(--brand-primary)]">Open routing policies</Link>
             </div>
             <div className="divide-y divide-[var(--border-subtle)]">
@@ -250,7 +250,7 @@ export default function ModelsPage() {
                   <p className="text-sm font-semibold">{recommendation.workload}</p>
                   <p className="text-xs font-semibold text-[var(--brand-primary-dark)]">{recommendation.route}</p>
                   <p className="text-xs text-[var(--text-secondary)]">{recommendation.rule}</p>
-                  <Link href="/dashboard/recommendations" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
+                  <Link href="/dashboard/routing-policies" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open routing policy</Link>
                 </div>
               ))}
             </div>

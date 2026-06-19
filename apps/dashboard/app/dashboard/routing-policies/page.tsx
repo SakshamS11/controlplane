@@ -157,15 +157,15 @@ export default function RoutingPoliciesPage() {
                   <StatusBadge value="Degraded" />
                   <span className="text-xs text-[var(--text-secondary)]">48 seconds ago</span>
                 </div>
-                <p className="mt-1 text-sm text-[var(--text-secondary)]">Elevated latency on GPT-5 requests. Route changes are reviewed through Recommendations and Approval Inbox.</p>
+                <p className="mt-1 text-sm text-[var(--text-secondary)]">Elevated latency on GPT-5 requests. Active response lives in Incidents; production route changes go through Approval Inbox.</p>
               </div>
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link href="/dashboard/incidents" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
                 View incident
               </Link>
-              <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
-                Review recommendation
+              <Link href="/dashboard/monitoring" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
+                Open monitoring
               </Link>
               <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">
                 Request approval
@@ -253,7 +253,7 @@ export default function RoutingPoliciesPage() {
                 <p className="text-sm font-semibold text-[var(--text-primary)]">{suggestion.workload}</p>
                 <p className="mt-1 text-xs font-semibold text-[var(--brand-primary-dark)]">{suggestion.route}</p>
                 <p className="mt-1 min-h-8 text-xs leading-4 text-[var(--text-secondary)]">{suggestion.rule}</p>
-                <Link href="/dashboard/recommendations" className="mt-2 inline-flex text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
+                <button type="button" onClick={() => setFilter(suggestion.workload.includes("Legal") || suggestion.workload.includes("Claims") ? "Sensitive" : suggestion.workload.includes("Marketing") ? "Cost risk" : "All")} className="mt-2 inline-flex text-xs font-semibold text-[var(--brand-primary)] hover:underline">Review matching policies</button>
               </div>
             ))}
           </div>

@@ -206,15 +206,15 @@ export default function CostCapacityPage() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
                 <div className="flex gap-4 text-xs"><span>Quality risk: <strong>Low</strong></span><span>Governance: <strong className="text-emerald-300">Improved</strong></span></div>
-                <Link href="/dashboard/recommendations" className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[var(--brand-primary-dark)]">Open in Recommendations</Link>
+                <button type="button" onClick={() => setActiveTab("safeguards")} className="rounded-md bg-white px-3 py-2 text-xs font-semibold text-[var(--brand-primary-dark)]">Review safeguards</button>
               </div>
-              <p className="px-4 pb-3 text-[10px] text-slate-400">Recommendations route through approval and audit before policy changes.</p>
+              <p className="px-4 pb-3 text-[10px] text-slate-400">Savings actions route through approval and audit before policy changes.</p>
             </Card>
 
             <Card className="p-4 xl:col-span-2">
               <div className="flex flex-col justify-between gap-3 md:flex-row md:items-center">
                 <div><h2 className="font-semibold">Capacity decision</h2><p className="mt-1 text-xs text-[var(--text-secondary)]">Claims needs more local GPU, while Finance has 20% reclaimable capacity.</p></div>
-                <div className="flex flex-wrap gap-2"><ActionButton variant="secondary" onClick={() => setActiveTab("capacity")}>Review GPU plan</ActionButton><ActionButton onClick={() => setActiveTab("forecast")}>Inspect forecast</ActionButton><Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Open recommendation</Link></div>
+                <div className="flex flex-wrap gap-2"><ActionButton variant="secondary" onClick={() => setActiveTab("capacity")}>Review GPU plan</ActionButton><ActionButton onClick={() => setActiveTab("forecast")}>Inspect forecast</ActionButton><Link href="/dashboard/resource-planner" className="inline-flex min-h-10 items-center justify-center rounded-md bg-[var(--brand-primary)] px-3.5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-[var(--brand-primary-dark)]">Open planner</Link></div>
               </div>
             </Card>
           </div>
@@ -275,7 +275,7 @@ export default function CostCapacityPage() {
         {activeTab === "safeguards" ? (
           <div className="mt-3 grid gap-3 xl:grid-cols-2">
             <Card className="overflow-hidden">
-              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3"><div><h2 className="font-semibold">Savings opportunities</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Forecasted savings with governance checks preserved.</p></div><Link href="/dashboard/recommendations" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link></div>
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3"><div><h2 className="font-semibold">Savings opportunities</h2><p className="mt-0.5 text-xs text-[var(--text-secondary)]">Forecasted savings with governance checks preserved.</p></div><Link href="/dashboard/resource-planner" className="text-xs font-semibold text-[var(--brand-primary)] hover:underline">Plan capacity impact</Link></div>
               <DataTable columns={["Opportunity", "Recommendation", "Impact", "Confidence"]} rows={opportunities.map((row) => [row[0], row[1], row[2], <StatusBadge key="confidence" value={row[3].includes("High") || row[3].includes("Low") ? "Healthy" : "Warning"} />])} />
             </Card>
             <Card className="overflow-hidden">

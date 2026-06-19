@@ -389,7 +389,7 @@ export default function RecommendationsPage() {
     if (item.severity === "Critical") {
       setConfirmation({
         title: `Dismiss critical recommendation?`,
-        body: "Critical recommendations should only be dismissed after reviewing evidence and impact.",
+        body: "High-impact planning items should only be dismissed after reviewing evidence and impact.",
         run
       });
       return;
@@ -400,15 +400,15 @@ export default function RecommendationsPage() {
   return (
     <>
       <PageHeader
-        eyebrow="Command Center"
+        eyebrow="Optimize"
         title="Recommendations"
-        description="Prioritized AI operations recommendations with evidence, impact, simulation, approval path, and audit trail."
-        action={<ActionButton onClick={() => simulateRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot run simulations." : undefined}><Play size={16} /> Simulate top recommendation</ActionButton>}
+        description="A planning backlog for cost, capacity, routing, governance, and evidence improvements. Immediate response lives in Incidents."
+        action={<ActionButton onClick={() => simulateRecommendation(selected)} disabled={!canChange} title={!canChange ? "Viewer role can inspect recommendations but cannot run simulations." : undefined}><Play size={16} /> Simulate selected item</ActionButton>}
       />
       <Section>
         <div className="mb-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
-          <MetricCard label="Open recommendations" value={String(openRecommendations.length)} detail="Need review or action" status={statusForKpi(openRecommendations.length)} icon={<Sparkles size={18} />} />
-          <MetricCard label="Critical" value={String(criticalRecommendations.length)} detail="Capacity and governance risk" status={criticalRecommendations.length ? "Critical" : "Healthy"} icon={<AlertTriangle size={18} />} />
+          <MetricCard label="Open planning items" value={String(openRecommendations.length)} detail="Review when optimizing" status={statusForKpi(openRecommendations.length)} icon={<Sparkles size={18} />} />
+          <MetricCard label="High-impact" value={String(criticalRecommendations.length)} detail="Capacity and governance risk" status={criticalRecommendations.length ? "Warning" : "Healthy"} icon={<AlertTriangle size={18} />} />
           <MetricCard label="Monthly savings" value="AED 36,600" detail="Simulated opportunity" status="Healthy" icon={<WalletCards size={18} />} />
           <MetricCard label="Awaiting approval" value={String(awaitingApproval.length)} detail="Requires decision path" status={statusForKpi(awaitingApproval.length)} icon={<FileCheck2 size={18} />} />
           <MetricCard label="Governance gaps" value={String(governanceOpen)} detail="Could be reduced" status={statusForKpi(governanceOpen)} icon={<ShieldCheck size={18} />} />
@@ -421,8 +421,8 @@ export default function RecommendationsPage() {
           <Card className="overflow-hidden">
             <div className="flex flex-col justify-between gap-3 border-b border-[var(--border-subtle)] px-4 py-3 lg:flex-row lg:items-center">
               <div>
-                <h2 className="font-semibold text-[var(--text-primary)]">Recommendation queue</h2>
-                <p className="mt-1 text-xs text-[var(--text-secondary)]">Problem, evidence, impact, owner, approval, and next action in one place.</p>
+                <h2 className="font-semibold text-[var(--text-primary)]">Optimization backlog</h2>
+                <p className="mt-1 text-xs text-[var(--text-secondary)]">Planning items with evidence, impact, owner, approval, and next step.</p>
               </div>
               <div className="flex items-center gap-2 overflow-x-auto">
                 {filters.map((item) => (
@@ -477,7 +477,7 @@ export default function RecommendationsPage() {
               ))}
               {visibleRecommendations.length === 0 ? (
                 <div className="px-4 py-10 text-center text-sm text-[var(--text-secondary)]">
-                  No recommendations match this filter. Try All, or review Incidents and Monitoring for active signals.
+                  No planning items match this filter. Try All, or review Incidents and Monitoring for active signals.
                 </div>
               ) : null}
             </div>
@@ -486,7 +486,7 @@ export default function RecommendationsPage() {
           <Card className="p-5">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <div className="text-xs font-semibold uppercase text-[var(--brand-primary)]">Selected recommendation</div>
+                <div className="text-xs font-semibold uppercase text-[var(--brand-primary)]">Selected planning item</div>
                 <h2 className="mt-1 text-lg font-semibold text-[var(--text-primary)]">{selected.title}</h2>
               </div>
               <StatusBadge value={selected.severity} />

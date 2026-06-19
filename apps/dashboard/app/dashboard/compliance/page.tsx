@@ -50,7 +50,7 @@ export default function ComplianceReadinessPage() {
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <StatusBadge value="Warning" />
-              <Link href="/dashboard/recommendations" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Open governance recommendations</Link>
+              <Link href="/dashboard/resource-planner" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Plan gap remediation</Link>
             </div>
           </div>
         </Card>
@@ -89,7 +89,7 @@ export default function ComplianceReadinessPage() {
               {["Finance retention policy pending", "5 risk assessments incomplete", "Provider drift response needs owner", "Evidence export needs review approver", "Agent tool registry incomplete"].map((gap) => (
                 <div key={gap} className="rounded-md border border-amber-100 bg-amber-50 px-3 py-3 text-sm text-amber-900">
                   <div>{gap}</div>
-                  <Link href="/dashboard/recommendations" className="mt-2 inline-flex text-xs font-semibold text-amber-950 underline">Open in Recommendations</Link>
+                  <Link href="/dashboard/resource-planner" className="mt-2 inline-flex text-xs font-semibold text-amber-950 underline">Plan remediation</Link>
                 </div>
               ))}
             </div>

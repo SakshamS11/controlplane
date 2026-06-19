@@ -22,7 +22,7 @@ const teams = ["Claims", "Legal", "Engineering", "Finance", "Customer Support", 
 const knowledgeBases = ["Claims SOPs", "Legal Contracts", "HR Policies", "Finance Policies", "Product FAQ", "Engineering Docs"];
 const agents = ["Claims Summary Agent", "Contract Review Agent", "Support Triage Agent", "Code Review Agent", "Finance Analysis Agent"];
 const fallbackPolicies = ["Local first", "Cheapest cloud", "Best quality", "Sensitive data local only"];
-const plannerTabs = ["Summary", "Recommendations", "Simulator", "Team Usage", "Access & Policies", "Evidence"] as const;
+const plannerTabs = ["Summary", "Planning Queue", "Simulator", "Team Usage", "Access & Policies", "Evidence"] as const;
 const matrixTabs = ["Models", "Knowledge Bases", "Agents", "Workspaces"] as const;
 type PlannerTab = (typeof plannerTabs)[number];
 type MatrixTab = (typeof matrixTabs)[number];
@@ -460,13 +460,13 @@ export default function ResourcePlannerPage() {
           <SummaryView
             onReview={() => {
               setReviewedRecommendation(recommendations[0]);
-              setActiveTab("Recommendations");
+              setActiveTab("Planning Queue");
             }}
             onSimulate={() => openSimulator("Claims")}
           />
         ) : null}
 
-        {activeTab === "Recommendations" ? (
+        {activeTab === "Planning Queue" ? (
           <RecommendationView
             onReview={setReviewedRecommendation}
             onSimulate={(team) => openSimulator(team)}
@@ -768,7 +768,7 @@ export default function ResourcePlannerPage() {
                 openSimulator(reviewedRecommendation.team);
               }}>Simulate plan</ActionButton>
               <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]">
-                Open in Recommendations
+                Open optimization backlog
               </Link>
               <ActionButton variant="secondary" onClick={() => setReviewedRecommendation(null)}>Close</ActionButton>
             </div>
@@ -817,7 +817,7 @@ function SummaryView({ onReview, onSimulate }: { onReview: () => void; onSimulat
                 Review evidence
               </button>
               <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center rounded-md border border-white/20 px-3.5 text-sm font-medium text-white hover:bg-white/10">
-                Open in Recommendations
+                Open backlog
               </Link>
             </div>
         </div>
@@ -833,7 +833,7 @@ function SummaryView({ onReview, onSimulate }: { onReview: () => void; onSimulat
           <div className="flex items-center justify-between gap-3">
             <div>
               <h2 className="font-semibold">Decision queue</h2>
-              <p className="mt-1 text-sm text-[var(--text-secondary)]">Six recommendations are ready for review.</p>
+              <p className="mt-1 text-sm text-[var(--text-secondary)]">Six planning items are ready for review.</p>
             </div>
             <StatusBadge value="3 require action" />
           </div>
@@ -858,7 +858,7 @@ function SummaryView({ onReview, onSimulate }: { onReview: () => void; onSimulat
           </div>
           <p className="mt-2 text-sm leading-6 text-[var(--text-secondary)]">Usage, cost, latency, GPU pressure, sensitivity, and evidence readiness shape each recommendation.</p>
           <Link href="/dashboard/recommendations" className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[var(--brand-primary)] hover:underline">
-            Open full action workflow <ArrowRight size={14} />
+            Open optimization backlog <ArrowRight size={14} />
           </Link>
         </Card>
       </div>
@@ -876,7 +876,7 @@ function RecommendationView({ onReview, onSimulate }: { onReview: (item: Recomme
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <StatusBadge value="AED 9,400 potential savings" />
-          <Link href="/dashboard/recommendations" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Open in Recommendations</Link>
+          <Link href="/dashboard/recommendations" className="text-sm font-semibold text-[var(--brand-primary)] hover:underline">Open backlog</Link>
         </div>
       </div>
       <DataTable

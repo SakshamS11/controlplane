@@ -225,10 +225,10 @@ export default function DeploymentTargetsPage() {
             </div>
             <div className="flex shrink-0 flex-wrap gap-2">
               <Link
-                href="/dashboard/recommendations"
+                href="/dashboard/resource-planner"
                 className="inline-flex min-h-10 items-center gap-2 rounded-md border border-[var(--border-subtle)] bg-white px-3.5 py-2 text-sm font-medium text-[var(--text-primary)] shadow-sm hover:bg-[var(--surface-muted)]"
               >
-                Open in Recommendations <ChevronRight size={15} />
+                Open capacity planner <ChevronRight size={15} />
               </Link>
               <Link
                 href="/dashboard/resource-planner"

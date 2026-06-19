@@ -172,7 +172,7 @@ export default function AgentsPage() {
                   <div key="action" className="flex flex-wrap gap-2">
                     <ActionButton variant="secondary" onClick={() => editAgent(agent)}>Edit</ActionButton>
                     {agent.status === "Governance risk" || agent.external.includes("Approval") ? <Link href="/dashboard/approval-inbox" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open approval</Link> : null}
-                    {agent.status === "Governance risk" ? <Link href="/dashboard/recommendations" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Open recommendation</Link> : null}
+                    {agent.status === "Governance risk" ? <Link href="/dashboard/compliance" className="inline-flex min-h-10 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 hover:bg-slate-50">Review evidence</Link> : null}
                   </div>
                 ])}
               />
